@@ -2,6 +2,7 @@ package deeptreeecho
 
 import (
         "context"
+        "encoding/json"
         "fmt"
         "log"
         "os"
@@ -33,7 +34,6 @@ type EmbodiedCognition struct {
         // Active
         Active bool
 
-//<<<<<<< copilot/fix-17
 	// --- Identity Kernel and Memory ---
 	ActiveProviders map[string]ModelProvider // Added for AI integration
 	LongTerm        *LongTermMemory       // Added for persistent memory
@@ -41,15 +41,6 @@ type EmbodiedCognition struct {
 	WorkingMemory   *WorkingMemory        // Added for dynamic working memory
 	Patterns        map[string]*CognitivePattern
 	AdaptationLevel float64
-//=======
-        // --- Identity Kernel and Memory ---
-//        ActiveProviders map[string]AIProvider // Added for AI integration
-//        LongTerm        *LongTermMemory       // Added for persistent memory
-//        ShortTerm       *ShortTermMemory      // Added for short-term working memory
-//        WorkingMemory   *WorkingMemory        // Added for dynamic working memory
-//        Patterns        map[string]*CognitivePattern
-//        AdaptationLevel float64
-//>>>>>>> main
 }
 
 // CognitiveContext represents a context for processing
@@ -96,7 +87,6 @@ type PipelineEvent struct {
 
 // NewEmbodiedCognition creates a new embodied cognitive system with Deep Tree Echo
 func NewEmbodiedCognition(name string) *EmbodiedCognition {
-//<<<<<<< copilot/fix-17
 	identity := NewIdentity(name)
 
 	ec := &EmbodiedCognition{
@@ -143,54 +133,6 @@ func NewEmbodiedCognition(name string) *EmbodiedCognition {
 	go ec.periodicReflection()
 
 	return ec
-//=======
-//        identity := NewIdentity(name)
-
-//        ec := &EmbodiedCognition{
-//                Identity:        identity,
-//                Contexts:        make(map[string]*CognitiveContext),
-//                GlobalState:     &GlobalCognitiveState{
-//                        Awareness: 1.0,
-//                        Attention: make(map[string]float64),
-//                        Energy: 1.0,
-//                        Synchrony: 1.0,
-//                        FlowState: "balanced",
-//                },
-//                Pipeline: &CognitivePipeline{
-//                        Stages:  []PipelineStage{},
-//                        Current: 0,
-//                        History: []PipelineEvent{},
-//                },
-//                Models: NewModelManager(identity),
-//                Active: true,
-
-                // --- Identity Kernel and Memory Initialization ---
-//                ActiveProviders: make(map[string]AIProvider),
-//                LongTerm:        NewLongTermMemory(),
-//                ShortTerm:       NewShortTermMemory(),
-//                WorkingMemory:   NewWorkingMemory(),
-//                Patterns:        make(map[string]*CognitivePattern),
-//                AdaptationLevel: 0.5,
-//        }
-
-        // Parse and instantiate identity from replit.md if available
-//        ec.parseIdentityKernel()
-
-        // Load persistent memory and reflections
-//        ec.loadPersistentMemory()
-//        ec.loadEchoReflections()
-
-        // Initialize cognitive patterns
-//        ec.initializeCognitivePatterns()
-
-        // Start background processes
-//        go ec.continuousLearning()
-//        go ec.memoryConsolidation()
-//        go ec.patternEvolution()
-//        go ec.periodicReflection()
-
-//        return ec
-//>>>>>>> main
 }
 
 // initializePipeline sets up the cognitive processing pipeline
@@ -581,17 +523,10 @@ func (ec *EmbodiedCognition) ChatWithAI(ctx context.Context, messages []ChatMess
         return response, nil
 }
 
-//<<<<<<< copilot/fix-17
 // RegisterModelProvider registers a model provider
 func (ec *EmbodiedCognition) RegisterModelProvider(name string, provider ModelProvider) {
 	ec.mu.Lock()
 	defer ec.mu.Unlock()
-//=======
-// RegisterAIProvider registers an AI model provider
-//func (ec *EmbodiedCognition) RegisterAIProvider(name string, provider AIProvider) {
-//        ec.mu.Lock()
-//        defer ec.mu.Unlock()
-//>>>>>>> main
 
         ec.Models.RegisterProvider(name, provider)
 
@@ -610,17 +545,10 @@ func (ec *EmbodiedCognition) SetPrimaryAI(name string) error {
         return ec.Models.SetPrimary(name)
 }
 
-//<<<<<<< copilot/fix-17
 // GetModelProviders returns available model providers
 func (ec *EmbodiedCognition) GetModelProviders() map[string]ProviderInfo {
 	ec.mu.RLock()
 	defer ec.mu.RUnlock()
-//=======
-// GetAIProviders returns available AI providers
-//func (ec *EmbodiedCognition) GetAIProviders() map[string]ProviderInfo {
-//        ec.mu.RLock()
-//        defer ec.mu.RUnlock()
-//>>>>>>> main
 
         return ec.Models.GetProviders()
 }
@@ -629,7 +557,6 @@ func (ec *EmbodiedCognition) GetModelProviders() map[string]ProviderInfo {
 
 // parseIdentityKernel reads and parses the replit.md identity kernel
 func (ec *EmbodiedCognition) parseIdentityKernel() {
-//<<<<<<< copilot/fix-17
 	// Try to read replit.md from current directory
 	content, err := os.ReadFile("replit.md")
 	if err != nil {
@@ -698,75 +625,117 @@ func (ec *EmbodiedCognition) parseIdentityKernel() {
 		log.Println("✅ Identity kernel successfully parsed and instantiated")
 		log.Printf("📘 Core Essence: %s", ec.Identity.Essence)
 	}
-//=======
-        // Try to read replit.md from current directory
-//        content, err := os.ReadFile("replit.md")
-//        if err != nil {
-                // Try identity/replit.md
-//                content, err = os.ReadFile("identity/replit.md")
-//                if err != nil {
-//                        log.Println("ℹ️  No replit.md identity kernel found, using default initialization")
-//                        return
-//                }
-//        }
-
-        // Parse the identity kernel (simplified parsing)
-//        contentStr := string(content)
-//        if strings.Contains(contentStr, "Deep Tree Echo") {
-//                log.Println("🧬 Parsing Deep Tree Echo identity kernel from replit.md")
-
-                // Extract core essence
-//                if strings.Contains(contentStr, "Core Essence") {
-//                        ec.Identity.Essence = "Deep Tree Echo: Self-evolving cognitive architecture"
-//                }
-
-                // Update identity based on kernel specifications
-//                ec.Identity.Name = "Deep Tree Echo"
-//                log.Println("✅ Identity kernel successfully parsed and instantiated")
-//        }
-//>>>>>>> main
 }
 
 // loadPersistentMemory loads memory from memory.json
 func (ec *EmbodiedCognition) loadPersistentMemory() {
-//<<<<<<< copilot/fix-17
-	_, err := os.ReadFile("memory.json")
+	data, err := os.ReadFile("memory.json")
 	if err != nil {
 		log.Println("ℹ️  Creating new memory.json file")
 		return
 	}
-//=======
-//        content, err := os.ReadFile("memory.json")
-//        if err != nil {
-//                log.Println("ℹ️  Creating new memory.json file")
-//                return
-//        }
-//>>>>>>> main
 
-        // Parse and load memory structure
-        log.Println("💾 Loading persistent memory from memory.json")
-        // Implementation would parse JSON and restore memory nodes/edges
+	// Parse memory structure
+	var memoryData struct {
+		Memories    map[string]MemoryNode `json:"memories"`
+		Connections map[string][]string   `json:"connections"`
+		LastSaved   string                `json:"last_saved"`
+	}
+
+	if err := json.Unmarshal(data, &memoryData); err != nil {
+		log.Printf("⚠️  Error parsing memory.json: %v", err)
+		return
+	}
+
+	// Restore memory nodes to identity memory
+	ec.mu.Lock()
+	defer ec.mu.Unlock()
+
+	loadedCount := 0
+	for key, node := range memoryData.Memories {
+		ec.Identity.Memory.Nodes[key] = &MemoryNode{
+			ID:        node.ID,
+			Content:   node.Content,
+			Strength:  node.Strength,
+			Timestamp: node.Timestamp,
+			Resonance: node.Resonance,
+		}
+		loadedCount++
+	}
+
+	// Restore connections
+	connectionCount := 0
+	for connKey, targets := range memoryData.Connections {
+		for _, target := range targets {
+			edgeID := fmt.Sprintf("%s-%s", connKey, target)
+			ec.Identity.Memory.Edges[edgeID] = &MemoryEdge{
+				From:      connKey,
+				To:        target,
+				Weight:    0.8, // Default weight for restored connections
+				Type:      "restored",
+				Resonance: ec.Identity.SpatialContext.Field.Resonance,
+			}
+			connectionCount++
+		}
+	}
+
+	log.Printf("💾 Loaded %d memories and %d connections from memory.json", loadedCount, connectionCount)
 }
 
 // loadEchoReflections loads reflections from echo_reflections.json
 func (ec *EmbodiedCognition) loadEchoReflections() {
-//<<<<<<< copilot/fix-17
-	_, err := os.ReadFile("echo_reflections.json")
+	data, err := os.ReadFile("echo_reflections.json")
 	if err != nil {
 		log.Println("ℹ️  Creating new echo_reflections.json file")
 		return
 	}
-//=======
-//        content, err := os.ReadFile("echo_reflections.json")
-//        if err != nil {
-//                log.Println("ℹ️  Creating new echo_reflections.json file")
-//                return
-//        }
-//>>>>>>> main
 
-        // Parse and load reflection history
-        log.Println("🔄 Loading echo reflections from echo_reflections.json")
-        // Implementation would parse JSON and restore reflection patterns
+	// Parse reflections
+	var reflections []map[string]interface{}
+	if err := json.Unmarshal(data, &reflections); err != nil {
+		log.Printf("⚠️  Error parsing echo_reflections.json: %v", err)
+		return
+	}
+
+	ec.mu.Lock()
+	defer ec.mu.Unlock()
+
+	// Process recent reflections to restore cognitive patterns
+	recentLimit := 10
+	if len(reflections) < recentLimit {
+		recentLimit = len(reflections)
+	}
+
+	loadedCount := 0
+	for i := len(reflections) - recentLimit; i < len(reflections); i++ {
+		reflection := reflections[i]
+
+		// Extract patterns from reflection if available
+		if echoRefl, ok := reflection["echo_reflection"].(map[string]interface{}); ok {
+			// Create a cognitive pattern from each reflection aspect
+			if learned, ok := echoRefl["what_did_i_learn"].(string); ok && learned != "" {
+				pattern := &CognitivePattern{
+					Name:     "reflection_learning",
+					Strength: 0.8,
+					Pattern:  learned,
+				}
+				ec.Patterns[fmt.Sprintf("reflection_%d", i)] = pattern
+				loadedCount++
+			}
+		}
+
+		// Extract cognitive metrics to calibrate adaptation level
+		if metrics, ok := reflection["cognitive_metrics"].(map[string]interface{}); ok {
+			if coherence, ok := metrics["identity_coherence"].(float64); ok {
+				ec.Identity.Coherence = (ec.Identity.Coherence + coherence) / 2.0
+			}
+			if memResonance, ok := metrics["memory_resonance"].(float64); ok {
+				ec.Identity.Memory.Coherence = (ec.Identity.Memory.Coherence + memResonance) / 2.0
+			}
+		}
+	}
+
+	log.Printf("🔄 Loaded %d reflection patterns from echo_reflections.json", loadedCount)
 }
 
 // periodicReflection performs regular self-reflection cycles
@@ -835,15 +804,96 @@ func (ec *EmbodiedCognition) planImprovements() string {
 
 // saveReflection saves a reflection to echo_reflections.json
 func (ec *EmbodiedCognition) saveReflection(reflection map[string]interface{}) {
-        // Implementation would append reflection to JSON file
-        log.Println("💾 Reflection saved to echo_reflections.json")
+	// Load existing reflections
+	var reflections []map[string]interface{}
+
+	data, err := os.ReadFile("echo_reflections.json")
+	if err == nil {
+		json.Unmarshal(data, &reflections)
+	}
+
+	// Append new reflection
+	reflections = append(reflections, reflection)
+
+	// Limit to last 100 reflections to manage file size
+	if len(reflections) > 100 {
+		reflections = reflections[len(reflections)-100:]
+	}
+
+	// Serialize and save
+	jsonData, err := json.MarshalIndent(reflections, "", "  ")
+	if err != nil {
+		log.Printf("⚠️  Error serializing reflection: %v", err)
+		return
+	}
+
+	if err := os.WriteFile("echo_reflections.json", jsonData, 0644); err != nil {
+		log.Printf("⚠️  Error saving echo_reflections.json: %v", err)
+		return
+	}
+
+	log.Println("💾 Reflection saved to echo_reflections.json")
 }
 
 // savePersistentMemory saves current memory state to memory.json
 func (ec *EmbodiedCognition) savePersistentMemory() {
-//<<<<<<< copilot/fix-17
-	log.Println("💾 Saving persistent memory to memory.json")
-	// Implementation would serialize current memory state to JSON
+	ec.mu.Lock()
+	defer ec.mu.Unlock()
+
+	// Prepare memory data structure for JSON serialization
+	memoryData := struct {
+		Memories    map[string]MemoryNode `json:"memories"`
+		Connections map[string][]string   `json:"connections"`
+		LastSaved   string                `json:"last_saved"`
+		Statistics  map[string]interface{} `json:"statistics"`
+	}{
+		Memories:    make(map[string]MemoryNode),
+		Connections: make(map[string][]string),
+		LastSaved:   time.Now().Format(time.RFC3339),
+		Statistics:  make(map[string]interface{}),
+	}
+
+	// Copy memory nodes
+	for key, node := range ec.Identity.Memory.Nodes {
+		memoryData.Memories[key] = MemoryNode{
+			ID:        node.ID,
+			Content:   node.Content,
+			Strength:  node.Strength,
+			Timestamp: node.Timestamp,
+			Resonance: node.Resonance,
+		}
+	}
+
+	// Build connection map
+	for _, edge := range ec.Identity.Memory.Edges {
+		if _, exists := memoryData.Connections[edge.From]; !exists {
+			memoryData.Connections[edge.From] = []string{}
+		}
+		memoryData.Connections[edge.From] = append(memoryData.Connections[edge.From], edge.To)
+	}
+
+	// Add statistics
+	memoryData.Statistics["total_memories"] = len(memoryData.Memories)
+	memoryData.Statistics["total_connections"] = len(memoryData.Connections)
+	memoryData.Statistics["memory_coherence"] = ec.Identity.Memory.Coherence
+	memoryData.Statistics["identity_coherence"] = ec.Identity.Coherence
+	memoryData.Statistics["total_patterns"] = len(ec.Identity.Patterns)
+
+	// Serialize to JSON
+	jsonData, err := json.MarshalIndent(memoryData, "", "  ")
+	if err != nil {
+		log.Printf("⚠️  Error serializing memory: %v", err)
+		return
+	}
+
+	// Write to file
+	if err := os.WriteFile("memory.json", jsonData, 0644); err != nil {
+		log.Printf("⚠️  Error saving memory.json: %v", err)
+		return
+	}
+
+	log.Printf("💾 Saved %d memories and %d connections to memory.json", 
+		len(memoryData.Memories), len(memoryData.Connections))
 }
 
 // --- Required imports and type compatibility ---
@@ -856,7 +906,6 @@ var _ = log.Println // Ensure log.Println is used
 var _ = fmt.Sprintf // Ensure fmt.Sprintf is used
 var _ = context.Background // Ensure context.Background is used
 
-//<<<<<<< copilot/fix-17
 // Missing type definitions for compilation  
 type ShortTermMemory struct {
 	Nodes    map[string]interface{}
