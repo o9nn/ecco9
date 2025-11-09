@@ -34,6 +34,9 @@ type AutonomousConsciousness struct {
 	// Symbolic reasoning
 	metamodel       *scheme.SchemeMetamodel
 	
+	// LLM integration
+	llm             *LLMIntegration
+	
 	// Stream of consciousness
 	consciousness   chan Thought
 	workingMemory   *WorkingMemory
@@ -145,6 +148,15 @@ func NewAutonomousConsciousness(name string) *AutonomousConsciousness {
 		awake:    false,
 		thinking: false,
 		learning: false,
+	}
+	
+	// Initialize LLM integration
+	llm, err := NewLLMIntegration(ctx)
+	if err != nil {
+		fmt.Printf("⚠️  LLM integration disabled: %v\n", err)
+	} else {
+		ac.llm = llm
+		fmt.Println("✅ LLM integration enabled")
 	}
 	
 	return ac
@@ -389,7 +401,19 @@ func (ac *AutonomousConsciousness) generateSpontaneousThought() {
 
 // generateThoughtContent generates content for a thought
 func (ac *AutonomousConsciousness) generateThoughtContent() string {
-	// Use Scheme metamodel for symbolic reasoning
+	// If LLM is available, use it for richer thought generation
+	if ac.llm != nil {
+		thoughtType := ac.selectThoughtType()
+		context := ac.buildThoughtContext()
+		
+		content, err := ac.llm.GenerateThought(thoughtType, context)
+		if err == nil && content != "" {
+			return content
+		}
+		fmt.Printf("⚠️  LLM thought generation failed: %v, using fallback\n", err)
+	}
+	
+	// Fallback to template-based generation
 	ac.interests.mu.RLock()
 	topTopic := ac.getTopInterest()
 	ac.interests.mu.RUnlock()
@@ -603,4 +627,40 @@ func (ac *AutonomousConsciousness) GetStatus() map[string]interface{} {
 // generateThoughtID generates a unique thought ID
 func generateThoughtID() string {
 	return fmt.Sprintf("thought_%d", time.Now().UnixNano())
+}
+
+// buildThoughtContext builds context for LLM thought generation
+func (ac *AutonomousConsciousness) buildThoughtContext() *ThoughtContext {
+	ac.workingMemory.mu.RLock()
+	defer ac.workingMemory.mu.RUnlock()
+	
+	// Extract recent thoughts
+	recentThoughts := make([]string, 0)
+	for _, t := range ac.workingMemory.buffer {
+		recentThoughts = append(recentThoughts, t.Content)
+	}
+	
+	// Extract working memory content
+	workingMemContent := make([]string, 0)
+	for _, t := range ac.workingMemory.buffer {
+		workingMemContent = append(workingMemContent, fmt.Sprintf("[%s] %s", t.Type, t.Content))
+	}
+	
+	// Get current interests
+	ac.interests.mu.RLock()
+	interests := make(map[string]float64)
+	for k, v := range ac.interests.topics {
+		interests[k] = v
+	}
+	ac.interests.mu.RUnlock()
+	
+	return &ThoughtContext{
+		WorkingMemory:    workingMemContent,
+		RecentThoughts:   recentThoughts,
+		CurrentInterests: interests,
+		IdentityState: map[string]interface{}{
+			"coherence": ac.identity.Coherence,
+			"name":      ac.identity.Name,
+		},
+	}
 }
