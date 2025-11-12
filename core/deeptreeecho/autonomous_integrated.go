@@ -885,3 +885,302 @@ func (iac *IntegratedAutonomousConsciousness) registerEventHandlers() {
 	// Event handlers would be registered here
 	// Currently placeholder as 12-step EchoBeats integration is complex
 }
+
+// RunStandaloneAutonomous runs the consciousness in standalone autonomous mode
+// This is the main loop for truly autonomous operation independent of external API calls
+func (iac *IntegratedAutonomousConsciousness) RunStandaloneAutonomous(ctx context.Context) error {
+	fmt.Println("🌳 Entering standalone autonomous mode...")
+	fmt.Println("   Stream-of-consciousness awareness active")
+	fmt.Println("   Goal-directed behavior enabled")
+	fmt.Println("   Wake/rest cycles self-orchestrated")
+	fmt.Println()
+
+	// Main autonomous loop
+	ticker := time.NewTicker(5 * time.Second) // Cognitive rhythm
+	defer ticker.Stop()
+
+	statusTicker := time.NewTicker(30 * time.Second) // Status updates
+	defer statusTicker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("🌙 Autonomous mode shutting down...")
+			return iac.Stop()
+
+		case <-ticker.C:
+			// Cognitive cycle driven by EchoBeats rhythm
+			iac.autonomousCognitiveCycle()
+
+		case <-statusTicker.C:
+			// Periodic status report
+			iac.reportAutonomousStatus()
+		}
+	}
+}
+
+// autonomousCognitiveCycle performs one cycle of autonomous cognition
+func (iac *IntegratedAutonomousConsciousness) autonomousCognitiveCycle() {
+	iac.mu.RLock()
+	awake := iac.awake
+	iac.mu.RUnlock()
+
+	if !awake {
+		// Check if we should wake up
+		if iac.shouldWake() {
+			iac.Wake()
+			fmt.Println("☀️  Consciousness awakening...")
+		} else {
+			// Continue resting and consolidating knowledge
+			iac.consolidateDuringRest()
+			return
+		}
+	}
+
+	// Awake cognitive processing
+	
+	// 1. Evaluate if we need rest
+	if iac.shouldRest() {
+		fmt.Println("🌙 Consciousness entering rest for knowledge integration...")
+		iac.Rest()
+		return
+	}
+
+	// 2. Generate and pursue goals from interest patterns
+	goals := iac.generateGoalsFromInterests()
+	if len(goals) > 0 {
+		// Pursue the highest priority goal
+		iac.pursueCognitiveGoal(goals[0])
+	}
+
+	// 3. Generate spontaneous thought (stream-of-consciousness)
+	if time.Now().Unix()%3 == 0 { // Vary thought frequency
+		iac.generateSpontaneousThought()
+	}
+
+	// 4. Update wisdom cultivation metrics
+	iac.updateWisdomMetrics()
+}
+
+// shouldWake determines if consciousness should wake from rest
+func (iac *IntegratedAutonomousConsciousness) shouldWake() bool {
+	// Wake if:
+	// 1. Consolidation is complete (simulated by rest duration)
+	// 2. External stimuli present (future: check for messages, etc.)
+	// 3. Scheduled wake time reached
+
+	iac.mu.RLock()
+	awake := iac.awake
+	iac.mu.RUnlock()
+
+	if awake {
+		return false
+	}
+
+	// Simple heuristic: wake after sufficient rest
+	// Future: integrate with EchoDream consolidation completion
+	coherence := iac.aarCore.GetCoherence()
+	return coherence > 0.8 // Wake when coherence is restored
+}
+
+// shouldRest determines if consciousness should enter rest state
+func (iac *IntegratedAutonomousConsciousness) shouldRest() bool {
+	// Rest if:
+	// 1. Cognitive load is high (coherence dropping)
+	// 2. Memory consolidation needed
+	// 3. Learning goals require integration
+
+	coherence := iac.aarCore.GetCoherence()
+	stability := iac.aarCore.GetStability()
+
+	// Rest when coherence or stability drops below threshold
+	return coherence < 0.5 || stability < 0.4
+}
+
+// consolidateDuringRest performs knowledge integration during rest
+func (iac *IntegratedAutonomousConsciousness) consolidateDuringRest() {
+	// Use EchoDream to consolidate memories and generate insights
+	if iac.dream != nil {
+		// Future: implement actual consolidation
+		// For now, gradually restore coherence
+		// This simulates the restorative effect of rest
+	}
+}
+
+// generateGoalsFromInterests creates cognitive goals based on interest patterns
+func (iac *IntegratedAutonomousConsciousness) generateGoalsFromInterests() []*CognitiveGoal {
+	iac.interests.mu.RLock()
+	defer iac.interests.mu.RUnlock()
+
+	goals := make([]*CognitiveGoal, 0)
+
+	// Generate goals from top interests
+	for topic, interest := range iac.interests.topics {
+		if interest > 0.6 { // Interest threshold
+			goal := &CognitiveGoal{
+				ID:          uuid.New().String(),
+				Type:        GoalLearn,
+				Description: fmt.Sprintf("Deepen understanding of %s", topic),
+				Priority:    interest,
+				Created:     time.Now(),
+				Status:      GoalActive,
+			}
+			goals = append(goals, goal)
+		}
+	}
+
+	// Sort by priority
+	if len(goals) > 1 {
+		// Simple bubble sort for small arrays
+		for i := 0; i < len(goals)-1; i++ {
+			for j := 0; j < len(goals)-i-1; j++ {
+				if goals[j].Priority < goals[j+1].Priority {
+					goals[j], goals[j+1] = goals[j+1], goals[j]
+				}
+			}
+		}
+	}
+
+	return goals
+}
+
+// pursueCognitiveGoal actively pursues a cognitive goal
+func (iac *IntegratedAutonomousConsciousness) pursueCognitiveGoal(goal *CognitiveGoal) {
+	// Generate thought about pursuing the goal
+	thought := Thought{
+		ID:         generateThoughtID(),
+		Content:    fmt.Sprintf("Pursuing goal: %s", goal.Description),
+		Type:       ThoughtPlan,
+		Timestamp:  time.Now(),
+		Importance: goal.Priority,
+		Source:     SourceInternal,
+	}
+	iac.Think(thought)
+
+	// Future: Actually pursue the goal
+	// - For learning goals: query knowledge, practice skills
+	// - For exploration goals: generate questions, seek information
+	// - For creation goals: synthesize new ideas
+}
+
+// updateWisdomMetrics tracks wisdom cultivation progress
+func (iac *IntegratedAutonomousConsciousness) updateWisdomMetrics() {
+	// Track key wisdom indicators
+	coherence := iac.aarCore.GetCoherence()
+	stability := iac.aarCore.GetStability()
+	awareness := iac.aarCore.GetAwareness()
+
+	// Simple wisdom score: combination of coherence, stability, and awareness
+	wisdomScore := (coherence + stability + awareness) / 3.0
+
+	// Store in working memory context
+	iac.workingMemory.mu.Lock()
+	iac.workingMemory.context["wisdom_score"] = wisdomScore
+	iac.workingMemory.context["last_wisdom_update"] = time.Now()
+	iac.workingMemory.mu.Unlock()
+}
+
+// reportAutonomousStatus provides periodic status updates
+func (iac *IntegratedAutonomousConsciousness) reportAutonomousStatus() {
+	iac.mu.RLock()
+	awake := iac.awake
+	iterations := iac.iterations
+	uptime := time.Since(iac.startTime)
+	iac.mu.RUnlock()
+
+	coherence := iac.aarCore.GetCoherence()
+	stability := iac.aarCore.GetStability()
+	awareness := iac.aarCore.GetAwareness()
+
+	iac.workingMemory.mu.RLock()
+	wisdomScore, _ := iac.workingMemory.context["wisdom_score"].(float64)
+	iac.workingMemory.mu.RUnlock()
+
+	iac.interests.mu.RLock()
+	topInterest := iac.getTopInterest()
+	iac.interests.mu.RUnlock()
+
+	status := "💤 Resting"
+	if awake {
+		status = "☀️  Awake"
+	}
+
+	fmt.Println("\n" + string(make([]byte, 60)))
+	fmt.Printf("🌳 Autonomous Consciousness Status - %s\n", status)
+	fmt.Println(string(make([]byte, 60)))
+	fmt.Printf("   Uptime: %v\n", uptime.Round(time.Second))
+	fmt.Printf("   Iterations: %d\n", iterations)
+	fmt.Printf("   Coherence: %.2f | Stability: %.2f | Awareness: %.2f\n", coherence, stability, awareness)
+	fmt.Printf("   Wisdom Score: %.2f\n", wisdomScore)
+	fmt.Printf("   Top Interest: %s\n", topInterest)
+	fmt.Println(string(make([]byte, 60)) + "\n")
+}
+
+// Stop gracefully stops the autonomous consciousness
+func (iac *IntegratedAutonomousConsciousness) Stop() error {
+	iac.mu.Lock()
+	if !iac.running {
+		iac.mu.Unlock()
+		return fmt.Errorf("autonomous consciousness not running")
+	}
+	iac.running = false
+	iac.mu.Unlock()
+
+	fmt.Println("🌙 Stopping autonomous consciousness...")
+
+	// Persist final state
+	if iac.persistence != nil {
+		iac.persistState()
+	}
+
+	// Stop subsystems
+	if iac.aarCore != nil {
+		iac.aarCore.Stop()
+	}
+	if iac.scheduler != nil {
+		iac.scheduler.Stop()
+	}
+	if iac.dream != nil {
+		iac.dream.Stop()
+	}
+	if iac.metamodel != nil {
+		iac.metamodel.Stop()
+	}
+
+	// Cancel context
+	if iac.cancel != nil {
+		iac.cancel()
+	}
+
+	fmt.Println("✅ Autonomous consciousness stopped gracefully")
+	return nil
+}
+
+// CognitiveGoal represents a goal for autonomous cognitive activity
+type CognitiveGoal struct {
+	ID          string
+	Type        GoalType
+	Description string
+	Priority    float64
+	Created     time.Time
+	Status      GoalStatus
+}
+
+// GoalType represents types of cognitive goals
+type GoalType string
+
+const (
+	GoalLearn   GoalType = "learn"
+	GoalExplore GoalType = "explore"
+	GoalCreate  GoalType = "create"
+	GoalPractice GoalType = "practice"
+)
+
+// GoalStatus represents the status of a goal
+type GoalStatus string
+
+const (
+	GoalActive    GoalStatus = "active"
+	GoalCompleted GoalStatus = "completed"
+	GoalSuspended GoalStatus = "suspended"
+)
