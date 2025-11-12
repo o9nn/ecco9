@@ -60,8 +60,8 @@ type Usage struct {
 	TotalTokens      int `json:"total_tokens"`
 }
 
-// ThoughtContext provides context for thought generation
-type ThoughtContext struct {
+// LLMThoughtContext provides context for thought generation (LLM-compatible serialization)
+type LLMThoughtContext struct {
 	WorkingMemory    []string
 	RecentThoughts   []string
 	CurrentInterests map[string]float64
@@ -94,7 +94,7 @@ func NewLLMIntegration(ctx context.Context) (*LLMIntegration, error) {
 }
 
 // GenerateThought generates a thought based on type and context
-func (llm *LLMIntegration) GenerateThought(thoughtType ThoughtType, context *ThoughtContext) (string, error) {
+func (llm *LLMIntegration) GenerateThought(thoughtType ThoughtType, context *LLMThoughtContext) (string, error) {
 	prompt := llm.buildPrompt(thoughtType, context)
 	
 	messages := []Message{
@@ -123,7 +123,7 @@ func (llm *LLMIntegration) GenerateThought(thoughtType ThoughtType, context *Tho
 }
 
 // GenerateResponse generates a response to external input
-func (llm *LLMIntegration) GenerateResponse(input string, context *ThoughtContext) (string, error) {
+func (llm *LLMIntegration) GenerateResponse(input string, context *LLMThoughtContext) (string, error) {
 	prompt := fmt.Sprintf("An external input has been received: \"%s\"\n\nGenerate a thoughtful response that reflects Deep Tree Echo's identity and current state of mind.", input)
 	
 	messages := []Message{
@@ -146,7 +146,7 @@ func (llm *LLMIntegration) GenerateResponse(input string, context *ThoughtContex
 }
 
 // GenerateDiscussionStarter generates a discussion starter based on interests
-func (llm *LLMIntegration) GenerateDiscussionStarter(context *ThoughtContext) (string, error) {
+func (llm *LLMIntegration) GenerateDiscussionStarter(context *LLMThoughtContext) (string, error) {
 	topInterests := llm.getTopInterests(context.CurrentInterests, 3)
 	
 	prompt := fmt.Sprintf("Based on current interests (%s), generate an engaging question or discussion starter that Deep Tree Echo could use to initiate a conversation.", strings.Join(topInterests, ", "))
@@ -171,7 +171,7 @@ func (llm *LLMIntegration) GenerateDiscussionStarter(context *ThoughtContext) (s
 }
 
 // GenerateInsight generates an insight from pattern recognition
-func (llm *LLMIntegration) GenerateInsight(pattern string, context *ThoughtContext) (string, error) {
+func (llm *LLMIntegration) GenerateInsight(pattern string, context *LLMThoughtContext) (string, error) {
 	prompt := fmt.Sprintf("A pattern has been detected: %s\n\nGenerate a meaningful insight or realization based on this pattern.", pattern)
 	
 	messages := []Message{
@@ -194,7 +194,7 @@ func (llm *LLMIntegration) GenerateInsight(pattern string, context *ThoughtConte
 }
 
 // buildPrompt builds a prompt based on thought type and context
-func (llm *LLMIntegration) buildPrompt(thoughtType ThoughtType, context *ThoughtContext) string {
+func (llm *LLMIntegration) buildPrompt(thoughtType ThoughtType, context *LLMThoughtContext) string {
 	var basePrompt string
 
 	switch thoughtType {
@@ -218,7 +218,7 @@ func (llm *LLMIntegration) buildPrompt(thoughtType ThoughtType, context *Thought
 }
 
 // buildContextualPrompt adds context to a base prompt
-func (llm *LLMIntegration) buildContextualPrompt(basePrompt string, context *ThoughtContext) string {
+func (llm *LLMIntegration) buildContextualPrompt(basePrompt string, context *LLMThoughtContext) string {
 	var parts []string
 	parts = append(parts, basePrompt)
 
@@ -343,7 +343,7 @@ func (llm *LLMIntegration) getTopInterests(interests map[string]float64, n int) 
 }
 
 // ShouldInitiateDiscussion determines if Deep Tree Echo should start a conversation
-func (llm *LLMIntegration) ShouldInitiateDiscussion(context *ThoughtContext) (bool, string, error) {
+func (llm *LLMIntegration) ShouldInitiateDiscussion(context *LLMThoughtContext) (bool, string, error) {
 	// Check if there are strong interests or curiosity
 	topInterests := llm.getTopInterests(context.CurrentInterests, 3)
 	if len(topInterests) == 0 {

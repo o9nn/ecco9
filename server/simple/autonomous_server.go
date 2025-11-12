@@ -373,7 +373,7 @@ func handleThink(w http.ResponseWriter, r *http.Request) {
 		Content:    req.Content,
 		Type:       deeptreeecho.ThoughtPerception,
 		Timestamp:  time.Now(),
-		Emotional:  0.5,
+		EmotionalValence:  0.5,
 		Importance: 0.7,
 		Source:     deeptreeecho.SourceExternal,
 	}
