@@ -1,7 +1,6 @@
 package deeptreeecho
 
 import (
-	"sync"
 	"time"
 )
 
@@ -130,115 +129,6 @@ func (wm *WorkingMemory) Size() int {
 	return len(wm.buffer)
 }
 
-
-// DiscussionManager manages external discussions and interactions
-type DiscussionManager struct {
-	mu                  sync.RWMutex
-	activeDiscussions   map[string]*Discussion
-	engagementThreshold float64
-	interests           *InterestSystem
-}
-
-// Discussion represents an active discussion
-type Discussion struct {
-	ID            string
-	Participants  []string
-	Topic         string
-	InterestScore float64
-	Messages      []*DiscussionMessage
-	Active        bool
-	StartTime     time.Time
-	LastActivity  time.Time
-}
-
-// Message type for discussions (different from llm_integration.go Message)
-type DiscussionMessage struct {
-	ID        string
-	From      string
-	Content   string
-	Timestamp time.Time
-}
-
-// NewDiscussionManager creates a new discussion manager
-func NewDiscussionManager(interests *InterestSystem) *DiscussionManager {
-	return &DiscussionManager{
-		activeDiscussions:   make(map[string]*Discussion),
-		engagementThreshold: 0.5,
-		interests:           interests,
-	}
-}
-
-// ShouldEngage determines if the system should engage in a discussion about a topic
-func (dm *DiscussionManager) ShouldEngage(topic string) bool {
-	dm.mu.RLock()
-	defer dm.mu.RUnlock()
-	
-	// Calculate interest score for topic
-	interestScore := dm.interests.GetInterest(topic)
-	
-	return interestScore >= dm.engagementThreshold
-}
-
-// InitiateDiscussion starts a new discussion
-func (dm *DiscussionManager) InitiateDiscussion(topic string, participants []string) *Discussion {
-	dm.mu.Lock()
-	defer dm.mu.Unlock()
-	
-	discussion := &Discussion{
-		ID:            generateID(),
-		Participants:  participants,
-		Topic:         topic,
-		InterestScore: dm.interests.GetInterest(topic),
-		Messages:      make([]*DiscussionMessage, 0),
-		Active:        true,
-		StartTime:     time.Now(),
-		LastActivity:  time.Now(),
-	}
-	
-	dm.activeDiscussions[discussion.ID] = discussion
-	return discussion
-}
-
-// AddMessage adds a message to a discussion
-func (dm *DiscussionManager) AddMessage(discussionID string, from string, content string) {
-	dm.mu.Lock()
-	defer dm.mu.Unlock()
-	
-	if discussion, exists := dm.activeDiscussions[discussionID]; exists {
-		message := &DiscussionMessage{
-			ID:        generateID(),
-			From:      from,
-			Content:   content,
-			Timestamp: time.Now(),
-		}
-		discussion.Messages = append(discussion.Messages, message)
-		discussion.LastActivity = time.Now()
-	}
-}
-
-// GetActiveDiscussions returns all active discussions
-func (dm *DiscussionManager) GetActiveDiscussions() []*Discussion {
-	dm.mu.RLock()
-	defer dm.mu.RUnlock()
-	
-	active := make([]*Discussion, 0)
-	for _, discussion := range dm.activeDiscussions {
-		if discussion.Active {
-			active = append(active, discussion)
-		}
-	}
-	return active
-}
-
-// EndDiscussion marks a discussion as inactive
-func (dm *DiscussionManager) EndDiscussion(discussionID string) {
-	dm.mu.Lock()
-	defer dm.mu.Unlock()
-	
-	if discussion, exists := dm.activeDiscussions[discussionID]; exists {
-		discussion.Active = false
-	}
-}
 
 // InterestSystem methods for enhanced functionality
 func (is *InterestSystem) GetInterest(topic string) float64 {

@@ -75,6 +75,9 @@ type IntegratedAutonomousConsciousness struct {
 	// Wisdom metrics
 	wisdomMetrics *WisdomMetrics
 	
+	// Featherless LLM integration
+	featherlessLLM *FeatherlessLLMIntegration
+	
 	// Running state
 	running         bool
 	startTime       time.Time
@@ -181,7 +184,20 @@ func NewIntegratedAutonomousConsciousness(name string) *IntegratedAutonomousCons
 		// Initialize wisdom metrics
 		iac.wisdomMetrics = NewWisdomMetrics()
 		
-		return iac
+	// Initialize Featherless LLM integration
+	featherlessLLM, err := NewFeatherlessLLMIntegration()
+	if err == nil {
+		iac.featherlessLLM = featherlessLLM
+		if iac.featherlessLLM.IsEnabled() {
+			fmt.Println("🪶 Featherless LLM integration enabled")
+		}
+	}
+	
+	// Initialize Discussion Manager
+	iac.discussionManager = NewDiscussionManager(iac, iac.interests)
+	fmt.Println("💬 Discussion Manager initialized")
+	
+	return iac
 	}
 
 // Start begins autonomous operation with full integration

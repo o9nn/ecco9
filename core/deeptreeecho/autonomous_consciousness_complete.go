@@ -439,7 +439,7 @@ func (iac *IntegratedAutonomousConsciousness) StartAutonomousOperation() {
 	
 	// Initialize discussion manager if not exists
 	if iac.discussionManager == nil {
-		iac.discussionManager = NewDiscussionManager(iac.interests)
+		iac.discussionManager = NewDiscussionManager(iac, iac.interests)
 	}
 	
 	// Initialize knowledge learning if not exists
