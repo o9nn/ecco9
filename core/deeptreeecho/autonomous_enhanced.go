@@ -94,6 +94,38 @@ const (
 	SkillReasoning      SkillCategory = "reasoning"
 	SkillCreativity     SkillCategory = "creativity"
 	SkillCommunication  SkillCategory = "communication"
+)
+
+// SkillRegistry manages the collection of skills
+type SkillRegistry struct {
+	mu     sync.RWMutex
+	skills map[string]*Skill
+}
+
+// NewSkillRegistry creates a new skill registry
+func NewSkillRegistry() *SkillRegistry {
+	return &SkillRegistry{
+		skills: make(map[string]*Skill),
+	}
+}
+
+// RegisterSkill adds a skill to the registry
+func (sr *SkillRegistry) RegisterSkill(skill *Skill) {
+	sr.mu.Lock()
+	defer sr.mu.Unlock()
+	sr.skills[skill.ID] = skill
+}
+
+// GetSkill retrieves a skill by ID
+func (sr *SkillRegistry) GetSkill(id string) (*Skill, bool) {
+	sr.mu.RLock()
+	defer sr.mu.RUnlock()
+	skill, exists := sr.skills[id]
+	return skill, exists
+}
+
+// Additional skill categories
+const (
 	SkillAnalysis       SkillCategory = "analysis"
 	SkillSynthesis      SkillCategory = "synthesis"
 	SkillMetaCognition  SkillCategory = "meta_cognition"

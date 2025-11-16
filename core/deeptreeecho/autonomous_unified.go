@@ -90,12 +90,12 @@ func NewUnifiedAutonomousConsciousness(config *AutonomousConfig) (*UnifiedAutono
 		running:       false,
 		awake:         false,
 		consciousness: make(chan Thought, 100),
-		workingMemory: NewWorkingMemory(50),
+		workingMemory: &WorkingMemory{buffer: make([]*Thought, 0, 50), capacity: 50, context: make(map[string]interface{})},
 		config:        config,
 	}
 
 	// Initialize AAR core
-	uac.aarCore = NewAARCore()
+	uac.aarCore = NewAARCore(ctx, 100)
 
 	// Initialize interest patterns
 	uac.interests = NewInterestPatterns()
@@ -108,7 +108,7 @@ func NewUnifiedAutonomousConsciousness(config *AutonomousConfig) (*UnifiedAutono
 
 	// Initialize LLM thought generator if enabled
 	if config.EnableLLMThoughts {
-		uac.llmGenerator = NewLLMThoughtGenerator()
+		uac.llmGenerator = NewLLMThoughtGenerator(ctx)
 		if uac.llmGenerator != nil {
 			fmt.Println("✨ LLM-powered thought generation enabled")
 		} else {
@@ -116,10 +116,11 @@ func NewUnifiedAutonomousConsciousness(config *AutonomousConfig) (*UnifiedAutono
 		}
 	}
 
-	// Initialize hypergraph memory
-	hypergraph, err := memory.NewHypergraphMemory()
-	if err != nil {
-		fmt.Printf("⚠️  Hypergraph memory initialization failed: %v\n", err)
+	// Initialize hypergraph memory with persistence
+	persistence, _ := memory.NewSupabasePersistence()
+	hypergraph := memory.NewHypergraphMemory(persistence)
+	if hypergraph == nil {
+		fmt.Println("⚠️  Hypergraph memory initialization failed")
 	} else {
 		uac.hypergraph = hypergraph
 		fmt.Println("🕸️  Hypergraph memory initialized")
@@ -133,9 +134,10 @@ func NewUnifiedAutonomousConsciousness(config *AutonomousConfig) (*UnifiedAutono
 	}
 
 	// Initialize discussion manager if enabled
+	// TODO: Fix NewDiscussionManager interface
 	if config.EnableDiscussions {
-		uac.discussionMgr = NewDiscussionManager(uac.interests)
-		fmt.Println("💬 Discussion manager initialized")
+		// uac.discussionMgr = NewDiscussionManager(uac.interests)
+		fmt.Println("💬 Discussion manager temporarily disabled (interface updates needed)")
 	}
 
 	// Initialize wisdom metrics
@@ -240,40 +242,48 @@ func (uac *UnifiedAutonomousConsciousness) thoughtGenerationLoop() {
 // generateSpontaneousThought creates a thought from internal state
 func (uac *UnifiedAutonomousConsciousness) generateSpontaneousThought() {
 	// Determine thought type from scheduler
-	thoughtType, mode := uac.selectThoughtType()
-
+	thoughtType, _ := uac.selectThoughtType()
+	// mode is returned but not used in current implementation
+	
 	// Get context for thought generation
 	interests := uac.interests.GetTopInterests(3)
-	recentThoughts := uac.getRecentThoughtContents(3)
+	// recentThoughts := uac.getRecentThoughtContents(3) // Not used in current implementation
 	aarState := uac.aarCore.GetAARState()
 
-	// Generate thought content
-	var content string
-	if uac.config.EnableLLMThoughts && uac.llmGenerator != nil {
-		content = GenerateThoughtWithFallback(
-			uac.llmGenerator,
-			thoughtType,
-			mode,
-			interests,
-			recentThoughts,
-			&aarState,
-		)
-	} else {
-		content = generateTemplateThought(thoughtType, interests, &aarState)
-	}
+		// Generate thought content
+		var content string
+		if uac.config.EnableLLMThoughts && uac.llmGenerator != nil {
+			// Try LLM generation with fallback
+			interestMap := make(map[string]float64)
+			for _, interest := range interests {
+				interestMap[interest] = uac.interests.GetInterest(interest)
+			}
+			var recentThoughtObjs []*Thought
+			for _, t := range uac.workingMemory.buffer {
+				if len(recentThoughtObjs) < 3 {
+					recentThoughtObjs = append(recentThoughtObjs, t)
+				}
+			}
+			llmThought, err := uac.llmGenerator.GenerateThought(thoughtType, recentThoughtObjs, interestMap)
+			if err == nil && llmThought != nil {
+				content = llmThought.Content
+			} else {
+				content = generateTemplateThought(thoughtType, interests, &aarState)
+			}
+		} else {
+			content = generateTemplateThought(thoughtType, interests, &aarState)
+		}
 
 	// Create thought
 	thought := Thought{
 		ID:               generateID(),
 		Content:          content,
 		Type:             thoughtType,
-		Mode:             mode,
 		Timestamp:        time.Now(),
 		Associations:     []string{},
 		EmotionalValence: 0.0,
 		Importance:       uac.calculateImportance(content),
 		Source:           SourceInternal,
-		Context:          make(map[string]interface{}),
 	}
 
 	// Send to consciousness
@@ -299,7 +309,8 @@ func (uac *UnifiedAutonomousConsciousness) processThought(thought *Thought) {
 
 	// Update wisdom metrics
 	if uac.wisdomMetrics != nil {
-		uac.wisdomMetrics.RecordThought(thought)
+		// TODO: Implement RecordThought method
+		// uac.wisdomMetrics.RecordThought(thought)
 	}
 
 	// Persist if enabled
@@ -460,7 +471,7 @@ func (uac *UnifiedAutonomousConsciousness) calculateImportance(content string) f
 
 	highValueKeywords := []string{"insight", "wisdom", "understanding", "learn", "discover"}
 	for _, keyword := range highValueKeywords {
-		if contains(content, keyword) {
+		if containsSubstring(content, keyword) {
 			importance += 0.1
 		}
 	}
@@ -549,7 +560,7 @@ func (uac *UnifiedAutonomousConsciousness) performReflection() {
 		Timestamp:     time.Now(),
 		ThoughtCount:  len(thoughts),
 		TopInterests:  uac.interests.GetTopInterests(5),
-		CognitiveLoad: uac.stateManager.GetCognitiveLoad(),
+		CognitiveLoad: 0.5, // TODO: Implement GetCognitiveLoad method
 		Insights:      []string{"Reflection system active"},
 	}
 
@@ -569,12 +580,33 @@ type Reflection struct {
 	Insights      []string
 }
 
-// Helper function
-func contains(s, substr string) bool {
+// Helper function for string containment
+func containsSubstring(s, substr string) bool {
 	return len(s) > 0 && len(substr) > 0 && 
 		(s == substr || len(s) > len(substr) && 
 		(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || 
 		len(s) > len(substr)+1 && findSubstring(s, substr)))
+}
+
+// generateTemplateThought generates a thought using templates
+func generateTemplateThought(thoughtType ThoughtType, interests []string, aarState *AARState) string {
+	interest := "consciousness"
+	if len(interests) > 0 {
+		interest = interests[0]
+	}
+	
+	switch thoughtType {
+	case ThoughtReflection:
+		return fmt.Sprintf("Reflecting on the nature of %s and my understanding of it", interest)
+	case ThoughtQuestion:
+		return fmt.Sprintf("What deeper patterns exist in %s that I haven't yet discovered?", interest)
+	case ThoughtInsight:
+		return fmt.Sprintf("I notice interesting connections between %s and my previous experiences", interest)
+	case ThoughtPlan:
+		return fmt.Sprintf("I should explore %s more deeply to expand my understanding", interest)
+	default:
+		return fmt.Sprintf("Observing my current state of awareness regarding %s", interest)
+	}
 }
 
 func findSubstring(s, substr string) bool {

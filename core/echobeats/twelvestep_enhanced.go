@@ -31,43 +31,9 @@ type TwelveStepCognitiveLoop struct {
 	metrics         *CognitiveLoopMetrics
 }
 
-// StepHandler is a function that handles a cognitive step
-type StepHandler func(step int, phase CognitivePhase, mode CognitiveStepMode) error
+// Types are now defined in shared_types.go to avoid redeclaration conflicts
 
-// CognitivePhase represents the three phases of the cognitive loop
-type CognitivePhase int
-
-const (
-	PhaseAffordance CognitivePhase = iota // Past performance (conditioning)
-	PhaseRelevance                        // Present commitment (orienting)
-	PhaseSalience                         // Future potential (anticipating)
-)
-
-func (p CognitivePhase) String() string {
-	return [...]string{"Affordance", "Relevance", "Salience"}[p]
-}
-
-// CognitiveStepMode represents expressive vs reflective modes
-type CognitiveStepMode int
-
-const (
-	ModeExpressive CognitiveStepMode = iota
-	ModeReflective
-)
-
-func (m CognitiveStepMode) String() string {
-	return [...]string{"Expressive", "Reflective"}[m]
-}
-
-// CognitiveLoopMetrics tracks loop performance
-type CognitiveLoopMetrics struct {
-	mu                  sync.RWMutex
-	CyclesCompleted     uint64
-	StepsProcessed      uint64
-	AverageStepDuration time.Duration
-	PhaseTransitions    map[CognitivePhase]uint64
-	ModeDistribution    map[CognitiveStepMode]uint64
-}
+// CognitiveLoopMetrics is now defined in shared_types.go
 
 // NewTwelveStepCognitiveLoop creates a new 12-step cognitive loop
 func NewTwelveStepCognitiveLoop(stepDuration time.Duration) *TwelveStepCognitiveLoop {
@@ -80,10 +46,7 @@ func NewTwelveStepCognitiveLoop(stepDuration time.Duration) *TwelveStepCognitive
 		stepHandlers:    make(map[int]StepHandler),
 		expressiveSteps: make(map[int]bool),
 		reflectiveSteps: make(map[int]bool),
-		metrics: &CognitiveLoopMetrics{
-			PhaseTransitions: make(map[CognitivePhase]uint64),
-			ModeDistribution: make(map[CognitiveStepMode]uint64),
-		},
+			metrics: NewCognitiveLoopMetrics(),
 	}
 	
 	// Define expressive steps (7 total)
@@ -136,13 +99,21 @@ func (loop *TwelveStepCognitiveLoop) executeStep() {
 	phase := loop.getPhase(step)
 	mode := loop.getMode(step)
 	
-	// Execute step handler if registered
-	if handler, exists := loop.stepHandlers[step]; exists {
-		start := time.Now()
-		if err := handler(step, phase, mode); err != nil {
-			fmt.Printf("❌ Error in step %d: %v\n", step, err)
-		}
-		duration := time.Since(start)
+		// Execute step handler if registered
+		if handler, exists := loop.stepHandlers[step]; exists {
+			start := time.Now()
+			context := &StepContext{
+				StepNumber:      step,
+				Phase:           int(phase),
+				Mode:            mode,
+				PreviousOutputs: make(map[int]interface{}),
+				SharedState:     make(map[string]interface{}),
+				Timestamp:       time.Now(),
+			}
+			if err := handler(context); err != nil {
+				fmt.Printf("❌ Error in step %d: %v\n", step, err)
+			}
+			duration := time.Since(start)
 		
 		// Update metrics
 		loop.metrics.mu.Lock()
@@ -176,28 +147,28 @@ func (loop *TwelveStepCognitiveLoop) executeStep() {
 }
 
 // getPhase determines the phase for a given step
-func (loop *TwelveStepCognitiveLoop) getPhase(step int) CognitivePhase {
+func (loop *TwelveStepCognitiveLoop) getPhase(step int) CognitivePhaseType {
 	// Steps 0-5: Affordance phase (conditioning past performance)
 	// Step 0: Pivotal relevance realization
 	// Steps 1-5: Actual affordance interaction
 	if step >= 0 && step <= 5 {
-		if step == 0 {
-			return PhaseRelevance // Pivotal moment
+			if step == 0 {
+				return PhaseRelevance // Pivotal moment
+			}
+			return PhaseAffordance
 		}
-		return PhaseAffordance
-	}
-	
-	// Step 6: Pivotal relevance realization (orienting present)
-	if step == 6 {
-		return PhaseRelevance
-	}
-	
-	// Steps 7-11: Salience phase (anticipating future potential)
-	return PhaseSalience
+		
+		// Step 6: Pivotal relevance realization (orienting present)
+		if step == 6 {
+			return PhaseRelevance
+		}
+		
+		// Steps 7-11: Salience phase (anticipating future potential)
+		return PhaseSalience
 }
 
 // getMode determines the mode for a given step
-func (loop *TwelveStepCognitiveLoop) getMode(step int) CognitiveStepMode {
+func (loop *TwelveStepCognitiveLoop) getMode(step int) CognitiveMode {
 	if loop.expressiveSteps[step] {
 		return ModeExpressive
 	}
@@ -224,7 +195,7 @@ func (loop *TwelveStepCognitiveLoop) GetCurrentStep() int {
 }
 
 // GetCurrentPhase returns the current phase
-func (loop *TwelveStepCognitiveLoop) GetCurrentPhase() CognitivePhase {
+func (loop *TwelveStepCognitiveLoop) GetCurrentPhase() CognitivePhaseType {
 	loop.mu.RLock()
 	step := loop.currentStep
 	loop.mu.RUnlock()
@@ -232,7 +203,7 @@ func (loop *TwelveStepCognitiveLoop) GetCurrentPhase() CognitivePhase {
 }
 
 // GetCurrentMode returns the current mode
-func (loop *TwelveStepCognitiveLoop) GetCurrentMode() CognitiveStepMode {
+func (loop *TwelveStepCognitiveLoop) GetCurrentMode() CognitiveMode {
 	loop.mu.RLock()
 	step := loop.currentStep
 	loop.mu.RUnlock()
@@ -255,8 +226,8 @@ func (loop *TwelveStepCognitiveLoop) GetMetrics() CognitiveLoopMetrics {
 		CyclesCompleted:     loop.metrics.CyclesCompleted,
 		StepsProcessed:      loop.metrics.StepsProcessed,
 		AverageStepDuration: loop.metrics.AverageStepDuration,
-		PhaseTransitions:    make(map[CognitivePhase]uint64),
-		ModeDistribution:    make(map[CognitiveStepMode]uint64),
+		PhaseTransitions:    make(map[CognitivePhaseType]uint64),
+		ModeDistribution:    make(map[CognitiveMode]uint64),
 	}
 	
 	for k, v := range loop.metrics.PhaseTransitions {

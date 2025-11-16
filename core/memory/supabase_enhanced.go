@@ -41,6 +41,16 @@ func (sp *SupabasePersistence) IsEnabled() bool {
 	return sp.enabled
 }
 
+// StoreNode stores a memory node (alias for SaveMemoryNode for interface compatibility)
+func (sp *SupabasePersistence) StoreNode(node *MemoryNode) error {
+	return sp.SaveMemoryNode(node)
+}
+
+// StoreEdge stores a memory edge (alias for SaveMemoryEdge for interface compatibility)
+func (sp *SupabasePersistence) StoreEdge(edge *MemoryEdge) error {
+	return sp.SaveMemoryEdge(edge)
+}
+
 // SaveMemoryNode saves a memory node to Supabase
 func (sp *SupabasePersistence) SaveMemoryNode(node *MemoryNode) error {
 	if !sp.enabled {
@@ -57,6 +67,20 @@ func (sp *SupabasePersistence) SaveMemoryNode(node *MemoryNode) error {
 	// _, err := client.From(sp.tableName).Insert(node).Execute()
 	// return err
 
+	return nil
+}
+
+// SaveMemoryEdge saves a memory edge to Supabase
+func (sp *SupabasePersistence) SaveMemoryEdge(edge *MemoryEdge) error {
+	if !sp.enabled {
+		return nil
+	}
+
+	// For now, log the save operation
+	fmt.Printf("💾 Persisting memory edge: %s -> %s (weight: %.2f)\n", 
+		edge.SourceID, edge.TargetID, edge.Weight)
+
+	// In production, this would use the Supabase client
 	return nil
 }
 
@@ -194,13 +218,13 @@ func (sp *SupabasePersistence) ImportMemories(filepath string) error {
 }
 
 // GetMemoryStatistics returns statistics about persisted memories
-func (sp *SupabasePersistence) GetMemoryStatistics() (*MemoryStatistics, error) {
+func (sp *SupabasePersistence) GetMemoryStatistics() (*PersistenceStatistics, error) {
 	if !sp.enabled {
-		return &MemoryStatistics{}, nil
+		return &PersistenceStatistics{}, nil
 	}
 
 	// In production, query Supabase for statistics
-	return &MemoryStatistics{
+	return &PersistenceStatistics{
 		TotalMemories:      0,
 		HighImportance:     0,
 		MediumImportance:   0,
@@ -211,8 +235,8 @@ func (sp *SupabasePersistence) GetMemoryStatistics() (*MemoryStatistics, error) 
 	}, nil
 }
 
-// MemoryStatistics holds statistics about persisted memories
-type MemoryStatistics struct {
+// PersistenceStatistics holds statistics about persisted memories (renamed to avoid conflict with MemoryStatistics in persistent.go)
+type PersistenceStatistics struct {
 	TotalMemories     int
 	HighImportance    int
 	MediumImportance  int
@@ -223,7 +247,7 @@ type MemoryStatistics struct {
 }
 
 // PrintStatistics prints memory statistics
-func (stats *MemoryStatistics) PrintStatistics() {
+func (stats *PersistenceStatistics) PrintStatistics() {
 	fmt.Println("\n╔════════════════════════════════════════════════════════════╗")
 	fmt.Printf("║ Memory Persistence Statistics                              ║\n")
 	fmt.Println("╠════════════════════════════════════════════════════════════╣")

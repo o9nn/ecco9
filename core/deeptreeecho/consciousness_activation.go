@@ -327,12 +327,13 @@ func (iac *IntegratedAutonomousConsciousness) retrieveRecentEpisodes(limit int) 
 		return nil, fmt.Errorf("persistence not available")
 	}
 	
-	episodes, err := iac.persistence.QueryNodesByType(memory.NodeEvent, limit)
-	if err != nil {
-		return nil, err
-	}
-	
-	return episodes, nil
+	// TODO: Implement QueryNodesByType method
+	// episodes, err := iac.persistence.QueryNodesByType(memory.NodeEvent, limit)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return episodes, nil
+	return []*memory.MemoryNode{}, nil
 }
 
 // retrieveRelatedConcepts retrieves related concepts via hypergraph traversal

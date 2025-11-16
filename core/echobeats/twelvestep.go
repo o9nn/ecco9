@@ -55,30 +55,7 @@ type InferenceEngine struct {
 	ProcessFunc func(step int, context *StepContext) error
 }
 
-// StepHandler is a function that handles a specific step in the 12-step loop
-type StepHandler func(context *StepContext) error
-
-// StepContext provides context for step execution
-type StepContext struct {
-	StepNumber      int
-	Phase           int
-	Mode            CognitiveMode
-	PreviousOutputs map[int]interface{}
-	SharedState     map[string]interface{}
-	Timestamp       time.Time
-}
-
-// CognitiveMode represents the current cognitive mode
-type CognitiveMode int
-
-const (
-	ModeExpressive CognitiveMode = iota // External engagement (steps 1-7)
-	ModeReflective                      // Internal processing (steps 8-12)
-)
-
-func (m CognitiveMode) String() string {
-	return [...]string{"Expressive", "Reflective"}[m]
-}
+// StepHandler, StepContext, and CognitiveMode are now defined in shared_types.go
 
 // TwelveStepMetrics tracks metrics for the 12-step loop
 type TwelveStepMetrics struct {
