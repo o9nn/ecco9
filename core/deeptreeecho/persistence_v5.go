@@ -271,39 +271,39 @@ func (p *PersistenceV5) LoadState(ac *AutonomousConsciousnessV4) error {
 	
 	// Restore wisdom
 	p.restoreWisdom(ac.wisdomMetrics, snapshot.WisdomState)
-	// 
-	// // Restore cognitive state
-	// if ac.consciousnessStream != nil && ac.consciousnessStream.cognitiveState != nil && snapshot.CognitiveParams != nil {
-	// 	p.restoreCognitiveState(ac.consciousnessStream.cognitiveState, snapshot.CognitiveParams)
-	// }
-	// 
-	// // Restore consciousness metrics
-	// if ac.consciousnessStream != nil && snapshot.ConsciousnessMetrics != nil {
-	// 	p.restoreConsciousnessMetrics(ac.consciousnessStream, snapshot.ConsciousnessMetrics)
-	// }
-	// 
-	// // Restore AAR state
-	// if ac.aarCore != nil && snapshot.AARState != nil {
-	// 	p.restoreAARState(ac.aarCore, snapshot.AARState)
-	// }
-	// 
-	// // Restore dream state
-	// if ac.dreamTrigger != nil && snapshot.DreamState != nil {
-	// 	p.restoreDreamState(ac.dreamTrigger, ac.loadManager, snapshot.DreamState)
-	// }
-	// 
-	// // Restore hypergraph memory
+	
+	// Restore cognitive state
+	if ac.consciousnessStream != nil && ac.consciousnessStream.cognitiveState != nil && snapshot.CognitiveParams != nil {
+		p.restoreCognitiveState(ac.consciousnessStream.cognitiveState, snapshot.CognitiveParams)
+	}
+	
+	// Restore consciousness metrics
+	if ac.consciousnessStream != nil && snapshot.ConsciousnessMetrics != nil {
+		p.restoreConsciousnessMetrics(ac.consciousnessStream, snapshot.ConsciousnessMetrics)
+	}
+	
+	// Restore AAR state
+	if ac.aarCore != nil && snapshot.AARState != nil {
+		p.restoreAARState(ac.aarCore, snapshot.AARState)
+	}
+	
+	// Restore dream state
+	if ac.dreamTrigger != nil && snapshot.DreamState != nil {
+		p.restoreDreamState(ac.dreamTrigger, ac.loadManager, snapshot.DreamState)
+	}
+	
+	// Restore hypergraph memory - commented out until Persist/Load methods are implemented
 	// if ac.hypergraph != nil {
 	// 	err = ac.hypergraph.Load()
 	// 	if err != nil {
 	// 		fmt.Printf("⚠️  Failed to load hypergraph: %v\n", err)
 	// 	}
 	// }
-	// 
-	// fmt.Printf("✅ Cognitive state restored (saved: %s, uptime: %s, iterations: %d)\n",
-	// 	snapshot.Timestamp.Format("2006-01-02 15:04:05"),
-	// 	snapshot.UpTime,
-	// 	snapshot.Iterations)
+	
+	fmt.Printf("✅ Cognitive state restored (saved: %s, uptime: %s, iterations: %d)\n",
+		snapshot.Timestamp.Format("2006-01-02 15:04:05"),
+		snapshot.UpTime,
+		snapshot.Iterations)
 	
 	return nil
 }

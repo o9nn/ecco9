@@ -1,6 +1,16 @@
 module github.com/EchoCog/echollama
 
-go 1.18
+// Deep Tree Echo requires Go 1.23+ for:
+// - cmp package (comparison utilities)
+// - iter package (iteration support)
+// - log/slog (structured logging)
+// - maps package (map utilities)
+// - math/rand/v2 (improved random number generation)
+// - slices package (slice utilities)
+go 1.23
+
+// Fallback toolchain for systems without Go 1.23
+toolchain go1.23.4
 
 require (
 	github.com/containerd/console v1.0.3

@@ -16,9 +16,9 @@ type LLMThoughtGeneratorV5 struct {
 	mu              sync.RWMutex
 	ctx             context.Context
 	
-	// OpenAI client (using environment variables for API key)
-	apiKey          string
-	baseURL         string
+	// LLM client for unified API access
+	llmClient       *LLMClient
+	provider        string
 	model           string
 	enabled         bool
 	
@@ -54,38 +54,51 @@ type LLMThoughtGeneratorV5 struct {
 // NewLLMThoughtGeneratorV5 creates a new V5 thought generator with real LLM integration
 func NewLLMThoughtGeneratorV5(ctx context.Context) *LLMThoughtGeneratorV5 {
 	// Try to find an available API key in priority order
-	apiKey := ""
-	baseURL := ""
+	var llmClient *LLMClient
+	provider := ""
 	model := ""
 	apiProvider := ""
 	
 	// Priority 1: Check for pre-configured OPENAI_API_KEY (Manus LLM proxy)
 	if key := os.Getenv("OPENAI_API_KEY"); key != "" {
-		apiKey = key
-		baseURL = os.Getenv("OPENAI_BASE_URL")
+		baseURL := os.Getenv("OPENAI_BASE_URL")
 		if baseURL == "" {
 			baseURL = "https://api.openai.com/v1"
 		}
 		model = "gpt-4.1-mini"
+		provider = "openai"
 		apiProvider = "OpenAI/Manus Proxy"
+		llmClient = NewLLMClient(provider, key, baseURL, model)
 	}
 	
-	// Priority 2: Check for ANTHROPIC_API_KEY
-	if apiKey == "" {
+	// Priority 2: Check for OPENROUTER_API_KEY
+	if llmClient == nil {
+		if key := os.Getenv("OPENROUTER_API_KEY"); key != "" {
+			baseURL := "https://openrouter.ai/api/v1"
+			model = "anthropic/claude-3.5-haiku" // Fast and cost-effective via OpenRouter
+			provider = "openrouter"
+			apiProvider = "OpenRouter"
+			llmClient = NewLLMClient(provider, key, baseURL, model)
+		}
+	}
+	
+	// Priority 3: Check for ANTHROPIC_API_KEY
+	if llmClient == nil {
 		if key := os.Getenv("ANTHROPIC_API_KEY"); key != "" {
-			apiKey = key
-			baseURL = "https://api.anthropic.com/v1"
+			baseURL := "https://api.anthropic.com/v1"
 			model = "claude-3-haiku-20240307" // Fast and cost-effective
+			provider = "anthropic"
 			apiProvider = "Anthropic"
+			llmClient = NewLLMClient(provider, key, baseURL, model)
 		}
 	}
 	
 	generator := &LLMThoughtGeneratorV5{
 		ctx:              ctx,
-		apiKey:           apiKey,
-		baseURL:          baseURL,
+		llmClient:        llmClient,
+		provider:         provider,
 		model:            model,
-		enabled:          apiKey != "",
+		enabled:          llmClient != nil,
 		contextWindow:    7,
 		temperature:      0.8, // High creativity
 		maxTokens:        150, // Concise thoughts
@@ -105,7 +118,7 @@ func NewLLMThoughtGeneratorV5(ctx context.Context) *LLMThoughtGeneratorV5 {
 		fmt.Printf("✅ LLM Thought Generator V5: Enabled with %s (model: %s)\n", apiProvider, model)
 	} else {
 		fmt.Println("⚠️  LLM Thought Generator V5: Running in fallback mode (no API key found)")
-		fmt.Println("   Checked: OPENAI_API_KEY, ANTHROPIC_API_KEY")
+		fmt.Println("   Checked: OPENAI_API_KEY, OPENROUTER_API_KEY, ANTHROPIC_API_KEY")
 	}
 	
 	return generator
@@ -204,10 +217,11 @@ func (g *LLMThoughtGeneratorV5) GenerateAutonomousThought(
 	var err error
 	
 	if g.enabled {
-		content, err = g.generateWithOpenAI(thoughtType, context)
+		content, err = g.generateWithLLM(thoughtType, context)
 		if err != nil {
 			g.failedCalls++
 			if g.fallbackEnabled {
+				fmt.Printf("⚠️  LLM generation failed, using fallback: %v\n", err)
 				content = g.generateFallback(thoughtType, context)
 			} else {
 				return nil, fmt.Errorf("LLM generation failed: %w", err)
@@ -287,8 +301,8 @@ func (g *LLMThoughtGeneratorV5) buildRichContext(
 	return strings.Join(parts, "\n")
 }
 
-// generateWithOpenAI calls the OpenAI API to generate thought content
-func (g *LLMThoughtGeneratorV5) generateWithOpenAI(thoughtType ThoughtType, context string) (string, error) {
+// generateWithLLM calls the LLM API to generate thought content
+func (g *LLMThoughtGeneratorV5) generateWithLLM(thoughtType ThoughtType, context string) (string, error) {
 	startTime := time.Now()
 	defer func() {
 		g.llmCalls++
@@ -310,58 +324,25 @@ func (g *LLMThoughtGeneratorV5) generateWithOpenAI(thoughtType ThoughtType, cont
 	// Build full prompt
 	fullPrompt := fmt.Sprintf("%s\n\n%s", context, userPrompt)
 	
-	// Prepare API request
-	requestBody := map[string]interface{}{
-		"model": g.model,
-		"messages": []map[string]string{
-			{"role": "system", "content": g.systemPrompt},
-			{"role": "user", "content": fullPrompt},
-		},
-		"temperature": g.temperature,
-		"max_tokens":  g.maxTokens,
+	// Create LLM request
+	req := LLMRequest{
+		SystemPrompt: g.systemPrompt,
+		UserPrompt:   fullPrompt,
+		Temperature:  g.temperature,
+		MaxTokens:    g.maxTokens,
+		Context:      []Message{}, // No conversation context for autonomous thoughts
 	}
 	
-	requestJSON, err := json.Marshal(requestBody)
+	// Make API call
+	response, err := g.llmClient.Generate(g.ctx, req)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
+		return "", fmt.Errorf("LLM API call failed: %w", err)
 	}
 	
-	// Make API call using curl (simpler than importing full OpenAI SDK)
-	// In production, this would use the OpenAI Go client
-	response, err := g.callOpenAIAPI(requestJSON)
-	if err != nil {
-		return "", err
-	}
-	
-	return response, nil
+	return response.Content, nil
 }
 
-// callOpenAIAPI makes the actual API call with retry logic
-func (g *LLMThoughtGeneratorV5) callOpenAIAPI(requestJSON []byte) (string, error) {
-	// Retry logic with exponential backoff
-	maxRetries := 3
-	var lastErr error
-	
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		if attempt > 0 {
-			// Exponential backoff: 1s, 2s, 4s
-			backoff := time.Duration(1<<uint(attempt-1)) * time.Second
-			time.Sleep(backoff)
-		}
-		
-		// For now, return error to use fallback
-		// TODO: Implement full OpenAI API integration
-		// This requires:
-		// 1. HTTP client with proper headers
-		// 2. Request/response handling
-		// 3. Error parsing
-		// 4. Rate limit handling
-		lastErr = fmt.Errorf("OpenAI API integration pending - using fallback")
-		break
-	}
-	
-	return "", lastErr
-}
+
 
 // generateFallback generates thought using template-based approach
 func (g *LLMThoughtGeneratorV5) generateFallback(thoughtType ThoughtType, context string) string {
