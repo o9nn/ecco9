@@ -44,7 +44,7 @@ func (aar *AARCore) UpdateFromThought(thought Thought) {
 		// Extract potential goals from thought content
 		goals := extractGoals(thought.Content)
 		for _, goal := range goals {
-			if !contains(aar.agent.activeGoals, goal) {
+			if !containsSlice(aar.agent.activeGoals, goal) {
 				aar.AddGoal(goal)
 			}
 		}
@@ -326,7 +326,7 @@ type AARState struct {
 
 // Helper functions
 
-func contains(slice []string, item string) bool {
+func containsSlice(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
 			return true

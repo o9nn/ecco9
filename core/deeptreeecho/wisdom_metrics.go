@@ -16,6 +16,7 @@ type WisdomMetrics struct {
 	IntegrationLevel     float64 // How well connected knowledge is
 	PracticalApplication float64 // Ability to apply knowledge
 	ReflectiveInsight    float64 // Depth of self-awareness
+	ReflectionCapacity   float64 // Capacity for reflective thinking
 	EthicalConsideration float64 // Consideration of values/ethics
 	TemporalPerspective  float64 // Long-term vs short-term thinking
 	

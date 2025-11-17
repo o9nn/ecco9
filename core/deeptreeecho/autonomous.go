@@ -89,12 +89,15 @@ const (
 	ThoughtPlan
 	ThoughtMemory
 	ThoughtImagination
+	ThoughtCurious
+	ThoughtEmotional
 )
 
 func (t ThoughtType) String() string {
 	return [...]string{
 		"Perception", "Reflection", "Reflective", "MetaCognitive",
 		"Question", "Insight", "Plan", "Memory", "Imagination",
+		"Curious", "Emotional",
 	}[t]
 }
 

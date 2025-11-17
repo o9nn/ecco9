@@ -333,20 +333,20 @@ func isNonRetryableError(err error) bool {
 	errStr := err.Error()
 	
 	// Don't retry on authentication errors
-	if contains(errStr, "401") || contains(errStr, "403") {
+	if containsString(errStr, "401") || containsString(errStr, "403") {
 		return true
 	}
 	
 	// Don't retry on invalid request errors
-	if contains(errStr, "400") || contains(errStr, "422") {
+	if containsString(errStr, "400") || containsString(errStr, "422") {
 		return true
 	}
 	
 	return false
 }
 
-// contains checks if a string contains a substring
-func contains(s, substr string) bool {
+// containsString checks if a string contains a substring
+func containsString(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && 
 		(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || 
 		bytes.Contains([]byte(s), []byte(substr))))

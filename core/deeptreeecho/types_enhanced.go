@@ -70,6 +70,11 @@ func (wm *WorkingMemory) Add(thought *Thought) {
 	}
 }
 
+// AddThought is an alias for Add for compatibility
+func (wm *WorkingMemory) AddThought(thought *Thought) {
+	wm.Add(thought)
+}
+
 // focusItem sets the current focus of working memory
 func (wm *WorkingMemory) focusItem(thought *Thought) {
 	wm.mu.Lock()

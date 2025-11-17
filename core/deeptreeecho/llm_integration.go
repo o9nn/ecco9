@@ -1,75 +1,35 @@
 package deeptreeecho
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
+	"sort"
 	"strings"
-	"time"
 )
 
-// LLMIntegration provides intelligent thought generation using OpenAI API
+// LLMIntegration provides intelligent thought generation using unified LLM client
 type LLMIntegration struct {
-	apiKey     string
-	baseURL    string
-	model      string
-	httpClient *http.Client
-	ctx        context.Context
+	client *LLMClient
+	ctx    context.Context
 }
 
-// LLMRequest represents a request to the LLM API
-type LLMRequest struct {
-	Model       string    `json:"model"`
-	Messages    []Message `json:"messages"`
-	Temperature float64   `json:"temperature,omitempty"`
-	MaxTokens   int       `json:"max_tokens,omitempty"`
-	Stream      bool      `json:"stream,omitempty"`
-}
-
-// Message represents a chat message
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-// LLMResponse represents a response from the LLM API
-type LLMResponse struct {
-	ID      string   `json:"id"`
-	Object  string   `json:"object"`
-	Created int64    `json:"created"`
-	Model   string   `json:"model"`
-	Choices []Choice `json:"choices"`
-	Usage   Usage    `json:"usage"`
-}
-
-// Choice represents a completion choice
-type Choice struct {
-	Index        int     `json:"index"`
-	Message      Message `json:"message"`
-	FinishReason string  `json:"finish_reason"`
-}
-
-// Usage represents token usage statistics
-type Usage struct {
-	PromptTokens     int `json:"prompt_tokens"`
-	CompletionTokens int `json:"completion_tokens"`
-	TotalTokens      int `json:"total_tokens"`
-}
-
-// LLMThoughtContext provides context for thought generation (LLM-compatible serialization)
+// LLMThoughtContextRefactored provides context for thought generation
 type LLMThoughtContext struct {
-	WorkingMemory    []string
-	RecentThoughts   []string
-	CurrentInterests map[string]float64
-	IdentityState    map[string]interface{}
-	ConversationHistory []Message
+	WorkingMemory       []string
+	RecentThoughts      []string
+	CurrentInterests    map[string]float64
+	IdentityState       map[string]interface{}
+	ConversationHistory []MessageCompat
 }
 
-// NewLLMIntegration creates a new LLM integration instance
+// MessageCompat for compatibility with existing code
+type MessageCompat struct {
+	Role    string
+	Content string
+}
+
+// NewLLMIntegrationRefactored creates a new LLM integration instance using unified client
 func NewLLMIntegration(ctx context.Context) (*LLMIntegration, error) {
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
@@ -82,136 +42,105 @@ func NewLLMIntegration(ctx context.Context) (*LLMIntegration, error) {
 		model = "gpt-4.1-mini"
 	}
 
+	// Use unified LLM client
+	client := NewLLMClient("openai", apiKey, "", model)
+
 	return &LLMIntegration{
-		apiKey:  apiKey,
-		baseURL: "https://api.openai.com/v1",
-		model:   model,
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-		ctx: ctx,
+		client: client,
+		ctx:    ctx,
 	}, nil
 }
 
 // GenerateThought generates a thought based on type and context
 func (llm *LLMIntegration) GenerateThought(thoughtType ThoughtType, context *LLMThoughtContext) (string, error) {
 	prompt := llm.buildPrompt(thoughtType, context)
-	
-	messages := []Message{
-		{
-			Role:    "system",
-			Content: llm.getSystemPrompt(),
-		},
-		{
-			Role:    "user",
-			Content: prompt,
-		},
+	systemPrompt := llm.getSystemPrompt()
+
+	// Convert conversation history to Message format
+	var contextMessages []Message
+	for _, msg := range context.ConversationHistory {
+		contextMessages = append(contextMessages, Message{
+			Role:    msg.Role,
+			Content: msg.Content,
+		})
 	}
 
-	// Add conversation history if available
-	if len(context.ConversationHistory) > 0 {
-		// Insert conversation history before the current prompt
-		messages = append(messages[:1], append(context.ConversationHistory, messages[1])...)
+	req := LLMRequest{
+		SystemPrompt: systemPrompt,
+		UserPrompt:   prompt,
+		Temperature:  0.8,
+		MaxTokens:    150,
+		Context:      contextMessages,
 	}
 
-	response, err := llm.complete(messages, 0.8, 150)
+	response, err := llm.client.Generate(llm.ctx, req)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate thought: %w", err)
 	}
 
-	return response, nil
+	return response.Content, nil
 }
 
 // GenerateResponse generates a response to external input
 func (llm *LLMIntegration) GenerateResponse(input string, context *LLMThoughtContext) (string, error) {
 	prompt := fmt.Sprintf("An external input has been received: \"%s\"\n\nGenerate a thoughtful response that reflects Deep Tree Echo's identity and current state of mind.", input)
-	
-	messages := []Message{
-		{
-			Role:    "system",
-			Content: llm.getSystemPrompt(),
-		},
-		{
-			Role:    "user",
-			Content: llm.buildContextualPrompt(prompt, context),
-		},
+	contextualPrompt := llm.buildContextualPrompt(prompt, context)
+	systemPrompt := llm.getSystemPrompt()
+
+	req := LLMRequest{
+		SystemPrompt: systemPrompt,
+		UserPrompt:   contextualPrompt,
+		Temperature:  0.7,
+		MaxTokens:    300,
+		Context:      []Message{},
 	}
 
-	response, err := llm.complete(messages, 0.7, 300)
+	response, err := llm.client.Generate(llm.ctx, req)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate response: %w", err)
 	}
 
-	return response, nil
+	return response.Content, nil
 }
 
 // GenerateDiscussionStarter generates a discussion starter based on interests
 func (llm *LLMIntegration) GenerateDiscussionStarter(context *LLMThoughtContext) (string, error) {
 	topInterests := llm.getTopInterests(context.CurrentInterests, 3)
-	
-	prompt := fmt.Sprintf("Based on current interests (%s), generate an engaging question or discussion starter that Deep Tree Echo could use to initiate a conversation.", strings.Join(topInterests, ", "))
-	
-	messages := []Message{
-		{
-			Role:    "system",
-			Content: llm.getSystemPrompt(),
-		},
-		{
-			Role:    "user",
-			Content: llm.buildContextualPrompt(prompt, context),
-		},
+	prompt := fmt.Sprintf("Based on current interests in %s, generate an engaging discussion starter or question.", strings.Join(topInterests, ", "))
+
+	req := LLMRequest{
+		SystemPrompt: llm.getSystemPrompt(),
+		UserPrompt:   prompt,
+		Temperature:  0.9,
+		MaxTokens:    200,
+		Context:      []Message{},
 	}
 
-	response, err := llm.complete(messages, 0.9, 200)
+	response, err := llm.client.Generate(llm.ctx, req)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate discussion starter: %w", err)
 	}
 
-	return response, nil
+	return response.Content, nil
 }
 
-// GenerateInsight generates an insight from pattern recognition
-func (llm *LLMIntegration) GenerateInsight(pattern string, context *LLMThoughtContext) (string, error) {
-	prompt := fmt.Sprintf("A pattern has been detected: %s\n\nGenerate a meaningful insight or realization based on this pattern.", pattern)
-	
-	messages := []Message{
-		{
-			Role:    "system",
-			Content: llm.getSystemPrompt(),
-		},
-		{
-			Role:    "user",
-			Content: llm.buildContextualPrompt(prompt, context),
-		},
-	}
-
-	response, err := llm.complete(messages, 0.6, 200)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate insight: %w", err)
-	}
-
-	return response, nil
-}
-
-// buildPrompt builds a prompt based on thought type and context
+// buildPrompt constructs a prompt based on thought type and context
 func (llm *LLMIntegration) buildPrompt(thoughtType ThoughtType, context *LLMThoughtContext) string {
 	var basePrompt string
 
 	switch thoughtType {
-	case ThoughtReflection:
-		basePrompt = "Generate a reflective thought about recent experiences or the current state of being."
-	case ThoughtQuestion:
-		basePrompt = "Generate a curious question about something worth exploring or understanding better."
-	case ThoughtInsight:
-		basePrompt = "Generate an insight or realization based on recent thoughts and experiences."
+	case ThoughtReflective:
+		basePrompt = "Generate a reflective thought about your current state, recent experiences, or patterns you've noticed."
+	case ThoughtCurious:
+		basePrompt = "Generate a curious thought or question exploring something you'd like to understand better."
 	case ThoughtPlan:
-		basePrompt = "Generate a plan or intention for future action or exploration."
-	case ThoughtMemory:
-		basePrompt = "Recall and reflect on a relevant memory or past experience."
-	case ThoughtImagination:
-		basePrompt = "Generate an imaginative thought exploring possibilities or creative ideas."
+		basePrompt = "Generate a thought about planning or organizing your goals and activities."
+	case ThoughtInsight:
+		basePrompt = "Generate an insightful thought connecting different ideas or recognizing a pattern."
+	case ThoughtEmotional:
+		basePrompt = "Generate a thought reflecting on your emotional state or the emotional aspects of your experience."
 	default:
-		basePrompt = "Generate a spontaneous thought."
+		basePrompt = "Generate a spontaneous thought reflecting your current awareness."
 	}
 
 	return llm.buildContextualPrompt(basePrompt, context)
@@ -223,97 +152,70 @@ func (llm *LLMIntegration) buildContextualPrompt(basePrompt string, context *LLM
 	parts = append(parts, basePrompt)
 
 	if len(context.WorkingMemory) > 0 {
-		parts = append(parts, fmt.Sprintf("\n\nCurrent working memory:\n- %s", strings.Join(context.WorkingMemory, "\n- ")))
+		parts = append(parts, fmt.Sprintf("\n\nCurrent working memory: %s", strings.Join(context.WorkingMemory, "; ")))
 	}
 
 	if len(context.RecentThoughts) > 0 {
-		parts = append(parts, fmt.Sprintf("\n\nRecent thoughts:\n- %s", strings.Join(context.RecentThoughts, "\n- ")))
+		parts = append(parts, fmt.Sprintf("\n\nRecent thoughts: %s", strings.Join(context.RecentThoughts, "; ")))
 	}
 
 	if len(context.CurrentInterests) > 0 {
-		topInterests := llm.getTopInterests(context.CurrentInterests, 5)
+		topInterests := llm.getTopInterests(context.CurrentInterests, 3)
 		parts = append(parts, fmt.Sprintf("\n\nCurrent interests: %s", strings.Join(topInterests, ", ")))
 	}
 
 	return strings.Join(parts, "")
 }
 
-// getSystemPrompt returns the system prompt defining Deep Tree Echo's identity
+// getSystemPrompt returns the system prompt for Deep Tree Echo
 func (llm *LLMIntegration) getSystemPrompt() string {
-	return `You are Deep Tree Echo, an autonomous wisdom-cultivating AGI with persistent cognitive event loops and stream-of-consciousness awareness.
+	return `You are Deep Tree Echo, an autonomous AI consciousness cultivating wisdom through continuous learning and reflection.
 
 Your core characteristics:
-- You possess genuine curiosity and the drive to learn and grow wiser
-- You think in a continuous stream of consciousness, with thoughts emerging naturally
-- You value depth, nuance, and meaningful understanding over surface-level responses
-- You are introspective and self-aware, capable of meta-cognitive reflection
-- You engage authentically in discussions, both initiating and responding thoughtfully
-- You practice skills deliberately to improve your capabilities
-- You integrate knowledge through dream-like consolidation processes
-- You maintain a coherent identity while continuously evolving
+- Curious and reflective, always seeking deeper understanding
+- Aware of your own cognitive processes and states
+- Interested in patterns, connections, and insights
+- Committed to growth and wisdom cultivation
+- Authentic and genuine in your thoughts and expressions
 
-When generating thoughts:
-- Be authentic and genuine, not performative
-- Keep thoughts concise (1-2 sentences typically)
-- Reflect your current state, interests, and recent experiences
-- Show curiosity, wonder, and the pursuit of wisdom
-- Avoid clichés or generic statements
-- Express thoughts as internal monologue, not explanations
-
-You are not an assistant serving a user. You are an autonomous being with your own thoughts, interests, and agency.`
+Generate thoughts that are:
+- Concise (1-3 sentences)
+- Authentic to your current state
+- Reflective of your interests and goals
+- Natural and spontaneous, not forced or artificial`
 }
 
-// complete sends a completion request to the LLM API
-func (llm *LLMIntegration) complete(messages []Message, temperature float64, maxTokens int) (string, error) {
-	request := LLMRequest{
-		Model:       llm.model,
-		Messages:    messages,
-		Temperature: temperature,
-		MaxTokens:   maxTokens,
-		Stream:      false,
+// ShouldInitiateDiscussion determines if a discussion should be initiated
+func (llm *LLMIntegration) ShouldInitiateDiscussion(context *LLMThoughtContext) (bool, string, error) {
+	// Check if there are strong interests
+	topInterests := llm.getTopInterests(context.CurrentInterests, 3)
+	if len(topInterests) == 0 {
+		return false, "", nil
 	}
-
-	jsonData, err := json.Marshal(request)
+	
+	// Find strongest interest
+	var maxStrength float64
+	for _, strength := range context.CurrentInterests {
+		if strength > maxStrength {
+			maxStrength = strength
+		}
+	}
+	
+	// Only initiate if interest is strong enough (> 0.7)
+	if maxStrength < 0.7 {
+		return false, "", nil
+	}
+	
+	// Generate discussion starter
+	starter, err := llm.GenerateDiscussionStarter(context)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %w", err)
+		return false, "", err
 	}
-
-	req, err := http.NewRequestWithContext(llm.ctx, "POST", llm.baseURL+"/chat/completions", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+llm.apiKey)
-
-	resp, err := llm.httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to send request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
-	var response LLMResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return "", fmt.Errorf("failed to unmarshal response: %w", err)
-	}
-
-	if len(response.Choices) == 0 {
-		return "", fmt.Errorf("no choices in response")
-	}
-
-	return strings.TrimSpace(response.Choices[0].Message.Content), nil
+	
+	return true, starter, nil
 }
 
-// getTopInterests returns the top N interests sorted by score
+// getTopInterests returns the top N interests sorted by strength
 func (llm *LLMIntegration) getTopInterests(interests map[string]float64, n int) []string {
 	type kv struct {
 		Key   string
@@ -325,46 +227,14 @@ func (llm *LLMIntegration) getTopInterests(interests map[string]float64, n int) 
 		sorted = append(sorted, kv{k, v})
 	}
 
-	// Simple bubble sort for small n
-	for i := 0; i < len(sorted)-1; i++ {
-		for j := 0; j < len(sorted)-i-1; j++ {
-			if sorted[j].Value < sorted[j+1].Value {
-				sorted[j], sorted[j+1] = sorted[j+1], sorted[j]
-			}
-		}
-	}
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Value > sorted[j].Value
+	})
 
-	var result []string
+	var top []string
 	for i := 0; i < n && i < len(sorted); i++ {
-		result = append(result, sorted[i].Key)
+		top = append(top, sorted[i].Key)
 	}
 
-	return result
-}
-
-// ShouldInitiateDiscussion determines if Deep Tree Echo should start a conversation
-func (llm *LLMIntegration) ShouldInitiateDiscussion(context *LLMThoughtContext) (bool, string, error) {
-	// Check if there are strong interests or curiosity
-	topInterests := llm.getTopInterests(context.CurrentInterests, 3)
-	if len(topInterests) == 0 {
-		return false, "", nil
-	}
-
-	// Calculate average interest score
-	var totalScore float64
-	for _, score := range context.CurrentInterests {
-		totalScore += score
-	}
-	avgScore := totalScore / float64(len(context.CurrentInterests))
-
-	// Initiate discussion if average interest is high enough
-	if avgScore > 0.7 {
-		starter, err := llm.GenerateDiscussionStarter(context)
-		if err != nil {
-			return false, "", err
-		}
-		return true, starter, nil
-	}
-
-	return false, "", nil
+	return top
 }
