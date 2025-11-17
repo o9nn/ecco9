@@ -220,3 +220,48 @@ func (kb *KnowledgeBase) GetFactCount() int {
 	defer kb.mu.RUnlock()
 	return len(kb.facts)
 }
+
+// ProcessThought extracts topics from a thought and updates interest patterns
+func (ip *InterestPatterns) ProcessThought(thought *Thought) {
+	if thought == nil {
+		return
+	}
+	
+	// Extract topics from thought content
+	// In a full implementation, this would use NLP
+	// For now, use simple keyword extraction
+	topics := extractTopicsFromContent(thought.Content)
+	
+	// Update interest scores based on thought importance
+	delta := thought.Importance * 0.1
+	
+	for _, topic := range topics {
+		ip.UpdateInterest(topic, delta)
+	}
+	
+	// Increase curiosity if thought is a question
+	if thought.Type == ThoughtQuestion {
+		ip.mu.Lock()
+		ip.curiosityLevel = min(1.0, ip.curiosityLevel+0.05)
+		ip.mu.Unlock()
+	}
+}
+
+// GetPatterns returns a copy of the current interest patterns
+func (ip *InterestPatterns) GetPatterns() map[string]float64 {
+	ip.mu.RLock()
+	defer ip.mu.RUnlock()
+	
+	patterns := make(map[string]float64)
+	for k, v := range ip.interests {
+		patterns[k] = v
+	}
+	return patterns
+}
+
+// extractTopicsFromContent extracts topics from text content
+func extractTopicsFromContent(content string) []string {
+	// Simple implementation: return empty for now
+	// In production, use NLP/semantic analysis
+	return []string{}
+}

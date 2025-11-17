@@ -174,10 +174,4 @@ func (iac *IntegratedAutonomousConsciousness) pruneWorkingMemory(threshold float
 	}
 }
 
-// Helper function for integer minimum
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
+// minInt function moved to utils.go

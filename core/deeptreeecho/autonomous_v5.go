@@ -172,7 +172,7 @@ func NewAutonomousConsciousnessV5(name string) *AutonomousConsciousnessV5 {
 			ac.hypergraph = memory.NewHypergraphMemory(persistence)
 			
 			// V5: Initialize complete persistence
-			ac.persistenceV5 = NewPersistenceV5(persistence, ac.identity.name)
+			ac.persistenceV5 = NewPersistenceV5(persistence, ac.identity.Name)
 			
 			fmt.Println("✅ Persistence layer enabled with Supabase")
 		}
@@ -193,7 +193,9 @@ func NewAutonomousConsciousnessV5(name string) *AutonomousConsciousnessV5 {
 	)
 
 	// Initialize discussion manager
-	ac.discussionMgr = NewDiscussionManagerV4(ac, ac.interests).DiscussionManager
+	// TODO: Fix type mismatch between V4 and V5
+	// ac.discussionMgr = NewDiscussionManagerV4(ac, ac.interests).DiscussionManager
+	fmt.Println("ℹ️  Discussion manager temporarily disabled (V4/V5 interface mismatch)")
 
 	// Initialize default skills
 	ac.initializeDefaultSkills()
@@ -313,12 +315,7 @@ func (ac *AutonomousConsciousnessV5) generateAutonomousThought() {
 	thoughtType := ac.determineThoughtType()
 
 	// Get current interests
-	ac.interests.mu.RLock()
-	interests := make(map[string]float64)
-	for k, v := range ac.interests.patterns {
-		interests[k] = v
-	}
-	ac.interests.mu.RUnlock()
+	interests := ac.interests.GetPatterns()
 
 	// Get working memory
 	ac.workingMemory.mu.RLock()
@@ -352,9 +349,8 @@ func (ac *AutonomousConsciousnessV5) determineThoughtType() ThoughtType {
 	// Get orchestrator guidance
 	consciousnessControl := ac.orchestrator.GetConsciousnessControl()
 	
-	consciousnessControl.mu.RLock()
-	focus := consciousnessControl.currentFocus
-	consciousnessControl.mu.RUnlock()
+	// Get current focus using accessor method
+	focus := consciousnessControl.GetCurrentFocus()
 
 	// Map focus to thought type
 	switch focus {
@@ -619,7 +615,15 @@ func (ac *AutonomousConsciousnessV5) initializeDefaultSkills() {
 	}
 
 	for _, skillName := range defaultSkills {
-		ac.skills.RegisterSkill(skillName)
+		skill := &Skill{
+			ID:          skillName,
+			Name:        skillName,
+			Category:    "cognitive",
+			Proficiency: 0.3, // Start with basic proficiency
+			LastPracticed: time.Now(),
+			PracticeCount: 0,
+		}
+		ac.skills.RegisterSkill(skill)
 	}
 }
 

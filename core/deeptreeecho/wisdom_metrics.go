@@ -396,3 +396,8 @@ func (wm *WisdomMetrics) GetPracticalApplication() float64 {
 	defer wm.mu.RUnlock()
 	return wm.PracticalApplication
 }
+
+// UpdateFromThought is an alias for RecordThought for compatibility
+func (wm *WisdomMetrics) UpdateFromThought(thought *Thought) {
+	wm.RecordThought(thought)
+}

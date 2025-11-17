@@ -45,6 +45,13 @@ type ConsciousnessControl struct {
 	stimulusReceptivity float64
 }
 
+// GetCurrentFocus returns the current focus safely
+func (cc *ConsciousnessControl) GetCurrentFocus() string {
+	cc.mu.RLock()
+	defer cc.mu.RUnlock()
+	return cc.currentFocus
+}
+
 // LearningControl manages learning processes based on cognitive step
 type LearningControl struct {
 	mu                sync.RWMutex

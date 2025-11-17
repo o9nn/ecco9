@@ -170,7 +170,7 @@ func (g *LLMThoughtGeneratorV5) initializeThoughtPrompts() {
 		"Consider how you're approaching understanding. What is your cognitive strategy?",
 	}
 	
-	g.thoughtPrompts[ThoughtIntention] = []string{
+	g.thoughtPrompts[ThoughtPlan] = []string{
 		"What do you want to explore or accomplish? What draws your attention?",
 		"What goals or intentions arise from your current understanding?",
 		"What direction do you want your thinking to take?",
@@ -280,7 +280,7 @@ func (g *LLMThoughtGeneratorV5) buildRichContext(
 	if wisdomMetrics != nil {
 		wisdomMetrics.mu.RLock()
 		parts = append(parts, fmt.Sprintf("Wisdom: depth=%.2f, breadth=%.2f, integration=%.2f",
-			wisdomMetrics.depth, wisdomMetrics.breadth, wisdomMetrics.integration))
+			wisdomMetrics.KnowledgeDepth, wisdomMetrics.KnowledgeBreadth, wisdomMetrics.IntegrationLevel))
 		wisdomMetrics.mu.RUnlock()
 	}
 	

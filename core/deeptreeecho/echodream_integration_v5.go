@@ -44,8 +44,8 @@ type ExperienceCluster struct {
 	Importance       float64
 }
 
-// KnowledgeNode represents consolidated knowledge
-type KnowledgeNode struct {
+// DreamKnowledgeNode represents consolidated knowledge from dreams
+type DreamKnowledgeNode struct {
 	ID               string
 	Content          string
 	Source           []string // IDs of source experiences
@@ -105,7 +105,7 @@ func (edi *EchoDreamIntegrationV5) IntegrateKnowledge() error {
 	fmt.Printf("   🔗 Identified %d experience clusters\n", len(clusters))
 	
 	// Step 3: Consolidate each cluster into knowledge
-	knowledgeNodes := make([]*KnowledgeNode, 0)
+	knowledgeNodes := make([]*DreamKnowledgeNode, 0)
 	for _, cluster := range clusters {
 		node := edi.consolidateCluster(cluster)
 		if node != nil {
@@ -211,7 +211,7 @@ func (edi *EchoDreamIntegrationV5) clusterExperiences(experiences []*Thought) []
 }
 
 // consolidateCluster consolidates a cluster of experiences into knowledge
-func (edi *EchoDreamIntegrationV5) consolidateCluster(cluster *ExperienceCluster) *KnowledgeNode {
+func (edi *EchoDreamIntegrationV5) consolidateCluster(cluster *ExperienceCluster) *DreamKnowledgeNode {
 	if cluster == nil || len(cluster.Experiences) == 0 {
 		return nil
 	}
@@ -231,7 +231,7 @@ func (edi *EchoDreamIntegrationV5) consolidateCluster(cluster *ExperienceCluster
 		sources[i] = exp.ID
 	}
 	
-	node := &KnowledgeNode{
+	node := &DreamKnowledgeNode{
 		ID:          fmt.Sprintf("knowledge_%d", time.Now().UnixNano()),
 		Content:     content,
 		Source:      sources,
@@ -245,7 +245,7 @@ func (edi *EchoDreamIntegrationV5) consolidateCluster(cluster *ExperienceCluster
 }
 
 // extractWisdom extracts wisdom insights from knowledge nodes
-func (edi *EchoDreamIntegrationV5) extractWisdom(nodes []*KnowledgeNode, experiences []*Thought) []*WisdomInsight {
+func (edi *EchoDreamIntegrationV5) extractWisdom(nodes []*DreamKnowledgeNode, experiences []*Thought) []*WisdomInsight {
 	insights := make([]*WisdomInsight, 0)
 	
 	// Look for patterns across knowledge nodes
@@ -274,40 +274,45 @@ func (edi *EchoDreamIntegrationV5) extractWisdom(nodes []*KnowledgeNode, experie
 }
 
 // integrateIntoMemory integrates knowledge nodes into hypergraph
-func (edi *EchoDreamIntegrationV5) integrateIntoMemory(nodes []*KnowledgeNode, insights []*WisdomInsight) error {
+func (edi *EchoDreamIntegrationV5) integrateIntoMemory(nodes []*DreamKnowledgeNode, insights []*WisdomInsight) error {
 	if edi.hypergraph == nil {
 		return fmt.Errorf("hypergraph memory not initialized")
 	}
 	
 	// Add knowledge nodes to hypergraph
 	for _, node := range nodes {
-		// Create memory node
-		memNode := &memory.Node{
-			ID:        node.ID,
-			Type:      memory.NodeTypeKnowledge,
-			Content:   node.Content,
-			Metadata: map[string]interface{}{
-				"confidence": node.Confidence,
-				"wisdom":     node.Wisdom,
-				"created_at": node.CreatedAt,
-				"sources":    node.Source,
-			},
-		}
+			// Create memory node
+			memNode := &memory.MemoryNode{
+				ID:        node.ID,
+				Type:      memory.NodeConcept, // Use NodeConcept for knowledge
+				Content:   node.Content,
+				Metadata: map[string]interface{}{
+					"confidence": node.Confidence,
+					"wisdom":     node.Wisdom,
+					"created_at": node.CreatedAt,
+					"sources":    node.Source,
+				},
+				CreatedAt: node.CreatedAt,
+				UpdatedAt: time.Now(),
+				Importance: node.Wisdom,
+			}
 		
 		err := edi.hypergraph.AddNode(memNode)
 		if err != nil {
 			fmt.Printf("⚠️  Failed to add knowledge node: %v\n", err)
 		}
 		
-		// Create edges to source experiences
-		for _, sourceID := range node.Source {
-			edge := &memory.Edge{
-				ID:       fmt.Sprintf("edge_%s_%s", node.ID, sourceID),
-				Source:   sourceID,
-				Target:   node.ID,
-				Type:     memory.EdgeTypeConsolidation,
-				Weight:   node.Confidence,
-			}
+			// Create edges to source experiences
+			for _, sourceID := range node.Source {
+				edge := &memory.MemoryEdge{
+					ID:       fmt.Sprintf("edge_%s_%s", node.ID, sourceID),
+					SourceID: sourceID,
+					TargetID: node.ID,
+					Type:     "consolidation", // Custom edge type
+					Weight:   node.Confidence,
+					Metadata: make(map[string]interface{}),
+					CreatedAt: time.Now(),
+				}
 			
 			err := edi.hypergraph.AddEdge(edge)
 			if err != nil {
@@ -316,18 +321,21 @@ func (edi *EchoDreamIntegrationV5) integrateIntoMemory(nodes []*KnowledgeNode, i
 		}
 	}
 	
-	// Add wisdom insights as special nodes
-	for _, insight := range insights {
-		insightNode := &memory.Node{
-			ID:      fmt.Sprintf("wisdom_%d", time.Now().UnixNano()),
-			Type:    memory.NodeTypeWisdom,
-			Content: insight.Insight,
-			Metadata: map[string]interface{}{
-				"depth":       insight.Depth,
-				"breadth":     insight.Breadth,
-				"integration": insight.Integration,
-				"sources":     insight.SourceExperiences,
-			},
+		// Add wisdom insights as special nodes
+		for _, insight := range insights {
+			insightNode := &memory.MemoryNode{
+				ID:      fmt.Sprintf("wisdom_%d", time.Now().UnixNano()),
+				Type:    memory.NodePattern, // Use NodePattern for wisdom insights
+				Content: insight.Insight,
+				Metadata: map[string]interface{}{
+					"depth":       insight.Depth,
+					"breadth":     insight.Breadth,
+					"integration": insight.Integration,
+					"sources":     insight.SourceExperiences,
+				},
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+				Importance: insight.Depth,
 		}
 		
 		err := edi.hypergraph.AddNode(insightNode)
@@ -350,32 +358,32 @@ func (edi *EchoDreamIntegrationV5) updateWisdomMetrics(insights []*WisdomInsight
 	
 	totalGain := 0.0
 	
-	for _, insight := range insights {
-		// Increase depth
-		depthGain := insight.Depth * 0.1
-		edi.wisdomMetrics.depth += depthGain
-		
-		// Increase breadth
-		breadthGain := insight.Breadth * 0.1
-		edi.wisdomMetrics.breadth += breadthGain
-		
-		// Increase integration
-		integrationGain := insight.Integration * 0.1
-		edi.wisdomMetrics.integration += integrationGain
+		for _, insight := range insights {
+			// Increase depth
+			depthGain := insight.Depth * 0.1
+			edi.wisdomMetrics.KnowledgeDepth += depthGain
+			
+			// Increase breadth
+			breadthGain := insight.Breadth * 0.1
+			edi.wisdomMetrics.KnowledgeBreadth += breadthGain
+			
+			// Increase integration
+			integrationGain := insight.Integration * 0.1
+			edi.wisdomMetrics.IntegrationLevel += integrationGain
 		
 		totalGain += depthGain + breadthGain + integrationGain
 	}
 	
-	// Increase reflection depth (we're reflecting during rest)
-	edi.wisdomMetrics.reflectionDepth += 0.05
-	
-	// Recalculate total wisdom
-	edi.wisdomMetrics.totalWisdom = (
-		edi.wisdomMetrics.depth +
-		edi.wisdomMetrics.breadth +
-		edi.wisdomMetrics.integration +
-		edi.wisdomMetrics.coherence +
-		edi.wisdomMetrics.reflectionDepth) / 5.0
+		// Increase reflection depth (we're reflecting during rest)
+		edi.wisdomMetrics.ReflectiveInsight += 0.05
+		
+		// Recalculate total wisdom score
+		edi.wisdomMetrics.WisdomScore = (
+			edi.wisdomMetrics.KnowledgeDepth +
+			edi.wisdomMetrics.KnowledgeBreadth +
+			edi.wisdomMetrics.IntegrationLevel +
+			edi.wisdomMetrics.PracticalApplication +
+			edi.wisdomMetrics.ReflectiveInsight) / 5.0
 	
 	return totalGain
 }
@@ -401,7 +409,7 @@ func (edi *EchoDreamIntegrationV5) clearWorkingMemory() {
 func (edi *EchoDreamIntegrationV5) extractPatterns(content string) []string {
 	// Simple pattern extraction
 	// In production, use NLP and semantic analysis
-	return []string{content[:min(20, len(content))]}
+	return []string{content[:minInt(20, len(content))]}
 }
 
 func (edi *EchoDreamIntegrationV5) areSimilar(t1, t2 *Thought) bool {
@@ -468,14 +476,14 @@ func (edi *EchoDreamIntegrationV5) calculateWisdomValue(cluster *ExperienceClust
 	return (depthScore + integrationScore + emotionalScore) / 3.0
 }
 
-func (edi *EchoDreamIntegrationV5) formulateInsight(node *KnowledgeNode) string {
+func (edi *EchoDreamIntegrationV5) formulateInsight(node *DreamKnowledgeNode) string {
 	// Formulate wisdom insight
 	// In production, use LLM to generate profound insights
 	
 	return fmt.Sprintf("Insight: %s (confidence: %.2f)", node.Content, node.Confidence)
 }
 
-func (edi *EchoDreamIntegrationV5) extractMetaPattern(nodes []*KnowledgeNode) *WisdomInsight {
+func (edi *EchoDreamIntegrationV5) extractMetaPattern(nodes []*DreamKnowledgeNode) *WisdomInsight {
 	// Look for patterns across knowledge nodes
 	// This is wisdom about wisdom - meta-cognition
 	
@@ -513,12 +521,7 @@ func (edi *EchoDreamIntegrationV5) GetMetrics() map[string]interface{} {
 
 // Utility functions
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
+// min function moved to utils.go as minInt
 
 func abs(x float64) float64 {
 	if x < 0 {
