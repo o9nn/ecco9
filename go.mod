@@ -12,7 +12,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.9.0
 	github.com/x448/float16 v0.8.4
-	golang.org/x/sync v0.12.0
+	golang.org/x/sync v0.1.0
 )
 
 require (
@@ -24,7 +24,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/mattn/go-runewidth v0.0.14
 	github.com/nlpodyssey/gopickle v0.3.0
-	github.com/pdevine/tensor v0.0.0-20240510204454-f88f4562727c
+	// github.com/pdevine/tensor v0.0.0-20240510204454-f88f4562727c
 	github.com/supabase-community/postgrest-go v0.0.11
 	github.com/supabase-community/supabase-go v0.0.4
 	golang.org/x/image v0.16.0
