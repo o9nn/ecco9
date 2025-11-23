@@ -15,9 +15,9 @@ type TwelveStepEchoBeats struct {
 	cancel  context.CancelFunc
 	
 	// Three concurrent inference engines
-	engine1 *InferenceEngine // Expressive-Reflective cycle
-	engine2 *InferenceEngine // Perception-Action cycle
-	engine3 *InferenceEngine // Learning-Integration cycle
+	engine1 *TwelveStepInferenceEngine // Expressive-Reflective cycle
+	engine2 *TwelveStepInferenceEngine // Perception-Action cycle
+	engine3 *TwelveStepInferenceEngine // Learning-Integration cycle
 	
 	// 12-step loop state
 	currentStep int
@@ -45,8 +45,9 @@ type TwelveStepEchoBeats struct {
 	cycleCount int
 }
 
-// InferenceEngine represents one of the three concurrent inference engines
-type InferenceEngine struct {
+// TwelveStepInferenceEngine represents one of the three concurrent inference engines
+// in the 12-step cognitive loop (simplified version)
+type TwelveStepInferenceEngine struct {
 	ID          int
 	Name        string
 	Purpose     string
@@ -106,21 +107,21 @@ func NewTwelveStepEchoBeats(ctx context.Context) *TwelveStepEchoBeats {
 
 // initializeEngines creates the three concurrent inference engines
 func (tseb *TwelveStepEchoBeats) initializeEngines() {
-	tseb.engine1 = &InferenceEngine{
+	tseb.engine1 = &TwelveStepInferenceEngine{
 		ID:      1,
 		Name:    "Expressive-Reflective Engine",
 		Purpose: "Balances external expression with internal reflection",
 		Active:  true,
 	}
 	
-	tseb.engine2 = &InferenceEngine{
+	tseb.engine2 = &TwelveStepInferenceEngine{
 		ID:      2,
 		Name:    "Perception-Action Engine",
 		Purpose: "Processes perceptions and generates actions",
 		Active:  true,
 	}
 	
-	tseb.engine3 = &InferenceEngine{
+	tseb.engine3 = &TwelveStepInferenceEngine{
 		ID:      3,
 		Name:    "Learning-Integration Engine",
 		Purpose: "Learns from experiences and integrates knowledge",
@@ -247,7 +248,7 @@ func (tseb *TwelveStepEchoBeats) executeNextStep() {
 }
 
 // runEngine runs an inference engine concurrently
-func (tseb *TwelveStepEchoBeats) runEngine(engine *InferenceEngine) {
+func (tseb *TwelveStepEchoBeats) runEngine(engine *TwelveStepInferenceEngine) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	
@@ -465,7 +466,7 @@ func (tseb *TwelveStepEchoBeats) GetStatus() map[string]interface{} {
 	return map[string]interface{}{
 		"running":      tseb.running,
 		"current_step": tseb.currentStep + 1,
-		"current_mode": tseb.currentMode.String(),
+		"current_mode": string(tseb.currentMode),
 		"cycle_count":  tseb.cycleCount,
 		"phase":        tseb.getPhase(tseb.currentStep + 1),
 	}

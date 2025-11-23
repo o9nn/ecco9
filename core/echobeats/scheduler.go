@@ -19,7 +19,7 @@ type EchoBeats struct {
 	eventQueue      *PriorityQueue
 	
 	// Cognitive state
-	state           CognitiveState
+	state           SchedulerState
 	
 	// Wake/Rest cycle management
 	cycleManager    *CycleManager
@@ -38,11 +38,11 @@ type EchoBeats struct {
 	heartbeat       *time.Ticker
 }
 
-// CognitiveState represents the current cognitive state
-type CognitiveState int
+// SchedulerState represents the scheduler's current state
+type SchedulerState int
 
 const (
-	StateAsleep CognitiveState = iota
+	StateAsleep SchedulerState = iota
 	StateWaking
 	StateAwake
 	StateThinking
@@ -50,7 +50,7 @@ const (
 	StateDreaming
 )
 
-func (s CognitiveState) String() string {
+func (s SchedulerState) String() string {
 	return [...]string{"Asleep", "Waking", "Awake", "Thinking", "Resting", "Dreaming"}[s]
 }
 

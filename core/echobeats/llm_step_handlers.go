@@ -238,7 +238,7 @@ func (loop *TwelveStepCognitiveLoop) processCurrentStep() {
 		// Pivotal relevance realization (step 6)
 		output, err := loop.handler.ProcessRelevanceStep(6, loop.presentFocus)
 		if err != nil {
-			fmt.Printf("⚠️  Step 6 (Relevance) error: %v\n", step, err)
+			fmt.Printf("⚠️  Step 6 (Relevance) error: %v\n", err)
 			return
 		}
 		loop.relevanceOutputs[6] = output

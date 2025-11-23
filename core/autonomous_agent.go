@@ -13,7 +13,9 @@ import (
 	"github.com/EchoCog/echollama/core/deeptreeecho"
 	"github.com/EchoCog/echollama/core/echobeats"
 	"github.com/EchoCog/echollama/core/echodream"
+	"github.com/EchoCog/echollama/core/echoself"
 	"github.com/EchoCog/echollama/core/llm"
+	"github.com/EchoCog/echollama/core/wisdom"
 )
 
 // AutonomousAgent is the master coordinator for Deep Tree Echo
@@ -29,6 +31,10 @@ type AutonomousAgent struct {
 	streamOfConsc       *consciousness.StreamOfConsciousness
 	dreamCycle          *echodream.DreamCycleIntegration
 	goalOrchestrator    *deeptreeecho.GoalOrchestrator
+	
+	// Echo9 cognitive enhancements
+	wisdomTracker       *wisdom.SevenDimensionalWisdom
+	coherenceTracker    *echoself.CoherenceTracker
 	
 	// LLM provider
 	llmProvider         llm.LLMProvider
@@ -120,6 +126,14 @@ func (agent *AutonomousAgent) initializeSubsystems() {
 		agent.wisdomDomains,
 	)
 	fmt.Println("   ✓ Goal orchestrator initialized")
+	
+	// Seven-dimensional wisdom tracker (Echo9)
+	agent.wisdomTracker = wisdom.NewSevenDimensionalWisdom()
+	fmt.Println("   ✓ Seven-dimensional wisdom tracker initialized")
+	
+	// Echoself coherence tracker (Echo9)
+	agent.coherenceTracker = echoself.NewCoherenceTracker(agent.coreValues)
+	fmt.Println("   ✓ Echoself coherence tracker initialized")
 }
 
 // wireSubsystems connects subsystems together
@@ -255,6 +269,7 @@ func (agent *AutonomousAgent) monitoringLoop() {
 		case <-agent.ctx.Done():
 			return
 		case <-ticker.C:
+			agent.UpdateWisdomAndCoherence()
 			agent.printStatus()
 		}
 	}
@@ -290,6 +305,17 @@ func (agent *AutonomousAgent) printStatus() {
 		goalMetrics["active_goals"],
 		goalMetrics["completed_goals"],
 		goalMetrics["completion_rate"].(float64)*100)
+	
+	// Wisdom cultivation (Echo9)
+	wisdomScore := agent.wisdomTracker.GetOverallWisdom()
+	coherenceScore := agent.wisdomTracker.GetCoherence()
+	fmt.Printf("Wisdom: Overall=%.1f%% | Coherence=%.1f%%\n",
+		wisdomScore*100, coherenceScore*100)
+	
+	// Identity coherence (Echo9)
+	identityCoherence := agent.coherenceTracker.GetCoherenceScore()
+	fmt.Printf("Identity: Coherence=%.1f%% | Signature=%s\n",
+		identityCoherence*100, agent.coherenceTracker.GetIdentitySignature()[:16]+"...")
 	
 	fmt.Println("─"*60 + "\n")
 }
@@ -383,4 +409,81 @@ func (p *SimpleLLMProvider) GenerateQuestion(context string) (string, error) {
 		MaxTokens:   80,
 	}
 	return p.provider.Generate(context.Background(), prompt, opts)
+}
+
+// UpdateWisdomAndCoherence updates wisdom and coherence metrics
+// Should be called periodically (e.g., every 30 seconds during monitoring loop)
+func (agent *AutonomousAgent) UpdateWisdomAndCoherence() {
+	agent.mu.RLock()
+	defer agent.mu.RUnlock()
+	
+	// TODO: Gather actual metrics from subsystems
+	// For now, use placeholder values that demonstrate integration
+	
+	// Wisdom dimensions (would come from actual hypergraph, skills, etc.)
+	graphDepth := 0.6       // From hypergraph memory depth
+	graphBreadth := 0.5     // From topic diversity
+	edgeDensity := 0.7      // From hypergraph connections
+	skillProf := 0.65       // From skills system
+	aarCoherence := 0.75    // From relevance realization
+	morality := 0.8         // From ethical considerations
+	timeHorizon := 0.7      // From goal time horizons
+	
+	agent.wisdomTracker.Update(
+		graphDepth,
+		graphBreadth,
+		edgeDensity,
+		skillProf,
+		aarCoherence,
+		morality,
+		timeHorizon,
+	)
+	
+	// Coherence tracking
+	agent.coherenceTracker.Update()
+}
+
+// RecordReflection records a structured reflection using the Echo9 protocol
+func (agent *AutonomousAgent) RecordReflection(
+	whatLearned, patternsEmerged, surprised, adapted, changeNext string,
+	impact float64,
+) {
+	reflection := echoself.StructuredReflection{
+		WhatDidILearn:        whatLearned,
+		WhatPatternsEmerged:  patternsEmerged,
+		WhatSurprisedMe:      surprised,
+		HowDidIAdapt:         adapted,
+		WhatWouldIChangeNext: changeNext,
+		CoherenceImpact:      impact,
+	}
+	
+	agent.coherenceTracker.RecordReflection(reflection)
+}
+
+// RecordMemoryEcho records a memory with Deep Tree Echo hooks
+func (agent *AutonomousAgent) RecordMemoryEcho(
+	content string,
+	emotionalTone map[string]float64,
+	strategicShift, patternRecognized, anomalyDetected, membraneContext string,
+) {
+	memory := echoself.MemoryEcho{
+		Content:           content,
+		EmotionalTone:     emotionalTone,
+		StrategicShift:    strategicShift,
+		PatternRecognized: patternRecognized,
+		AnomalyDetected:   anomalyDetected,
+		MembraneContext:   membraneContext,
+	}
+	
+	agent.coherenceTracker.RecordMemoryEcho(memory)
+}
+
+// GetWisdomStatus returns formatted wisdom status
+func (agent *AutonomousAgent) GetWisdomStatus() string {
+	return agent.wisdomTracker.GetStatus()
+}
+
+// GetCoherenceStatus returns formatted coherence status
+func (agent *AutonomousAgent) GetCoherenceStatus() string {
+	return agent.coherenceTracker.GetStatus()
 }
