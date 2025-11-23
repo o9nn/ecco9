@@ -1,6 +1,6 @@
 ---
-name: kernos
-description: kernel-os rubric
+name: rubric-kern-os-plat
+description: Rubric for kernel, OS, and platform evaluation
 ---
 
 ## Kernel/OS Functionality Scoring Rubric
