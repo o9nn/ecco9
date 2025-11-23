@@ -10,17 +10,15 @@ import (
 // This file consolidates type definitions to avoid redeclaration conflicts
 // =============================================================================
 
-// CognitiveMode represents the current cognitive mode (expressive vs reflective)
-type CognitiveMode int
-
-const (
-	ModeExpressive CognitiveMode = iota // External engagement
-	ModeReflective                      // Internal processing
-)
-
-func (m CognitiveMode) String() string {
-	return [...]string{"Expressive", "Reflective"}[m]
-}
+// CognitiveMode represents the processing mode
+// Note: This is defined in cognitive_loop.go as the canonical version
+// type CognitiveMode string
+// const (
+//   ModeExpressive           CognitiveMode = "expressive"
+//   ModeReflective           CognitiveMode = "reflective"
+//   ModeRelevanceRealization CognitiveMode = "relevance_realization"
+//   ModeMetaCognitive        CognitiveMode = "metacognitive"
+// )
 
 // CognitivePhaseType represents the three phases of cognitive processing
 type CognitivePhaseType int
