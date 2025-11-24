@@ -1,9 +1,7 @@
 module github.com/EchoCog/echollama
 
-// Deep Tree Echo - requires Go 1.23.0+ (for golang.org/x/term@v0.30.0)
-go 1.23.0
-
-toolchain go1.24.10
+// Deep Tree Echo - compatible with Go 1.18+
+go 1.18
 
 require (
 	github.com/containerd/console v1.0.3
