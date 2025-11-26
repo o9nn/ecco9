@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/EchoCog/echollama/llm"
 )
 
 // EchoBeatsThreePhase implements the 12-step 3-phase cognitive loop
@@ -18,6 +20,11 @@ type EchoBeatsThreePhase struct {
 	engine1             *InferenceEngine
 	engine2             *InferenceEngine
 	engine3             *InferenceEngine
+	
+	// LLM providers for actual inference
+	llmProvider1        llm.Provider
+	llmProvider2        llm.Provider
+	llmProvider3        llm.Provider
 	
 	// 12-step cognitive loop state
 	currentStep         int
@@ -203,14 +210,22 @@ type Interaction struct {
 
 // NewEchoBeatsThreePhase creates a new 3-phase EchoBeats system
 func NewEchoBeatsThreePhase() *EchoBeatsThreePhase {
+	return NewEchoBeatsThreePhaseWithProviders(nil, nil, nil)
+}
+
+// NewEchoBeatsThreePhaseWithProviders creates a new 3-phase EchoBeats system with LLM providers
+func NewEchoBeatsThreePhaseWithProviders(provider1, provider2, provider3 llm.Provider) *EchoBeatsThreePhase {
 	ctx, cancel := context.WithCancel(context.Background())
 	
-	return &EchoBeatsThreePhase{
-		ctx:                 ctx,
-		cancel:              cancel,
-		engine1:             newInferenceEngine(1),
-		engine2:             newInferenceEngine(2),
-		engine3:             newInferenceEngine(3),
+		eb := &EchoBeatsThreePhase{
+			ctx:                 ctx,
+			cancel:              cancel,
+			engine1:             newInferenceEngine(1),
+			engine2:             newInferenceEngine(2),
+			engine3:             newInferenceEngine(3),
+			llmProvider1:        provider1,
+			llmProvider2:        provider2,
+			llmProvider3:        provider3,
 		currentStep:         1,
 		currentPhase:        PhaseExpressive,
 		stepHistory:         make([]StepExecution, 0),
@@ -219,10 +234,12 @@ func NewEchoBeatsThreePhase() *EchoBeatsThreePhase {
 		relevanceRealizer:   newRelevanceRealizer(),
 		affordanceTracker:   newAffordanceTracker(),
 		salienceSimulator:   newSalienceSimulator(),
-		pastPerformance:     make([]PerformanceRecord, 0),
-		futurePotential:     make([]PotentialScenario, 0),
+			pastPerformance:     make([]PerformanceRecord, 0),
+			futurePotential:     make([]PotentialScenario, 0),
+		}
+		
+		return eb
 	}
-}
 
 func newInferenceEngine(id int) *InferenceEngine {
 	return &InferenceEngine{
