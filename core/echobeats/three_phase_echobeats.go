@@ -28,7 +28,7 @@ type EchoBeatsThreePhase struct {
 	
 	// 12-step cognitive loop state
 	currentStep         int
-	currentPhase        CognitivePhase
+	currentPhase        CognitivePhaseEnum
 	stepHistory         []StepExecution
 	
 	// Phase-specific processors
@@ -49,7 +49,7 @@ type EchoBeatsThreePhase struct {
 	
 	// Callbacks
 	onThoughtGenerated  func(thought string)
-	onStepComplete      func(step int, phase CognitivePhase)
+	onStepComplete      func(step int, phase CognitivePhaseEnum)
 	
 	// Metrics
 	cyclesCompleted     uint64
@@ -59,46 +59,21 @@ type EchoBeatsThreePhase struct {
 	running             bool
 }
 
-// CognitivePhase represents the three phases of the loop
-type CognitivePhase int
+// CognitivePhaseEnum represents the three phases of the loop
+// Renamed from CognitivePhase to avoid conflict with struct in threephase.go
+type CognitivePhaseEnum int
 
 const (
-	PhaseExpressive CognitivePhase = iota  // Steps 1-7
-	PhaseReflective                         // Steps 8-12
-	PhaseTransition                         // Between phases
+	PhaseExpressive CognitivePhaseEnum = iota  // Steps 1-7
+	PhaseReflective                            // Steps 8-12
+	PhaseTransition                            // Between phases
 )
 
-func (cp CognitivePhase) String() string {
+func (cp CognitivePhaseEnum) String() string {
 	return [...]string{"Expressive", "Reflective", "Transition"}[cp]
 }
 
-// StepExecution records execution of a step
-type StepExecution struct {
-	StepNumber      int
-	Phase           CognitivePhase
-	StepType        StepType
-	Timestamp       time.Time
-	Duration        time.Duration
-	Output          interface{}
-	EngineID        int
-}
-
-// StepType categorizes the 12 steps
-type StepType int
-
-const (
-	StepRelevanceRealization StepType = iota  // Steps 1, 7
-	StepAffordanceInteraction                  // Steps 2-6
-	StepSalienceSimulation                     // Steps 8-12
-)
-
-func (st StepType) String() string {
-	return [...]string{
-		"RelevanceRealization",
-		"AffordanceInteraction",
-		"SalienceSimulation",
-	}[st]
-}
+// StepExecution and StepType are now defined in shared_types.go to avoid redeclaration
 
 // InferenceEngine represents one of the three concurrent engines
 type InferenceEngine struct {
@@ -387,11 +362,12 @@ func (eb *EchoBeatsThreePhase) executeNextStep() {
 	// Record step execution
 	execution := StepExecution{
 		StepNumber: step,
-		Phase:      eb.determinePhase(step),
-		StepType:   stepType,
+		// PhaseType omitted - using local CognitivePhase tracking instead
 		Timestamp:  startTime,
+		StartTime:  startTime,
 		Duration:   duration,
 		Output:     output,
+		Success:    true, // Assume success if no error
 	}
 	
 	eb.mu.Lock()
@@ -559,7 +535,7 @@ func (eb *EchoBeatsThreePhase) getStepType(step int) StepType {
 }
 
 // determinePhase determines the phase for a given step
-func (eb *EchoBeatsThreePhase) determinePhase(step int) CognitivePhase {
+func (eb *EchoBeatsThreePhase) determinePhase(step int) CognitivePhaseEnum {
 	if step >= 1 && step <= 7 {
 		return PhaseExpressive
 	} else if step >= 8 && step <= 12 {

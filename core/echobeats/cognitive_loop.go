@@ -71,16 +71,7 @@ const (
 	ModeMetaCognitive        CognitiveMode = "metacognitive"
 )
 
-// StepExecution records execution of a step
-type StepExecution struct {
-	Step        int           `json:"step"`
-	StartTime   time.Time     `json:"start_time"`
-	Duration    time.Duration `json:"duration"`
-	Mode        CognitiveMode `json:"mode"`
-	Success     bool          `json:"success"`
-	Output      interface{}   `json:"output"`
-	Error       error         `json:"error,omitempty"`
-}
+// StepExecution is now defined in shared_types.go to avoid redeclaration
 
 // StepResult contains the result of step processing
 type StepResult struct {
@@ -273,13 +264,13 @@ func (cl *CognitiveLoop) executeStep() {
 	
 	// Record execution
 	execution := StepExecution{
-		Step:      step,
-		StartTime: startTime,
-		Duration:  duration,
-		Mode:      processor.GetMode(),
-		Success:   err == nil && result != nil && result.Success,
-		Output:    nil,
-		Error:     err,
+		StepNumber: step,
+		StartTime:  startTime,
+		Duration:   duration,
+		Mode:       processor.GetMode(),
+		Success:    err == nil && result != nil && result.Success,
+		Output:     nil,
+		Error:      err,
 	}
 	
 	if result != nil {
