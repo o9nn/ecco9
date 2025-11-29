@@ -1,4 +1,4 @@
-name: Echollama Verbose Integration Test
+name: Live Interactive Test
 
 on: [push, pull_request]
 
