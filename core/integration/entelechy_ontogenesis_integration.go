@@ -128,3 +128,4 @@ Generation      int
 PopulationStats ontogenesis.PopulationStats
 EntelechyReport *entelechy.IntrospectionReport
 }
+// Entelechy Ontogenesis Integration - placeholder for future implementation

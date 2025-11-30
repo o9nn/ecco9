@@ -118,3 +118,4 @@ func (d *EvolutionaryDimension) Assess() float64 {
 func (d *EvolutionaryDimension) String() string {
 	return fmt.Sprintf("Evolutionary[%.2f%%]", d.EvolutionaryPotential*100)
 }
+// Dimensions module - placeholder for future implementation

@@ -154,3 +154,4 @@ func generateKernelID() string {
 	kernelIDCounter++
 	return fmt.Sprintf("kernel-%d-%d", time.Now().Unix(), kernelIDCounter)
 }
+// Kernel module - placeholder for future implementation

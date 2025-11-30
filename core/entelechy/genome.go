@@ -68,3 +68,4 @@ func (g *EntelechyGenome) Clone() *EntelechyGenome {
 	clone.Genes = g.Genes
 	return clone
 }
+// Genome module - placeholder for future implementation

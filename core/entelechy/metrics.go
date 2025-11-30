@@ -75,3 +75,4 @@ func (m *ActualizationMetrics) GetActualization() float64 {
 	defer m.mu.RUnlock()
 	return m.CurrentActualization
 }
+// Metrics module - placeholder for future implementation

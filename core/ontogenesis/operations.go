@@ -88,3 +88,4 @@ func createOptimizationProblem() TestProblem {
 		Steps:  10,
 	}
 }
+// Operations module - placeholder for future implementation

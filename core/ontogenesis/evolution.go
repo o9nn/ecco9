@@ -121,3 +121,4 @@ type PopulationStats struct {
 	MinFitness    float64
 	MaxFitness    float64
 }
+// Evolution module - placeholder for future implementation

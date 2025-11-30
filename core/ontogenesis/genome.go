@@ -136,3 +136,4 @@ func randomTreeStructure(order int) []int {
 	}
 	return tree
 }
+// Genome module - placeholder for future implementation
