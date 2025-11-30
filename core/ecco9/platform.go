@@ -58,7 +58,7 @@ func DefaultConfiguration() *Configuration {
 func NewFirmware() *Firmware {
 	return &Firmware{
 		Version:       "2.5.0",
-		BuildDate:     time.Now(),
+		BuildDate:     time.Now(), // When firmware was built
 		BootStage:     BootStageOff,
 		KernelVersion: "ecco9-kernel-1.0.0",
 	}
@@ -114,6 +114,7 @@ func (p *Platform) Boot(ctx context.Context) error {
 	}
 	
 	p.Firmware.BootStage = BootStageReady
+	p.BootTime = time.Now() // Record boot time
 	log.Println("✨ ecco9 Platform Boot Complete - All Systems Ready")
 	
 	return nil
@@ -279,7 +280,7 @@ func (p *Platform) GetStatus() map[string]interface{} {
 		"boot_stage":       p.Firmware.BootStage.String(),
 		"device_count":     len(p.Devices),
 		"driver_count":     len(p.Drivers),
-		"uptime":           time.Since(p.Firmware.BuildDate),
+		"uptime":           time.Since(p.BootTime),
 		"ports":            p.Config.Ports,
 	}
 }

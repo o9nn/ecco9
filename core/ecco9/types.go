@@ -109,6 +109,7 @@ type Platform struct {
 	Streams      *StreamManager
 	Telemetry    *TelemetryCollector
 	Config       *Configuration
+	BootTime     time.Time // When platform was booted
 }
 
 // Driver represents a device driver

@@ -88,7 +88,12 @@ func showStatus(baseURL string) {
 	fmt.Printf("Boot Stage:       %v\n", result.Status["boot_stage"])
 	fmt.Printf("Device Count:     %v\n", result.Status["device_count"])
 	fmt.Printf("Driver Count:     %v\n", result.Status["driver_count"])
-	fmt.Printf("Uptime:           %v ns\n", result.Status["uptime"])
+	
+	// Format uptime as human-readable duration
+	if uptimeNs, ok := result.Status["uptime"].(float64); ok {
+		uptime := time.Duration(uptimeNs)
+		fmt.Printf("Uptime:           %v\n", uptime.Round(time.Second))
+	}
 	
 	if ports, ok := result.Status["ports"].(map[string]interface{}); ok {
 		fmt.Println("\nPort Allocation:")
