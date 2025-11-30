@@ -68,3 +68,64 @@ Input
 Failed to store memory with error: Resource not found
 
 The memory storage isn't critical. Let me create a final review summary
+
+---
+
+Perfect! Now let me store some important learnings for future sessions:
+
+Call to store_memory
+Input
+{
+  "subject": "ecco9 architecture",
+  "fact": "ecco9 uses a 6-stage boot sequence: Hardware Init, Memory Test, Reservoir Init, Kernel Load, Identity Load, Service Init",
+  "citations": "core/ecco9/platform.go:95-130 (bootStage0-5 functions)",
+  "reason": "Future work on ecco9 boot sequence optimization or debugging will need to understand this 6-stage initialization pattern. The boot sequence is critical for proper device initialization and takes ~600ms total.",
+  "category": "file_specific"
+}
+Failed to store memory with error: Resource not found
+
+Call to store_memory
+Input
+{
+  "subject": "cognitive device drivers",
+  "fact": "All ecco9 cognitive devices must implement CognitiveDevice interface with Initialize, Shutdown, Reset, Read, Write, IoCtl methods",
+  "citations": "core/ecco9/types.go:62-82 (CognitiveDevice interface definition)",
+  "reason": "Creating new cognitive devices or drivers in ecco9 requires implementing this interface. Understanding this pattern is essential for extending the platform with new hardware capabilities.",
+  "category": "general"
+}
+Failed to store memory with error: Resource not found
+
+Call to store_memory
+Input
+{
+  "subject": "ecco9 port allocation",
+  "fact": "ecco9 reserves ports 5000-5005: HTTP API (5000), WebSocket (5001), gRPC (5002), Telemetry (5003), Admin (5004), Debug (5005)",
+  "citations": "core/ecco9/types.go:163-170 (PortConfig struct and DefaultPortConfig)",
+  "reason": "Future development of additional ecco9 services must use these designated ports. Port conflicts can occur if other services try to use 5000-5005 range.",
+  "category": "general"
+}
+Failed to store memory with error: Resource not found
+
+Call to store_memory
+Input
+{
+  "subject": "device driver pattern",
+  "fact": "ecco9 drivers implement Load/Unload lifecycle and manage multiple devices through GetDevice/ListDevices methods",
+  "citations": "core/ecco9/types.go:117-128 (Driver interface), core/ecco9/drivers/*.go (all driver implementations)",
+  "reason": "Understanding the driver lifecycle is critical for adding new drivers or debugging existing ones. The pattern separates driver management from individual device operations.",
+  "category": "general"
+}
+Failed to store memory with error: Resource not found
+
+Call to store_memory
+Input
+{
+  "subject": "emotion processing",
+  "fact": "ecco9 emotion driver uses Izard's 10 basic emotions with 5% decay rate and 30% blending alpha for smooth transitions",
+  "citations": "core/ecco9/drivers/emotion_driver.go:40-48 (DefaultEmotionConfig), lines 154-167 (emotion channel initialization)",
+  "reason": "Tuning emotion parameters or adding new emotion models requires understanding these baseline values. The decay and blending rates affect how emotions evolve over time.",
+  "category": "file_specific"
+}
+Failed to store memory with error: Resource not found
+
+That's okay, the memory storage wasn't critical. Let me create one final summary for you
