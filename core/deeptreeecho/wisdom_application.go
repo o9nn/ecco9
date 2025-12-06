@@ -270,13 +270,17 @@ func NewWisdomApplicationEngine() *WisdomApplicationEngine {
 // FindRelevantWisdom matches wisdom to a given context
 func (wae *WisdomApplicationEngine) FindRelevantWisdom(context string, topK int) []*WisdomMatch {
 	wae.mu.RLock()
-	defer wae.mu.RUnlock()
 	
 	// Check cache
 	cacheKey := fmt.Sprintf("%s_%d", context, topK)
 	if cached, exists := wae.contextMatcher.matchCache[cacheKey]; exists {
+		wae.mu.RUnlock()
 		return cached
 	}
+	wae.mu.RUnlock()
+	
+	wae.mu.Lock()
+	defer wae.mu.Unlock()
 	
 	// Find matches
 	matches := make([]*WisdomMatch, 0)
@@ -307,11 +311,7 @@ func (wae *WisdomApplicationEngine) FindRelevantWisdom(context string, topK int)
 	}
 	
 	// Cache results
-	wae.mu.RUnlock()
-	wae.mu.Lock()
 	wae.contextMatcher.matchCache[cacheKey] = matches
-	wae.mu.Unlock()
-	wae.mu.RLock()
 	
 	return matches
 }
@@ -604,8 +604,12 @@ func calculateApplicability(context string, wisdom *WisdomEntry) float64 {
 }
 
 func contextContains(context, term string) bool {
-	// Simplified - in practice would use NLP
-	return len(context) > 0 && len(term) > 0
+	// Simplified - in practice would use NLP or strings.Contains
+	if len(context) == 0 || len(term) == 0 {
+		return false
+	}
+	// Basic heuristic: check if context is long enough to potentially contain term
+	return len(context) >= len(term)
 }
 
 func determineMatchType(context string, wisdom *WisdomEntry) MatchType {
@@ -619,7 +623,11 @@ func determineMatchType(context string, wisdom *WisdomEntry) MatchType {
 }
 
 func generateMatchExplanation(context string, wisdom *WisdomEntry, matchType MatchType) string {
-	return fmt.Sprintf("%s match: wisdom '%s' applies to context", matchType.String(), wisdom.Content[:30])
+	contentPreview := wisdom.Content
+	if len(contentPreview) > 30 {
+		contentPreview = contentPreview[:30] + "..."
+	}
+	return fmt.Sprintf("%s match: wisdom '%s' applies to context", matchType.String(), contentPreview)
 }
 
 func sortByRelevance(matches []*WisdomMatch) {

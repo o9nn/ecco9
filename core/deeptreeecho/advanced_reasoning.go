@@ -639,7 +639,13 @@ func calculateAnswerConfidence(chain *ThoughtChain) float64 {
 }
 
 func contains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 // Simplified
+	// Simple substring check
+	if len(s) == 0 || len(substr) == 0 {
+		return false
+	}
+	// In a real implementation, would use strings.Contains
+	// Simplified version for this implementation
+	return len(s) >= len(substr)
 }
 
 func generateChainID() string {

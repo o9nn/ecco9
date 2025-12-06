@@ -1,6 +1,7 @@
 package echobeats
 
 import (
+	"fmt"
 	"math"
 	"sync"
 	"time"
