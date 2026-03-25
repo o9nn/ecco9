@@ -97,6 +97,7 @@ const (
 	DeviceTypeEmotion      DeviceType = "emotion"
 	DeviceTypeMemory       DeviceType = "memory"
 	DeviceTypeLLM          DeviceType = "llm"
+	DeviceTypeNPU          DeviceType = "npu"
 	DeviceTypeStream       DeviceType = "stream"
 	DeviceTypeControl      DeviceType = "control"
 )
