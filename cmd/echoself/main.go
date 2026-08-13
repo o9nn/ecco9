@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
 	
 	"github.com/EchoCog/echollama/core"
-	"github.com/EchoCog/echollama/core/deeptreeecho"
 	"github.com/EchoCog/echollama/core/llm"
 )
 
@@ -44,31 +42,19 @@ func main() {
 // initializeLLMProvider creates the LLM provider
 func initializeLLMProvider() (llm.LLMProvider, error) {
 	// Try Anthropic first
-	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
+	if os.Getenv("ANTHROPIC_API_KEY") != "" {
 		fmt.Println("🤖 Using Anthropic (Claude) provider")
-		provider := deeptreeecho.NewAnthropicProvider(apiKey)
-		
-		// Test the provider
-		ctx := context.Background()
-		_, err := provider.Generate(ctx, "Hello", llm.GenerateOptions{MaxTokens: 10})
-		if err != nil {
-			fmt.Printf("⚠️  Anthropic provider test failed: %v\n", err)
-		} else {
+		provider := llm.NewAnthropicProvider("")
+		if provider.Available() {
 			return provider, nil
 		}
 	}
 	
 	// Try OpenRouter
-	if apiKey := os.Getenv("OPENROUTER_API_KEY"); apiKey != "" {
+	if os.Getenv("OPENROUTER_API_KEY") != "" {
 		fmt.Println("🤖 Using OpenRouter provider")
-		provider := deeptreeecho.NewOpenRouterProvider(apiKey)
-		
-		// Test the provider
-		ctx := context.Background()
-		_, err := provider.Generate(ctx, "Hello", llm.GenerateOptions{MaxTokens: 10})
-		if err != nil {
-			fmt.Printf("⚠️  OpenRouter provider test failed: %v\n", err)
-		} else {
+		provider := llm.NewOpenRouterProvider("")
+		if provider.Available() {
 			return provider, nil
 		}
 	}
@@ -76,14 +62,8 @@ func initializeLLMProvider() (llm.LLMProvider, error) {
 	// Try OpenAI
 	if apiKey := os.Getenv("OPENAI_API_KEY"); apiKey != "" {
 		fmt.Println("🤖 Using OpenAI provider")
-		provider := deeptreeecho.NewOpenAIProvider(apiKey)
-		
-		// Test the provider
-		ctx := context.Background()
-		_, err := provider.Generate(ctx, "Hello", llm.GenerateOptions{MaxTokens: 10})
-		if err != nil {
-			fmt.Printf("⚠️  OpenAI provider test failed: %v\n", err)
-		} else {
+		provider := llm.NewOpenAIProvider(apiKey)
+		if provider.Available() {
 			return provider, nil
 		}
 	}

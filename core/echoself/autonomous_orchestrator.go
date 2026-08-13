@@ -631,7 +631,7 @@ func (ae *AutonomousEchoself) consolidateMemories() {
 	
 	// Convert thoughts to episodic memories
 	for _, thought := range thoughts {
-		memory := echodream.EpisodicMemory{
+		memory := echodream.DreamEpisodicMemory{
 			ID:        thought.ID,
 			Timestamp: thought.Timestamp,
 			Content:   thought.Content,

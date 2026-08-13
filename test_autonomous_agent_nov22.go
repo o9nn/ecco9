@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 	
 	"github.com/EchoCog/echollama/core"
-	"github.com/EchoCog/echollama/core/deeptreeecho"
 	"github.com/EchoCog/echollama/core/echobeats"
 	"github.com/EchoCog/echollama/core/llm"
 )
@@ -23,38 +23,58 @@ func (m *MockLLMProvider) Generate(ctx context.Context, prompt string, opts llm.
 	return "Mock LLM response", nil
 }
 
+func (m *MockLLMProvider) StreamGenerate(ctx context.Context, prompt string, opts llm.GenerateOptions) (<-chan llm.StreamChunk, error) {
+	ch := make(chan llm.StreamChunk, 1)
+	response, err := m.Generate(ctx, prompt, opts)
+	ch <- llm.StreamChunk{Content: response, Done: true, Error: err}
+	close(ch)
+	return ch, err
+}
+
+func (m *MockLLMProvider) Name() string {
+	return "mock"
+}
+
+func (m *MockLLMProvider) Available() bool {
+	return true
+}
+
+func (m *MockLLMProvider) MaxTokens() int {
+	return 4096
+}
+
 func main() {
-	fmt.Println("="*70)
+	fmt.Println(strings.Repeat("=", 70))
 	fmt.Println("🧪 Testing Deep Tree Echo Autonomous Agent - November 22, 2025")
-	fmt.Println("="*70 + "\n")
+	fmt.Println(strings.Repeat("=", 70) + "\n")
 	
 	// Test 1: EchoBeats Components
 	fmt.Println("Test 1: EchoBeats 12-Step Cognitive Loop")
-	fmt.Println("-"*70)
+	fmt.Println(strings.Repeat("-", 70))
 	testCognitiveLoop()
 	fmt.Println()
 	
 	// Test 2: Inference Engines
 	fmt.Println("Test 2: 3 Concurrent Inference Engines")
-	fmt.Println("-"*70)
+	fmt.Println(strings.Repeat("-", 70))
 	testInferenceEngines()
 	fmt.Println()
 	
 	// Test 3: Enhanced Scheduler
 	fmt.Println("Test 3: Enhanced EchoBeats Scheduler")
-	fmt.Println("-"*70)
+	fmt.Println(strings.Repeat("-", 70))
 	testEnhancedScheduler()
 	fmt.Println()
 	
 	// Test 4: Autonomous Agent (short run)
 	fmt.Println("Test 4: Autonomous Agent Integration")
-	fmt.Println("-"*70)
+	fmt.Println(strings.Repeat("-", 70))
 	testAutonomousAgent()
 	fmt.Println()
 	
-	fmt.Println("="*70)
+	fmt.Println(strings.Repeat("=", 70))
 	fmt.Println("✅ All tests completed successfully!")
-	fmt.Println("="*70)
+	fmt.Println(strings.Repeat("=", 70))
 }
 
 func testCognitiveLoop() {
@@ -196,12 +216,15 @@ func testAutonomousAgent() {
 	
 	// Check if real API key is available
 	var llmProvider llm.LLMProvider = mockProvider
-	if apiKey := os.Getenv("ANTHROPIC_API_KEY"); apiKey != "" {
+	if os.Getenv("ANTHROPIC_API_KEY") != "" {
 		fmt.Println("   ℹ️  Using real Anthropic provider")
-		llmProvider = deeptreeecho.NewAnthropicProvider(apiKey)
-	} else if apiKey := os.Getenv("OPENROUTER_API_KEY"); apiKey != "" {
+		llmProvider = llm.NewAnthropicProvider("")
+	} else if os.Getenv("OPENROUTER_API_KEY") != "" {
 		fmt.Println("   ℹ️  Using real OpenRouter provider")
-		llmProvider = deeptreeecho.NewOpenRouterProvider(apiKey)
+		llmProvider = llm.NewOpenRouterProvider("")
+	} else if apiKey := os.Getenv("OPENAI_API_KEY"); apiKey != "" {
+		fmt.Println("   ℹ️  Using real OpenAI provider")
+		llmProvider = llm.NewOpenAIProvider(apiKey)
 	} else {
 		fmt.Println("   ℹ️  Using mock LLM provider (no API key)")
 	}

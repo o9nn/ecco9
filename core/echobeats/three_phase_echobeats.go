@@ -277,7 +277,8 @@ func (eb *EchoBeatsThreePhase) Start() error {
 	fmt.Println("🎵   - 12-Step Loop (7 Expressive + 5 Reflective)")
 	fmt.Println("🎵   - Phase 1: Steps 1-7 (Expressive Mode)")
 	fmt.Println("🎵   - Phase 2: Steps 8-12 (Reflective Mode)")
-	fmt.Println("🎵 ═══════════════════════════════════════════════════════\n")
+	fmt.Println("🎵 ═══════════════════════════════════════════════════════")
+	fmt.Println()
 
 	// Start the three concurrent engines
 	go eb.runEngine(eb.engine1)

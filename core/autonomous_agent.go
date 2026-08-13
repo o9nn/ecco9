@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -168,13 +169,13 @@ func (agent *AutonomousAgent) Start() error {
 	agent.startTime = time.Now()
 	agent.mu.Unlock()
 	
-	fmt.Println("\n" + "="*60)
+	fmt.Println("\n" + strings.Repeat("=", 60))
 	fmt.Println("🌳 Deep Tree Echo: Autonomous Agent Starting")
-	fmt.Println("="*60)
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Printf("Identity: %s\n", agent.identity)
 	fmt.Printf("Core Values: %v\n", agent.coreValues)
 	fmt.Printf("Wisdom Domains: %v\n", agent.wisdomDomains)
-	fmt.Println("="*60 + "\n")
+	fmt.Println(strings.Repeat("=", 60) + "\n")
 	
 	// Start all subsystems in order
 	
@@ -281,9 +282,9 @@ func (agent *AutonomousAgent) printStatus() {
 	uptime := time.Since(agent.startTime)
 	agent.mu.RUnlock()
 	
-	fmt.Println("\n" + "─"*60)
+	fmt.Println("\n" + strings.Repeat("─", 60))
 	fmt.Printf("📊 Deep Tree Echo Status (uptime: %s)\n", uptime.Round(time.Second))
-	fmt.Println("─"*60)
+	fmt.Println(strings.Repeat("─", 60))
 	
 	// Wake/Rest state
 	wakeRestMetrics := agent.wakeRestManager.GetMetrics()
@@ -317,7 +318,7 @@ func (agent *AutonomousAgent) printStatus() {
 	fmt.Printf("Identity: Coherence=%.1f%% | Signature=%s\n",
 		identityCoherence*100, agent.coherenceTracker.GetIdentitySignature()[:16]+"...")
 	
-	fmt.Println("─"*60 + "\n")
+	fmt.Println(strings.Repeat("─", 60) + "\n")
 }
 
 // Callback handlers
@@ -385,12 +386,16 @@ type SimpleLLMProvider struct {
 	provider llm.LLMProvider
 }
 
-func (p *SimpleLLMProvider) GenerateThought(prompt string, context map[string]interface{}) (string, error) {
+func (p *SimpleLLMProvider) GenerateThought(prompt string, contextData map[string]interface{}) (string, error) {
 	opts := llm.GenerateOptions{
 		Temperature: 0.8,
 		MaxTokens:   100,
 	}
-	return p.provider.Generate(context["ctx"].(context.Context), prompt, opts)
+	ctx, _ := contextData["ctx"].(context.Context)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	return p.provider.Generate(ctx, prompt, opts)
 }
 
 func (p *SimpleLLMProvider) GenerateInsight(thoughts []string) (string, error) {
@@ -402,8 +407,8 @@ func (p *SimpleLLMProvider) GenerateInsight(thoughts []string) (string, error) {
 	return p.provider.Generate(context.Background(), prompt, opts)
 }
 
-func (p *SimpleLLMProvider) GenerateQuestion(context string) (string, error) {
-	prompt := fmt.Sprintf("Generate a self-directed question based on: %s", context)
+func (p *SimpleLLMProvider) GenerateQuestion(contextText string) (string, error) {
+	prompt := fmt.Sprintf("Generate a self-directed question based on: %s", contextText)
 	opts := llm.GenerateOptions{
 		Temperature: 0.9,
 		MaxTokens:   80,
