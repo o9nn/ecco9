@@ -371,7 +371,3 @@ func pruneWeakInterests(interests []*Interest) {
 func generateClusterID() string {
 	return fmt.Sprintf("cluster_%d", time.Now().UnixNano())
 }
-
-var generateInterestID = func(name string) string {
-	return fmt.Sprintf("interest_%s_%d", name, time.Now().UnixNano())
-}

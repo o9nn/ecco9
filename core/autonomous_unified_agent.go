@@ -625,12 +625,13 @@ func (cs *ConsciousnessStream) generateThought() {
 	}
 	cs.mu.RUnlock()
 	
-	// Generate autonomous thought using LLM
-	prompt := fmt.Sprintf("Continue this stream of consciousness with a brief, introspective thought: %s", context)
-	
-	// In real implementation, would call LLM API
-	// For now, generate placeholder thought
-	thought := fmt.Sprintf("Autonomous thought at %s: Contemplating cognitive patterns...", time.Now().Format("15:04:05"))
+	// In real implementation, this context would be sent to the LLM.
+	// For now, generate a placeholder thought that still reflects the recent context.
+	thought := fmt.Sprintf(
+		"Autonomous thought at %s: Contemplating cognitive patterns from %s",
+		time.Now().Format("15:04:05"),
+		context,
+	)
 	
 	cs.mu.Lock()
 	cs.recentThoughts = append(cs.recentThoughts, thought)
