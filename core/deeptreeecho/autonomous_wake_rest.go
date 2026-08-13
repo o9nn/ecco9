@@ -10,43 +10,43 @@ import (
 // AutonomousWakeRestManager manages autonomous wake/rest cycles
 // Integrates with echodream for knowledge consolidation during rest
 type AutonomousWakeRestManager struct {
-	mu              sync.RWMutex
-	ctx             context.Context
-	cancel          context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// State
-	currentState    WakeRestState
-	stateStartTime  time.Time
-	cycleCount      uint64
-	
+	currentState   WakeRestState
+	stateStartTime time.Time
+	cycleCount     uint64
+
 	// Configuration
-	minWakeDuration    time.Duration
-	maxWakeDuration    time.Duration
-	minRestDuration    time.Duration
-	maxRestDuration    time.Duration
-	
+	minWakeDuration time.Duration
+	maxWakeDuration time.Duration
+	minRestDuration time.Duration
+	maxRestDuration time.Duration
+
 	// Cognitive load tracking
-	cognitiveLoad      float64
-	fatigueLevel       float64
-	learningRate       float64
-	
+	cognitiveLoad float64
+	fatigueLevel  float64
+	learningRate  float64
+
 	// Decision thresholds
-	restThreshold      float64
-	wakeThreshold      float64
-	
+	restThreshold float64
+	wakeThreshold float64
+
 	// Callbacks
-	onWake             func() error
-	onRest             func() error
-	onDreamStart       func() error
-	onDreamEnd         func() error
-	
+	onWake       func() error
+	onRest       func() error
+	onDreamStart func() error
+	onDreamEnd   func() error
+
 	// Metrics
-	totalWakeTime      time.Duration
-	totalRestTime      time.Duration
-	dreamCount         uint64
-	
+	totalWakeTime time.Duration
+	totalRestTime time.Duration
+	dreamCount    uint64
+
 	// Running state
-	running            bool
+	running bool
 }
 
 // WakeRestState represents the current state
@@ -66,21 +66,21 @@ func (s WakeRestState) String() string {
 // NewAutonomousWakeRestManager creates a new wake/rest manager
 func NewAutonomousWakeRestManager() *AutonomousWakeRestManager {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &AutonomousWakeRestManager{
-		ctx:                ctx,
-		cancel:             cancel,
-		currentState:       StateAwake,
-		stateStartTime:     time.Now(),
-		minWakeDuration:    30 * time.Minute,
-		maxWakeDuration:    4 * time.Hour,
-		minRestDuration:    5 * time.Minute,
-		maxRestDuration:    30 * time.Minute,
-		cognitiveLoad:      0.0,
-		fatigueLevel:       0.0,
-		learningRate:       0.5,
-		restThreshold:      0.75,  // Rest when fatigue > 0.75
-		wakeThreshold:      0.25,  // Wake when fatigue < 0.25
+		ctx:             ctx,
+		cancel:          cancel,
+		currentState:    StateAwake,
+		stateStartTime:  time.Now(),
+		minWakeDuration: 30 * time.Minute,
+		maxWakeDuration: 4 * time.Hour,
+		minRestDuration: 5 * time.Minute,
+		maxRestDuration: 30 * time.Minute,
+		cognitiveLoad:   0.0,
+		fatigueLevel:    0.0,
+		learningRate:    0.5,
+		restThreshold:   0.75, // Rest when fatigue > 0.75
+		wakeThreshold:   0.25, // Wake when fatigue < 0.25
 	}
 }
 
@@ -90,7 +90,7 @@ func (m *AutonomousWakeRestManager) SetCallbacks(
 ) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.onWake = onWake
 	m.onRest = onRest
 	m.onDreamStart = onDreamStart
@@ -106,14 +106,14 @@ func (m *AutonomousWakeRestManager) Start() error {
 	}
 	m.running = true
 	m.mu.Unlock()
-	
+
 	fmt.Println("🌙 Starting Autonomous Wake/Rest Cycle Manager...")
 	fmt.Printf("   Wake Duration: %v - %v\n", m.minWakeDuration, m.maxWakeDuration)
 	fmt.Printf("   Rest Duration: %v - %v\n", m.minRestDuration, m.maxRestDuration)
 	fmt.Printf("   Rest Threshold: %.2f | Wake Threshold: %.2f\n", m.restThreshold, m.wakeThreshold)
-	
+
 	go m.run()
-	
+
 	return nil
 }
 
@@ -121,15 +121,15 @@ func (m *AutonomousWakeRestManager) Start() error {
 func (m *AutonomousWakeRestManager) Stop() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	if !m.running {
 		return fmt.Errorf("not running")
 	}
-	
+
 	fmt.Println("🌙 Stopping wake/rest cycle manager...")
 	m.running = false
 	m.cancel()
-	
+
 	return nil
 }
 
@@ -137,7 +137,7 @@ func (m *AutonomousWakeRestManager) Stop() error {
 func (m *AutonomousWakeRestManager) run() {
 	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-m.ctx.Done():
@@ -154,7 +154,7 @@ func (m *AutonomousWakeRestManager) evaluateStateTransition() {
 	currentState := m.currentState
 	stateTime := time.Since(m.stateStartTime)
 	m.mu.Unlock()
-	
+
 	switch currentState {
 	case StateAwake:
 		m.evaluateNeedForRest(stateTime)
@@ -171,25 +171,25 @@ func (m *AutonomousWakeRestManager) evaluateNeedForRest(awakeTime time.Duration)
 	fatigue := m.fatigueLevel
 	cogLoad := m.cognitiveLoad
 	m.mu.Unlock()
-	
+
 	// Decision logic for resting
 	shouldRest := false
-	
+
 	// High fatigue
 	if fatigue > m.restThreshold {
 		shouldRest = true
 	}
-	
+
 	// High cognitive load for extended period
 	if cogLoad > 0.8 && awakeTime > m.minWakeDuration {
 		shouldRest = true
 	}
-	
+
 	// Maximum wake duration reached
 	if awakeTime > m.maxWakeDuration {
 		shouldRest = true
 	}
-	
+
 	if shouldRest {
 		m.transitionToRest()
 	}
@@ -208,25 +208,25 @@ func (m *AutonomousWakeRestManager) evaluateNeedForWake(dreamTime time.Duration)
 	m.mu.Lock()
 	fatigue := m.fatigueLevel
 	m.mu.Unlock()
-	
+
 	// Decision logic for waking
 	shouldWake := false
-	
+
 	// Fatigue recovered
 	if fatigue < m.wakeThreshold {
 		shouldWake = true
 	}
-	
+
 	// Minimum rest duration reached and fatigue low enough
 	if dreamTime > m.minRestDuration && fatigue < 0.5 {
 		shouldWake = true
 	}
-	
+
 	// Maximum rest duration reached
 	if dreamTime > m.maxRestDuration {
 		shouldWake = true
 	}
-	
+
 	if shouldWake {
 		m.transitionToWake()
 	}
@@ -239,17 +239,17 @@ func (m *AutonomousWakeRestManager) transitionToRest() {
 		m.mu.Unlock()
 		return
 	}
-	
+
 	awakeTime := time.Since(m.stateStartTime)
 	m.totalWakeTime += awakeTime
-	
+
 	m.currentState = StateResting
 	m.stateStartTime = time.Now()
 	m.mu.Unlock()
-	
+
 	fmt.Printf("\n💤 Transitioning to REST (awake for %v)\n", awakeTime.Round(time.Second))
 	fmt.Printf("   Fatigue: %.2f | Cognitive Load: %.2f\n", m.fatigueLevel, m.cognitiveLoad)
-	
+
 	if m.onRest != nil {
 		if err := m.onRest(); err != nil {
 			fmt.Printf("⚠️  Rest callback error: %v\n", err)
@@ -264,14 +264,14 @@ func (m *AutonomousWakeRestManager) transitionToDream() {
 		m.mu.Unlock()
 		return
 	}
-	
+
 	m.currentState = StateDreaming
 	m.dreamCount++
 	m.mu.Unlock()
-	
+
 	fmt.Printf("\n🌙 Entering DREAM state (dream #%d)\n", m.dreamCount)
 	fmt.Println("   Consolidating knowledge and integrating experiences...")
-	
+
 	if m.onDreamStart != nil {
 		if err := m.onDreamStart(); err != nil {
 			fmt.Printf("⚠️  Dream start callback error: %v\n", err)
@@ -286,27 +286,27 @@ func (m *AutonomousWakeRestManager) transitionToWake() {
 		m.mu.Unlock()
 		return
 	}
-	
+
 	restTime := time.Since(m.stateStartTime)
 	m.totalRestTime += restTime
-	
+
 	m.currentState = StateAwake
 	m.stateStartTime = time.Now()
 	m.cycleCount++
-	
+
 	// Reduce fatigue after rest
 	m.fatigueLevel *= 0.3
 	m.mu.Unlock()
-	
+
 	fmt.Printf("\n☀️  AWAKENING (rested for %v, cycle #%d)\n", restTime.Round(time.Second), m.cycleCount)
 	fmt.Printf("   Fatigue: %.2f | Ready for new experiences\n", m.fatigueLevel)
-	
+
 	if m.onDreamEnd != nil {
 		if err := m.onDreamEnd(); err != nil {
 			fmt.Printf("⚠️  Dream end callback error: %v\n", err)
 		}
 	}
-	
+
 	if m.onWake != nil {
 		if err := m.onWake(); err != nil {
 			fmt.Printf("⚠️  Wake callback error: %v\n", err)
@@ -318,9 +318,9 @@ func (m *AutonomousWakeRestManager) transitionToWake() {
 func (m *AutonomousWakeRestManager) UpdateCognitiveLoad(load float64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.cognitiveLoad = load
-	
+
 	// Increase fatigue based on cognitive load
 	if m.currentState == StateAwake {
 		fatigueIncrease := load * 0.01 * m.learningRate
@@ -332,7 +332,7 @@ func (m *AutonomousWakeRestManager) UpdateCognitiveLoad(load float64) {
 func (m *AutonomousWakeRestManager) UpdateLearningRate(rate float64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.learningRate = rate
 }
 
@@ -340,7 +340,7 @@ func (m *AutonomousWakeRestManager) UpdateLearningRate(rate float64) {
 func (m *AutonomousWakeRestManager) GetState() WakeRestState {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	return m.currentState
 }
 
@@ -348,16 +348,16 @@ func (m *AutonomousWakeRestManager) GetState() WakeRestState {
 func (m *AutonomousWakeRestManager) GetMetrics() map[string]interface{} {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	return map[string]interface{}{
-		"current_state":     m.currentState.String(),
-		"state_duration":    time.Since(m.stateStartTime).Round(time.Second).String(),
-		"cycle_count":       m.cycleCount,
-		"dream_count":       m.dreamCount,
-		"fatigue_level":     m.fatigueLevel,
-		"cognitive_load":    m.cognitiveLoad,
-		"total_wake_time":   m.totalWakeTime.Round(time.Second).String(),
-		"total_rest_time":   m.totalRestTime.Round(time.Second).String(),
+		"current_state":   m.currentState.String(),
+		"state_duration":  time.Since(m.stateStartTime).Round(time.Second).String(),
+		"cycle_count":     m.cycleCount,
+		"dream_count":     m.dreamCount,
+		"fatigue_level":   m.fatigueLevel,
+		"cognitive_load":  m.cognitiveLoad,
+		"total_wake_time": m.totalWakeTime.Round(time.Second).String(),
+		"total_rest_time": m.totalRestTime.Round(time.Second).String(),
 	}
 }
 
@@ -365,7 +365,7 @@ func (m *AutonomousWakeRestManager) GetMetrics() map[string]interface{} {
 func (m *AutonomousWakeRestManager) IsAwake() bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	return m.currentState == StateAwake
 }
 
@@ -373,7 +373,6 @@ func (m *AutonomousWakeRestManager) IsAwake() bool {
 func (m *AutonomousWakeRestManager) IsDreaming() bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	return m.currentState == StateDreaming
 }
-

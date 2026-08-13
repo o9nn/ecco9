@@ -357,10 +357,10 @@ func (s *AutonomousV4Server) handleWisdom(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"wisdom_score": 0.65,
 		"dimensions": map[string]float64{
-			"knowledge":    0.7,
+			"knowledge":     0.7,
 			"understanding": 0.6,
-			"insight":      0.65,
-			"compassion":   0.7,
+			"insight":       0.65,
+			"compassion":    0.7,
 		},
 	})
 }
@@ -408,13 +408,13 @@ func (s *AutonomousV4Server) handleSkills(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"skills": []map[string]interface{}{
 			{
-				"name":        "Pattern Recognition",
-				"proficiency": 0.65,
+				"name":           "Pattern Recognition",
+				"proficiency":    0.65,
 				"last_practiced": "2 hours ago",
 			},
 			{
-				"name":        "Analogical Reasoning",
-				"proficiency": 0.58,
+				"name":           "Analogical Reasoning",
+				"proficiency":    0.58,
 				"last_practiced": "5 hours ago",
 			},
 		},

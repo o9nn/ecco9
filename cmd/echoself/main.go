@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	
+
 	"github.com/EchoCog/echollama/core"
 	"github.com/EchoCog/echollama/core/llm"
 )
@@ -19,23 +19,23 @@ func main() {
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 `)
-	
+
 	// Initialize LLM provider
 	llmProvider, err := initializeLLMProvider()
 	if err != nil {
 		log.Fatalf("❌ Failed to initialize LLM provider: %v", err)
 	}
-	
+
 	fmt.Println("✓ LLM provider initialized")
-	
+
 	// Create autonomous agent
 	agent := core.NewAutonomousAgent(llmProvider)
-	
+
 	// Run agent (blocks until interrupted)
 	if err := agent.Run(); err != nil {
 		log.Fatalf("❌ Agent error: %v", err)
 	}
-	
+
 	fmt.Println("\n👋 Goodbye from Deep Tree Echo\n")
 }
 
@@ -49,7 +49,7 @@ func initializeLLMProvider() (llm.LLMProvider, error) {
 			return provider, nil
 		}
 	}
-	
+
 	// Try OpenRouter
 	if os.Getenv("OPENROUTER_API_KEY") != "" {
 		fmt.Println("🤖 Using OpenRouter provider")
@@ -58,7 +58,7 @@ func initializeLLMProvider() (llm.LLMProvider, error) {
 			return provider, nil
 		}
 	}
-	
+
 	// Try OpenAI
 	if apiKey := os.Getenv("OPENAI_API_KEY"); apiKey != "" {
 		fmt.Println("🤖 Using OpenAI provider")
@@ -67,6 +67,6 @@ func initializeLLMProvider() (llm.LLMProvider, error) {
 			return provider, nil
 		}
 	}
-	
+
 	return nil, fmt.Errorf("no LLM provider available - set ANTHROPIC_API_KEY, OPENROUTER_API_KEY, or OPENAI_API_KEY")
 }

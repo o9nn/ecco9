@@ -369,13 +369,13 @@ func handleThink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	thought := deeptreeecho.Thought{
-		ID:         fmt.Sprintf("thought_%d", time.Now().UnixNano()),
-		Content:    req.Content,
-		Type:       deeptreeecho.ThoughtPerception,
-		Timestamp:  time.Now(),
-		EmotionalValence:  0.5,
-		Importance: 0.7,
-		Source:     deeptreeecho.SourceExternal,
+		ID:               fmt.Sprintf("thought_%d", time.Now().UnixNano()),
+		Content:          req.Content,
+		Type:             deeptreeecho.ThoughtPerception,
+		Timestamp:        time.Now(),
+		EmotionalValence: 0.5,
+		Importance:       0.7,
+		Source:           deeptreeecho.SourceExternal,
 	}
 
 	consciousness.Think(thought)

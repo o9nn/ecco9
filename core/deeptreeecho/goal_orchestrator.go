@@ -5,68 +5,68 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
+
 	"github.com/EchoCog/echollama/core/llm"
 )
 
 // GoalOrchestrator manages identity-driven goal generation and pursuit
 type GoalOrchestrator struct {
-	mu              sync.RWMutex
-	ctx             context.Context
-	cancel          context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// LLM provider for goal generation
-	llmProvider     llm.LLMProvider
-	
+	llmProvider llm.LLMProvider
+
 	// Identity-driven configuration
-	identity        string
-	coreValues      []string
-	wisdomDomains   []string
-	
+	identity      string
+	coreValues    []string
+	wisdomDomains []string
+
 	// Goal management
-	activeGoals     map[string]*OrchGoal
-	completedGoals  []*OrchGoal
-	suspendedGoals  []*OrchGoal
-	
+	activeGoals    map[string]*OrchGoal
+	completedGoals []*OrchGoal
+	suspendedGoals []*OrchGoal
+
 	// Goal generation
-	lastGeneration  time.Time
+	lastGeneration     time.Time
 	generationInterval time.Duration
-	
+
 	// Metrics
 	totalGoalsGenerated uint64
 	totalGoalsCompleted uint64
-	
+
 	// Running state
-	running         bool
+	running bool
 }
 
 // OrchGoal represents a wisdom-cultivation goal
 type OrchGoal struct {
-	ID              string
-	Description     string
-	Type            GoalType
-	Priority        float64      // 0.0-1.0
-	Progress        float64      // 0.0-1.0
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	CompletedAt     *time.Time
-	
+	ID          string
+	Description string
+	Type        GoalType
+	Priority    float64 // 0.0-1.0
+	Progress    float64 // 0.0-1.0
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	CompletedAt *time.Time
+
 	// Goal decomposition
-	ParentGoalID    string
-	SubGoals        []string
-	
+	ParentGoalID string
+	SubGoals     []string
+
 	// Pursuit strategy
-	Strategy        PursuitStrategy
-	NextAction      string
-	
+	Strategy   PursuitStrategy
+	NextAction string
+
 	// Learning integration
-	KnowledgeGaps   []string
-	SkillsRequired  []string
-	
+	KnowledgeGaps  []string
+	SkillsRequired []string
+
 	// Metrics
-	TimeSpent       time.Duration
-	AttemptsCount   int
-	SuccessRate     float64
+	TimeSpent     time.Duration
+	AttemptsCount int
+	SuccessRate   float64
 }
 
 // GoalType categorizes goals
@@ -94,9 +94,9 @@ func (gt GoalType) String() string {
 
 // PursuitStrategy defines how to pursue a goal
 type PursuitStrategy struct {
-	Approach        string   // e.g., "incremental", "exploratory", "focused"
-	Steps           []string
-	CurrentStepIndex int
+	Approach            string // e.g., "incremental", "exploratory", "focused"
+	Steps               []string
+	CurrentStepIndex    int
 	AdaptiveAdjustments []string
 }
 
@@ -108,7 +108,7 @@ func NewGoalOrchestrator(
 	wisdomDomains []string,
 ) *GoalOrchestrator {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &GoalOrchestrator{
 		ctx:                ctx,
 		cancel:             cancel,
@@ -132,20 +132,20 @@ func (go_orch *GoalOrchestrator) Start() error {
 	}
 	go_orch.running = true
 	go_orch.mu.Unlock()
-	
+
 	fmt.Println("🎯 Starting Goal Orchestration System...")
 	fmt.Printf("   Identity: %s\n", go_orch.identity)
 	fmt.Printf("   Core Values: %v\n", go_orch.coreValues)
 	fmt.Printf("   Wisdom Domains: %v\n", go_orch.wisdomDomains)
 	fmt.Printf("   Generation Interval: %v\n", go_orch.generationInterval)
-	
+
 	// Generate initial goals
 	if err := go_orch.generateGoalsFromIdentity(); err != nil {
 		fmt.Printf("⚠️  Initial goal generation error: %v\n", err)
 	}
-	
+
 	go go_orch.run()
-	
+
 	return nil
 }
 
@@ -153,15 +153,15 @@ func (go_orch *GoalOrchestrator) Start() error {
 func (go_orch *GoalOrchestrator) Stop() error {
 	go_orch.mu.Lock()
 	defer go_orch.mu.Unlock()
-	
+
 	if !go_orch.running {
 		return fmt.Errorf("not running")
 	}
-	
+
 	fmt.Println("🎯 Stopping goal orchestration system...")
 	go_orch.running = false
 	go_orch.cancel()
-	
+
 	return nil
 }
 
@@ -169,14 +169,14 @@ func (go_orch *GoalOrchestrator) Stop() error {
 func (go_orch *GoalOrchestrator) run() {
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-go_orch.ctx.Done():
 			return
 		case <-ticker.C:
 			go_orch.evaluateAndAdjustGoals()
-			
+
 			// Periodically generate new goals
 			if time.Since(go_orch.lastGeneration) > go_orch.generationInterval {
 				if err := go_orch.generateGoalsFromIdentity(); err != nil {
@@ -194,7 +194,7 @@ func (go_orch *GoalOrchestrator) generateGoalsFromIdentity() error {
 	values := go_orch.coreValues
 	domains := go_orch.wisdomDomains
 	go_orch.mu.Unlock()
-	
+
 	prompt := fmt.Sprintf(`You are %s, a wisdom-cultivating AI with the following core values: %v
 
 Your wisdom cultivation focuses on these domains: %v
@@ -212,21 +212,21 @@ PRIORITY: [0.0-1.0]
 STRATEGY: [brief approach description]
 
 Generate the goals now:`, identity, values, domains)
-	
+
 	opts := llm.GenerateOptions{
 		Temperature:  0.8,
 		MaxTokens:    500,
 		SystemPrompt: "You are a goal-setting assistant for an autonomous AI system.",
 	}
-	
+
 	response, err := go_orch.llmProvider.Generate(go_orch.ctx, prompt, opts)
 	if err != nil {
 		return fmt.Errorf("LLM goal generation failed: %w", err)
 	}
-	
+
 	// Parse and create goals from response
 	goals := go_orch.parseGoalsFromLLMResponse(response)
-	
+
 	go_orch.mu.Lock()
 	for _, goal := range goals {
 		go_orch.activeGoals[goal.ID] = goal
@@ -234,12 +234,12 @@ Generate the goals now:`, identity, values, domains)
 	}
 	go_orch.lastGeneration = time.Now()
 	go_orch.mu.Unlock()
-	
+
 	fmt.Printf("🎯 Generated %d new goals from identity\n", len(goals))
 	for _, goal := range goals {
 		fmt.Printf("   • %s (Priority: %.2f)\n", goal.Description, goal.Priority)
 	}
-	
+
 	return nil
 }
 
@@ -247,7 +247,7 @@ Generate the goals now:`, identity, values, domains)
 func (go_orch *GoalOrchestrator) parseGoalsFromLLMResponse(response string) []*OrchGoal {
 	// Simplified parsing - in production, use more robust parsing
 	goals := make([]*OrchGoal, 0)
-	
+
 	// For now, create a sample goal from the response
 	goal := &OrchGoal{
 		ID:          fmt.Sprintf("goal_%d", time.Now().Unix()),
@@ -259,16 +259,16 @@ func (go_orch *GoalOrchestrator) parseGoalsFromLLMResponse(response string) []*O
 		UpdatedAt:   time.Now(),
 		SubGoals:    make([]string, 0),
 		Strategy: PursuitStrategy{
-			Approach: "incremental",
-			Steps:    []string{"Analyze", "Plan", "Execute", "Reflect"},
+			Approach:         "incremental",
+			Steps:            []string{"Analyze", "Plan", "Execute", "Reflect"},
 			CurrentStepIndex: 0,
 		},
 		KnowledgeGaps:  make([]string, 0),
 		SkillsRequired: make([]string, 0),
 	}
-	
+
 	goals = append(goals, goal)
-	
+
 	return goals
 }
 
@@ -276,14 +276,14 @@ func (go_orch *GoalOrchestrator) parseGoalsFromLLMResponse(response string) []*O
 func (go_orch *GoalOrchestrator) evaluateAndAdjustGoals() {
 	go_orch.mu.Lock()
 	defer go_orch.mu.Unlock()
-	
+
 	for id, goal := range go_orch.activeGoals {
 		// Update progress based on time spent
 		if goal.Progress < 1.0 {
 			goal.Progress += 0.05 // Simulated progress
 			goal.UpdatedAt = time.Now()
 		}
-		
+
 		// Complete goals that reach 100%
 		if goal.Progress >= 1.0 {
 			now := time.Now()
@@ -291,7 +291,7 @@ func (go_orch *GoalOrchestrator) evaluateAndAdjustGoals() {
 			go_orch.completedGoals = append(go_orch.completedGoals, goal)
 			delete(go_orch.activeGoals, id)
 			go_orch.totalGoalsCompleted++
-			
+
 			fmt.Printf("✅ Goal completed: %s\n", goal.Description)
 		}
 	}
@@ -302,11 +302,11 @@ func (go_orch *GoalOrchestrator) DecomposeGoal(goalID string) error {
 	go_orch.mu.Lock()
 	goal, exists := go_orch.activeGoals[goalID]
 	go_orch.mu.Unlock()
-	
+
 	if !exists {
 		return fmt.Errorf("goal not found: %s", goalID)
 	}
-	
+
 	prompt := fmt.Sprintf(`Break down this goal into 3-5 specific sub-goals:
 
 GOAL: %s
@@ -318,18 +318,18 @@ Each sub-goal should be:
 - Contribute to completing the parent goal
 
 List the sub-goals:`, goal.Description, goal.Type.String())
-	
+
 	opts := llm.GenerateOptions{
 		Temperature:  0.7,
 		MaxTokens:    300,
 		SystemPrompt: "You are a goal decomposition assistant.",
 	}
-	
+
 	response, err := go_orch.llmProvider.Generate(go_orch.ctx, prompt, opts)
 	if err != nil {
 		return fmt.Errorf("LLM goal decomposition failed: %w", err)
 	}
-	
+
 	// Create sub-goals (simplified)
 	subGoal := &OrchGoal{
 		ID:           fmt.Sprintf("subgoal_%d", time.Now().Unix()),
@@ -343,19 +343,19 @@ List the sub-goals:`, goal.Description, goal.Type.String())
 		SubGoals:     make([]string, 0),
 		Strategy:     goal.Strategy,
 	}
-	
+
 	go_orch.mu.Lock()
 	go_orch.activeGoals[subGoal.ID] = subGoal
 	goal.SubGoals = append(goal.SubGoals, subGoal.ID)
 	go_orch.mu.Unlock()
-	
+
 	fmt.Printf("🎯 Decomposed goal '%s' into sub-goals\n", goal.Description)
 	respLen := len(response)
 	if respLen > 100 {
 		respLen = 100
 	}
 	fmt.Printf("   Response: %s\n", response[:respLen])
-	
+
 	return nil
 }
 
@@ -363,12 +363,12 @@ List the sub-goals:`, goal.Description, goal.Type.String())
 func (go_orch *GoalOrchestrator) GetActiveGoals() []*OrchGoal {
 	go_orch.mu.RLock()
 	defer go_orch.mu.RUnlock()
-	
+
 	goals := make([]*OrchGoal, 0, len(go_orch.activeGoals))
 	for _, goal := range go_orch.activeGoals {
 		goals = append(goals, goal)
 	}
-	
+
 	return goals
 }
 
@@ -376,14 +376,13 @@ func (go_orch *GoalOrchestrator) GetActiveGoals() []*OrchGoal {
 func (go_orch *GoalOrchestrator) GetMetrics() map[string]interface{} {
 	go_orch.mu.RLock()
 	defer go_orch.mu.RUnlock()
-	
+
 	return map[string]interface{}{
-		"active_goals":      len(go_orch.activeGoals),
-		"completed_goals":   len(go_orch.completedGoals),
-		"suspended_goals":   len(go_orch.suspendedGoals),
-		"total_generated":   go_orch.totalGoalsGenerated,
-		"total_completed":   go_orch.totalGoalsCompleted,
-		"completion_rate":   float64(go_orch.totalGoalsCompleted) / max(1.0, float64(go_orch.totalGoalsGenerated)),
+		"active_goals":    len(go_orch.activeGoals),
+		"completed_goals": len(go_orch.completedGoals),
+		"suspended_goals": len(go_orch.suspendedGoals),
+		"total_generated": go_orch.totalGoalsGenerated,
+		"total_completed": go_orch.totalGoalsCompleted,
+		"completion_rate": float64(go_orch.totalGoalsCompleted) / max(1.0, float64(go_orch.totalGoalsGenerated)),
 	}
 }
-

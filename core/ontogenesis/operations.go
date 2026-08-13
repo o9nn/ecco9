@@ -16,7 +16,7 @@ func SelfOptimize(kernel *OntogeneticKernel, iterations int) *OntogeneticKernel 
 	optimized := kernel.Clone()
 	learningRate := 0.01
 	problem := createOptimizationProblem()
-	
+
 	for iter := 0; iter < iterations; iter++ {
 		gradient := computeGradient(optimized, problem)
 		for i := range optimized.Genome.Coefficients {
@@ -25,7 +25,7 @@ func SelfOptimize(kernel *OntogeneticKernel, iterations int) *OntogeneticKernel 
 		optimized.Evaluate(problem)
 		learningRate *= 0.99
 	}
-	
+
 	return optimized
 }
 
@@ -33,7 +33,7 @@ func SelfReproduce(parent1, parent2 *OntogeneticKernel) *OntogeneticKernel {
 	offspringGenome := parent1.Genome.Crossover(parent2.Genome)
 	offspringGenome.ParentIDs = []string{parent1.ID, parent2.ID}
 	offspringGenome.Mutate()
-	
+
 	offspring := &OntogeneticKernel{
 		ID:         generateKernelID(),
 		Generation: offspringGenome.Generation,
@@ -45,7 +45,7 @@ func SelfReproduce(parent1, parent2 *OntogeneticKernel) *OntogeneticKernel {
 		Output:     make([]float64, len(offspringGenome.Coefficients)),
 		Metadata:   make(map[string]interface{}),
 	}
-	
+
 	return offspring
 }
 
@@ -61,7 +61,7 @@ func computeGradient(kernel *OntogeneticKernel, problem TestProblem) []float64 {
 	gradient := make([]float64, len(kernel.Genome.Coefficients))
 	epsilon := 1e-5
 	baseline := kernel.Evaluate(problem)
-	
+
 	for i := range kernel.Genome.Coefficients {
 		original := kernel.Genome.Coefficients[i]
 		kernel.Genome.Coefficients[i] += epsilon
@@ -69,7 +69,7 @@ func computeGradient(kernel *OntogeneticKernel, problem TestProblem) []float64 {
 		gradient[i] = (perturbed - baseline) / epsilon
 		kernel.Genome.Coefficients[i] = original
 	}
-	
+
 	return gradient
 }
 
@@ -88,4 +88,5 @@ func createOptimizationProblem() TestProblem {
 		Steps:  10,
 	}
 }
+
 // Operations module - placeholder for future implementation

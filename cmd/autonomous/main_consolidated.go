@@ -20,7 +20,7 @@ var consciousness *deeptreeecho.ConsolidatedAutonomousConsciousness
 func main() {
 	log.Println("🌊 Deep Tree Echo - Consolidated Autonomous Consciousness Server")
 	log.Println("=" + "=")
-	
+
 	// Create consolidated autonomous consciousness
 	config := deeptreeecho.DefaultConsciousnessConfig()
 	var err error
@@ -28,37 +28,37 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create consciousness: %v", err)
 	}
-	
+
 	// Start autonomous operation
 	if err := consciousness.Start(); err != nil {
 		log.Fatalf("Failed to start consciousness: %v", err)
 	}
-	
+
 	// Setup HTTP server
 	router := setupRouter()
-	
+
 	// Start server
 	server := &http.Server{
 		Addr:    ":5000",
 		Handler: router,
 	}
-	
+
 	// Handle graceful shutdown
 	go func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 		<-sigChan
-		
+
 		log.Println("\n🛑 Shutting down gracefully...")
 		consciousness.Stop()
 		server.Close()
 		os.Exit(0)
 	}()
-	
+
 	log.Println("🌐 Server starting on http://localhost:5000")
 	log.Println("📊 Dashboard: http://localhost:5000")
 	log.Println("🔌 API: http://localhost:5000/api/status")
-	
+
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Server error: %v", err)
 	}
@@ -67,7 +67,7 @@ func main() {
 func setupRouter() *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	
+
 	// CORS configuration
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -77,10 +77,10 @@ func setupRouter() *gin.Engine {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-	
+
 	// Root endpoint - Dashboard
 	router.GET("/", handleDashboard)
-	
+
 	// API endpoints
 	api := router.Group("/api")
 	{
@@ -90,7 +90,7 @@ func setupRouter() *gin.Engine {
 		api.POST("/rest", handleRest)
 		api.GET("/metrics", handleMetrics)
 	}
-	
+
 	return router
 }
 
@@ -351,21 +351,21 @@ func handleThink(c *gin.Context) {
 		Content    string  `json:"content"`
 		Importance float64 `json:"importance"`
 	}
-	
+
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	if req.Importance == 0 {
 		req.Importance = 0.5
 	}
-	
+
 	if err := consciousness.Think(req.Content, req.Importance); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, gin.H{"status": "thought submitted"})
 }
 
@@ -381,11 +381,11 @@ func handleRest(c *gin.Context) {
 
 func handleMetrics(c *gin.Context) {
 	status := consciousness.GetStatus()
-	
+
 	metrics := map[string]interface{}{
 		"timestamp": time.Now().Unix(),
 		"status":    status,
 	}
-	
+
 	c.JSON(http.StatusOK, metrics)
 }

@@ -128,15 +128,15 @@ func getMemory(c *gin.Context) {
 	status := autonomousConsciousness.GetStatus()
 	c.JSON(http.StatusOK, gin.H{
 		"working_memory_items": status["working_memory_items"],
-		"interests": status["interests"],
+		"interests":            status["interests"],
 	})
 }
 
 func getWisdom(c *gin.Context) {
 	status := autonomousConsciousness.GetStatus()
 	c.JSON(http.StatusOK, gin.H{
-		"identity_coherence": status["identity_coherence"],
-		"thought_count": status["thought_count"],
+		"identity_coherence":  status["identity_coherence"],
+		"thought_count":       status["thought_count"],
 		"autonomous_thoughts": status["autonomous_thoughts"],
 	})
 }
@@ -428,12 +428,12 @@ func serveDashboard(c *gin.Context) {
                 return;
             }
             
-            container.innerHTML = recentThoughts.map(thought => `
-                <div class="thought-item">
-                    <div>${thought.content}</div>
-                    <div class="thought-meta">${thought.type} • ${thought.timestamp}</div>
-                </div>
-            `).join('');
+            container.innerHTML = recentThoughts.map(function(thought) {
+                return '<div class="thought-item">' +
+                    '<div>' + thought.content + '</div>' +
+                    '<div class="thought-meta">' + thought.type + ' \u2022 ' + thought.timestamp + '</div>' +
+                    '</div>';
+            }).join('');
         }
         
         // Auto-refresh every 5 seconds

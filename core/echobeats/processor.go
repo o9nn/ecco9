@@ -9,12 +9,12 @@ import (
 
 // DefaultPhaseProcessor provides default implementations for all cognitive terms
 type DefaultPhaseProcessor struct {
-	perceptionBuffer   []interface{}
-	memoryStore        map[string]interface{}
-	ideaQueue          []string
-	actionSequence     []string
-	balanceState       float64
-	consciousnessRef   interface{} // Reference to consciousness system
+	perceptionBuffer []interface{}
+	memoryStore      map[string]interface{}
+	ideaQueue        []string
+	actionSequence   []string
+	balanceState     float64
+	consciousnessRef interface{} // Reference to consciousness system
 }
 
 // NewDefaultPhaseProcessor creates a new default processor
@@ -181,10 +181,10 @@ func (dpp *DefaultPhaseProcessor) ProcessT5ActionSequence(mode Mode) (*Cognitive
 			result := dpp.executeAction(action)
 
 			stream.Content = map[string]interface{}{
-				"action":         action,
-				"result":         result,
-				"remaining":      len(dpp.actionSequence),
-				"type":           "action_execution",
+				"action":    action,
+				"result":    result,
+				"remaining": len(dpp.actionSequence),
+				"type":      "action_execution",
 			}
 			log.Printf("⚡ T5E: Action executed: %s", action)
 		} else {

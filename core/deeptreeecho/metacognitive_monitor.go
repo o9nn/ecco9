@@ -10,40 +10,40 @@ import (
 
 // MetaCognitiveMonitor provides self-awareness and monitoring of cognitive processes
 type MetaCognitiveMonitor struct {
-	mu                      sync.RWMutex
-	ctx                     context.Context
-	cancel                  context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// Process tracking
-	activeProcesses         map[string]*CognitiveProcess
-	processHistory          []*ProcessRecord
-	
+	activeProcesses map[string]*CognitiveProcess
+	processHistory  []*ProcessRecord
+
 	// Decision tracking
-	recentDecisions         []*Decision
-	decisionQuality         map[string]*QualityAssessment
-	
+	recentDecisions []*Decision
+	decisionQuality map[string]*QualityAssessment
+
 	// Strategy management
-	availableStrategies     map[string]*CognitiveStrategy
-	strategyPerformance     map[string]*StrategyMetrics
-	currentStrategy         *CognitiveStrategy
-	
+	availableStrategies map[string]*CognitiveStrategy
+	strategyPerformance map[string]*StrategyMetrics
+	currentStrategy     *CognitiveStrategy
+
 	// Self-model
-	selfModel               *SelfModel
-	confidenceLevel         float64
-	awarenessLevel          float64
-	
+	selfModel       *SelfModel
+	confidenceLevel float64
+	awarenessLevel  float64
+
 	// Meta-reasoning
-	reasoningDepth          int
-	maxReasoningDepth       int
-	recursiveThoughts       []*MetaThought
-	
+	reasoningDepth    int
+	maxReasoningDepth int
+	recursiveThoughts []*MetaThought
+
 	// Performance metrics
 	totalProcessesMonitored uint64
 	totalDecisionsReviewed  uint64
 	totalStrategyShifts     uint64
-	
+
 	// Running state
-	running                 bool
+	running bool
 }
 
 // CognitiveProcess represents an ongoing cognitive process
@@ -55,7 +55,7 @@ type CognitiveProcess struct {
 	EstimatedDuration   time.Duration
 	ActualDuration      time.Duration
 	Status              ProcessStatus
-	Progress            float64        // 0.0 to 1.0
+	Progress            float64 // 0.0 to 1.0
 	ResourceUsage       ResourceMetrics
 	IntermediateResults []interface{}
 	Metadata            map[string]interface{}
@@ -105,30 +105,30 @@ func (ps ProcessStatus) String() string {
 
 // ProcessRecord logs historical process information
 type ProcessRecord struct {
-	ProcessID       string
-	ProcessType     ProcessType
-	StartTime       time.Time
-	EndTime         time.Time
-	Duration        time.Duration
-	Success         bool
-	Efficiency      float64
-	Quality         float64
-	ResourceCost    float64
-	Insights        []string
+	ProcessID    string
+	ProcessType  ProcessType
+	StartTime    time.Time
+	EndTime      time.Time
+	Duration     time.Duration
+	Success      bool
+	Efficiency   float64
+	Quality      float64
+	ResourceCost float64
+	Insights     []string
 }
 
 // Decision represents a decision made by the system
 type Decision struct {
-	ID              string
-	Timestamp       time.Time
-	Context         string
-	Options         []string
-	Chosen          string
-	Rationale       string
-	Confidence      float64
-	UrgencyLevel    float64
-	Reversible      bool
-	Outcome         *DecisionOutcome
+	ID           string
+	Timestamp    time.Time
+	Context      string
+	Options      []string
+	Chosen       string
+	Rationale    string
+	Confidence   float64
+	UrgencyLevel float64
+	Reversible   bool
+	Outcome      *DecisionOutcome
 }
 
 // DecisionOutcome tracks the result of a decision
@@ -143,36 +143,36 @@ type DecisionOutcome struct {
 
 // QualityAssessment evaluates decision quality
 type QualityAssessment struct {
-	DecisionID          string
-	Appropriateness     float64
-	Timeliness          float64
-	Effectiveness       float64
-	Efficiency          float64
-	OverallQuality      float64
+	DecisionID             string
+	Appropriateness        float64
+	Timeliness             float64
+	Effectiveness          float64
+	Efficiency             float64
+	OverallQuality         float64
 	ImprovementSuggestions []string
 }
 
 // CognitiveStrategy represents a high-level thinking strategy
 type CognitiveStrategy struct {
-	ID              string
-	Name            string
-	Description     string
-	ApplicableTo    []ProcessType
-	Steps           []StrategyStep
-	Complexity      float64
-	Reliability     float64
-	Speed           float64
-	Accuracy        float64
-	Conditions      map[string]interface{}
+	ID           string
+	Name         string
+	Description  string
+	ApplicableTo []ProcessType
+	Steps        []StrategyStep
+	Complexity   float64
+	Reliability  float64
+	Speed        float64
+	Accuracy     float64
+	Conditions   map[string]interface{}
 }
 
 // StrategyStep is a step in a cognitive strategy
 type StrategyStep struct {
-	Order           int
-	Description     string
-	Action          string
-	ExpectedResult  string
-	TimeEstimate    time.Duration
+	Order          int
+	Description    string
+	Action         string
+	ExpectedResult string
+	TimeEstimate   time.Duration
 }
 
 // StrategyMetrics tracks strategy performance
@@ -187,47 +187,47 @@ type StrategyMetrics struct {
 
 // ResourceMetrics tracks cognitive resource usage
 type ResourceMetrics struct {
-	AttentionUsed   float64
-	MemoryAccessed  uint64
-	ComputeCycles   uint64
-	EnergyExpended  float64
+	AttentionUsed  float64
+	MemoryAccessed uint64
+	ComputeCycles  uint64
+	EnergyExpended float64
 }
 
 // MetaThought represents recursive self-reflection
 type MetaThought struct {
-	ID              string
-	Depth           int
-	Content         string
-	About           string // What this thought is about
-	Insight         string
-	Timestamp       time.Time
-	ParentThought   *MetaThought
+	ID            string
+	Depth         int
+	Content       string
+	About         string // What this thought is about
+	Insight       string
+	Timestamp     time.Time
+	ParentThought *MetaThought
 }
 
 // NewMetaCognitiveMonitor creates a new metacognitive monitoring system
 func NewMetaCognitiveMonitor() *MetaCognitiveMonitor {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	mcm := &MetaCognitiveMonitor{
-		ctx:                     ctx,
-		cancel:                  cancel,
-		activeProcesses:         make(map[string]*CognitiveProcess),
-		processHistory:          make([]*ProcessRecord, 0),
-		recentDecisions:         make([]*Decision, 0),
-		decisionQuality:         make(map[string]*QualityAssessment),
-		availableStrategies:     make(map[string]*CognitiveStrategy),
-		strategyPerformance:     make(map[string]*StrategyMetrics),
-		recursiveThoughts:       make([]*MetaThought, 0),
-		selfModel:               initializeSelfModel(),
-		confidenceLevel:         0.7,
-		awarenessLevel:          0.8,
-		maxReasoningDepth:       5,
-		reasoningDepth:          0,
+		ctx:                 ctx,
+		cancel:              cancel,
+		activeProcesses:     make(map[string]*CognitiveProcess),
+		processHistory:      make([]*ProcessRecord, 0),
+		recentDecisions:     make([]*Decision, 0),
+		decisionQuality:     make(map[string]*QualityAssessment),
+		availableStrategies: make(map[string]*CognitiveStrategy),
+		strategyPerformance: make(map[string]*StrategyMetrics),
+		recursiveThoughts:   make([]*MetaThought, 0),
+		selfModel:           initializeSelfModel(),
+		confidenceLevel:     0.7,
+		awarenessLevel:      0.8,
+		maxReasoningDepth:   5,
+		reasoningDepth:      0,
 	}
-	
+
 	// Initialize default strategies
 	mcm.initializeStrategies()
-	
+
 	return mcm
 }
 
@@ -235,22 +235,22 @@ func NewMetaCognitiveMonitor() *MetaCognitiveMonitor {
 func (mcm *MetaCognitiveMonitor) StartProcess(name string, processType ProcessType) string {
 	mcm.mu.Lock()
 	defer mcm.mu.Unlock()
-	
+
 	process := &CognitiveProcess{
-		ID:                generateProcessID(),
-		Name:              name,
-		Type:              processType,
-		StartTime:         time.Now(),
-		Status:            StatusActive,
-		Progress:          0.0,
-		ResourceUsage:     ResourceMetrics{},
+		ID:                  generateProcessID(),
+		Name:                name,
+		Type:                processType,
+		StartTime:           time.Now(),
+		Status:              StatusActive,
+		Progress:            0.0,
+		ResourceUsage:       ResourceMetrics{},
 		IntermediateResults: make([]interface{}, 0),
-		Metadata:          make(map[string]interface{}),
+		Metadata:            make(map[string]interface{}),
 	}
-	
+
 	mcm.activeProcesses[process.ID] = process
 	mcm.totalProcessesMonitored++
-	
+
 	return process.ID
 }
 
@@ -258,11 +258,11 @@ func (mcm *MetaCognitiveMonitor) StartProcess(name string, processType ProcessTy
 func (mcm *MetaCognitiveMonitor) UpdateProcess(processID string, progress float64, status ProcessStatus) {
 	mcm.mu.Lock()
 	defer mcm.mu.Unlock()
-	
+
 	if process, exists := mcm.activeProcesses[processID]; exists {
 		process.Progress = progress
 		process.Status = status
-		
+
 		if status == StatusCompleted || status == StatusFailed || status == StatusAborted {
 			process.ActualDuration = time.Since(process.StartTime)
 			mcm.finalizeProcess(process)
@@ -274,7 +274,7 @@ func (mcm *MetaCognitiveMonitor) UpdateProcess(processID string, progress float6
 func (mcm *MetaCognitiveMonitor) RecordDecision(context, chosen, rationale string, options []string, confidence float64) string {
 	mcm.mu.Lock()
 	defer mcm.mu.Unlock()
-	
+
 	decision := &Decision{
 		ID:           generateDecisionID(),
 		Timestamp:    time.Now(),
@@ -286,15 +286,15 @@ func (mcm *MetaCognitiveMonitor) RecordDecision(context, chosen, rationale strin
 		UrgencyLevel: 0.5,
 		Reversible:   true,
 	}
-	
+
 	mcm.recentDecisions = append(mcm.recentDecisions, decision)
 	mcm.totalDecisionsReviewed++
-	
+
 	// Trim history
 	if len(mcm.recentDecisions) > 100 {
 		mcm.recentDecisions = mcm.recentDecisions[1:]
 	}
-	
+
 	return decision.ID
 }
 
@@ -302,7 +302,7 @@ func (mcm *MetaCognitiveMonitor) RecordDecision(context, chosen, rationale strin
 func (mcm *MetaCognitiveMonitor) AssessDecisionQuality(decisionID string, outcome *DecisionOutcome) {
 	mcm.mu.Lock()
 	defer mcm.mu.Unlock()
-	
+
 	var decision *Decision
 	for _, d := range mcm.recentDecisions {
 		if d.ID == decisionID {
@@ -310,13 +310,13 @@ func (mcm *MetaCognitiveMonitor) AssessDecisionQuality(decisionID string, outcom
 			break
 		}
 	}
-	
+
 	if decision == nil {
 		return
 	}
-	
+
 	decision.Outcome = outcome
-	
+
 	// Calculate quality metrics
 	assessment := &QualityAssessment{
 		DecisionID:      decisionID,
@@ -325,17 +325,17 @@ func (mcm *MetaCognitiveMonitor) AssessDecisionQuality(decisionID string, outcom
 		Effectiveness:   outcome.ActualBenefit / math.Max(outcome.ExpectedBenefit, 0.01),
 		Efficiency:      calculateEfficiency(decision, outcome),
 	}
-	
-	assessment.OverallQuality = (assessment.Appropriateness + 
-		assessment.Timeliness + 
-		assessment.Effectiveness + 
+
+	assessment.OverallQuality = (assessment.Appropriateness +
+		assessment.Timeliness +
+		assessment.Effectiveness +
 		assessment.Efficiency) / 4.0
-	
+
 	// Generate improvement suggestions
 	if assessment.OverallQuality < 0.7 {
 		assessment.ImprovementSuggestions = generateImprovementSuggestions(decision, assessment)
 	}
-	
+
 	mcm.decisionQuality[decisionID] = assessment
 }
 
@@ -343,10 +343,10 @@ func (mcm *MetaCognitiveMonitor) AssessDecisionQuality(decisionID string, outcom
 func (mcm *MetaCognitiveMonitor) SelectStrategy(processType ProcessType, constraints map[string]interface{}) *CognitiveStrategy {
 	mcm.mu.RLock()
 	defer mcm.mu.RUnlock()
-	
+
 	var bestStrategy *CognitiveStrategy
 	bestScore := 0.0
-	
+
 	for _, strategy := range mcm.availableStrategies {
 		// Check if strategy is applicable
 		applicable := false
@@ -356,28 +356,28 @@ func (mcm *MetaCognitiveMonitor) SelectStrategy(processType ProcessType, constra
 				break
 			}
 		}
-		
+
 		if !applicable {
 			continue
 		}
-		
+
 		// Calculate strategy score based on metrics and constraints
 		metrics := mcm.strategyPerformance[strategy.ID]
 		score := calculateStrategyScore(strategy, metrics, constraints)
-		
+
 		if score > bestScore {
 			bestScore = score
 			bestStrategy = strategy
 		}
 	}
-	
+
 	if bestStrategy != nil && (mcm.currentStrategy == nil || bestStrategy.ID != mcm.currentStrategy.ID) {
 		mcm.mu.Lock()
 		mcm.currentStrategy = bestStrategy
 		mcm.totalStrategyShifts++
 		mcm.mu.Unlock()
 	}
-	
+
 	return bestStrategy
 }
 
@@ -385,11 +385,11 @@ func (mcm *MetaCognitiveMonitor) SelectStrategy(processType ProcessType, constra
 func (mcm *MetaCognitiveMonitor) GenerateMetaThought(about, content string, depth int) *MetaThought {
 	mcm.mu.Lock()
 	defer mcm.mu.Unlock()
-	
+
 	if depth > mcm.maxReasoningDepth {
 		return nil
 	}
-	
+
 	thought := &MetaThought{
 		ID:        generateThoughtID(),
 		Depth:     depth,
@@ -397,14 +397,14 @@ func (mcm *MetaCognitiveMonitor) GenerateMetaThought(about, content string, dept
 		About:     about,
 		Timestamp: time.Now(),
 	}
-	
+
 	// Generate insight based on depth
 	if depth > 0 {
 		thought.Insight = generateMetaInsight(about, content, depth)
 	}
-	
+
 	mcm.recursiveThoughts = append(mcm.recursiveThoughts, thought)
-	
+
 	// Recursively think about the thought
 	if depth < mcm.maxReasoningDepth-1 && shouldRecurse(depth) {
 		metaContent := fmt.Sprintf("Thinking about: %s", content)
@@ -413,7 +413,7 @@ func (mcm *MetaCognitiveMonitor) GenerateMetaThought(about, content string, dept
 			childThought.ParentThought = thought
 		}
 	}
-	
+
 	return thought
 }
 
@@ -421,19 +421,19 @@ func (mcm *MetaCognitiveMonitor) GenerateMetaThought(about, content string, dept
 func (mcm *MetaCognitiveMonitor) GetSelfAwareness() map[string]interface{} {
 	mcm.mu.RLock()
 	defer mcm.mu.RUnlock()
-	
+
 	return map[string]interface{}{
-		"confidence_level":        mcm.confidenceLevel,
-		"awareness_level":         mcm.awarenessLevel,
-		"active_processes":        len(mcm.activeProcesses),
-		"total_processes":         mcm.totalProcessesMonitored,
-		"recent_decisions":        len(mcm.recentDecisions),
-		"total_decisions":         mcm.totalDecisionsReviewed,
-		"strategy_shifts":         mcm.totalStrategyShifts,
-		"current_strategy":        mcm.currentStrategy,
-		"reasoning_depth":         mcm.reasoningDepth,
-		"meta_thoughts":           len(mcm.recursiveThoughts),
-		"self_model":              mcm.selfModel,
+		"confidence_level": mcm.confidenceLevel,
+		"awareness_level":  mcm.awarenessLevel,
+		"active_processes": len(mcm.activeProcesses),
+		"total_processes":  mcm.totalProcessesMonitored,
+		"recent_decisions": len(mcm.recentDecisions),
+		"total_decisions":  mcm.totalDecisionsReviewed,
+		"strategy_shifts":  mcm.totalStrategyShifts,
+		"current_strategy": mcm.currentStrategy,
+		"reasoning_depth":  mcm.reasoningDepth,
+		"meta_thoughts":    len(mcm.recursiveThoughts),
+		"self_model":       mcm.selfModel,
 	}
 }
 
@@ -452,10 +452,10 @@ func (mcm *MetaCognitiveMonitor) finalizeProcess(process *CognitiveProcess) {
 		ResourceCost: calculateResourceCost(process.ResourceUsage),
 		Insights:     extractProcessInsights(process),
 	}
-	
+
 	mcm.processHistory = append(mcm.processHistory, record)
 	delete(mcm.activeProcesses, process.ID)
-	
+
 	// Update self-model based on process outcome
 	updateSelfModel(mcm.selfModel, record)
 }
@@ -463,40 +463,40 @@ func (mcm *MetaCognitiveMonitor) finalizeProcess(process *CognitiveProcess) {
 func (mcm *MetaCognitiveMonitor) initializeStrategies() {
 	// Deliberate reasoning strategy
 	mcm.availableStrategies["deliberate"] = &CognitiveStrategy{
-		ID:          "deliberate",
-		Name:        "Deliberate Reasoning",
-		Description: "Slow, careful, step-by-step analysis",
+		ID:           "deliberate",
+		Name:         "Deliberate Reasoning",
+		Description:  "Slow, careful, step-by-step analysis",
 		ApplicableTo: []ProcessType{ProcessReasoning, ProcessProblemSolving, ProcessDecisionMaking},
-		Complexity:  0.8,
-		Reliability: 0.9,
-		Speed:       0.3,
-		Accuracy:    0.95,
+		Complexity:   0.8,
+		Reliability:  0.9,
+		Speed:        0.3,
+		Accuracy:     0.95,
 	}
-	
+
 	// Intuitive strategy
 	mcm.availableStrategies["intuitive"] = &CognitiveStrategy{
-		ID:          "intuitive",
-		Name:        "Intuitive Processing",
-		Description: "Fast, pattern-based, heuristic thinking",
+		ID:           "intuitive",
+		Name:         "Intuitive Processing",
+		Description:  "Fast, pattern-based, heuristic thinking",
 		ApplicableTo: []ProcessType{ProcessThinking, ProcessPatternRecognition, ProcessCreativeSynthesis},
-		Complexity:  0.3,
-		Reliability: 0.7,
-		Speed:       0.9,
-		Accuracy:    0.75,
+		Complexity:   0.3,
+		Reliability:  0.7,
+		Speed:        0.9,
+		Accuracy:     0.75,
 	}
-	
+
 	// Analytical strategy
 	mcm.availableStrategies["analytical"] = &CognitiveStrategy{
-		ID:          "analytical",
-		Name:        "Analytical Decomposition",
-		Description: "Break down complex problems into components",
+		ID:           "analytical",
+		Name:         "Analytical Decomposition",
+		Description:  "Break down complex problems into components",
 		ApplicableTo: []ProcessType{ProcessProblemSolving, ProcessReasoning},
-		Complexity:  0.7,
-		Reliability: 0.85,
-		Speed:       0.5,
-		Accuracy:    0.9,
+		Complexity:   0.7,
+		Reliability:  0.85,
+		Speed:        0.5,
+		Accuracy:     0.9,
 	}
-	
+
 	// Initialize metrics for each strategy
 	for id := range mcm.availableStrategies {
 		mcm.strategyPerformance[id] = &StrategyMetrics{
@@ -547,31 +547,31 @@ func calculateEfficiency(decision *Decision, outcome *DecisionOutcome) float64 {
 
 func generateImprovementSuggestions(decision *Decision, assessment *QualityAssessment) []string {
 	suggestions := make([]string, 0)
-	
+
 	if assessment.Appropriateness < 0.7 {
 		suggestions = append(suggestions, "Consider gathering more context before deciding")
 	}
-	
+
 	if assessment.Timeliness < 0.7 {
 		suggestions = append(suggestions, "Balance urgency with decision quality")
 	}
-	
+
 	if assessment.Effectiveness < 0.7 {
 		suggestions = append(suggestions, "Improve outcome prediction accuracy")
 	}
-	
+
 	return suggestions
 }
 
 func calculateStrategyScore(strategy *CognitiveStrategy, metrics *StrategyMetrics, constraints map[string]interface{}) float64 {
 	score := 0.0
-	
+
 	// Base score from reliability and success rate
 	score += strategy.Reliability * 0.3
 	if metrics != nil {
 		score += metrics.SuccessRate * 0.3
 	}
-	
+
 	// Factor in constraints
 	if speedRequired, ok := constraints["speed_required"].(bool); ok && speedRequired {
 		score += strategy.Speed * 0.4
@@ -581,7 +581,7 @@ func calculateStrategyScore(strategy *CognitiveStrategy, metrics *StrategyMetric
 		// Balanced approach
 		score += (strategy.Speed + strategy.Accuracy) * 0.2
 	}
-	
+
 	return score
 }
 
@@ -589,7 +589,7 @@ func calculateProcessEfficiency(process *CognitiveProcess) float64 {
 	if process.EstimatedDuration == 0 {
 		return 0.8
 	}
-	
+
 	ratio := float64(process.EstimatedDuration) / float64(process.ActualDuration)
 	return math.Min(1.0, ratio)
 }
@@ -603,22 +603,22 @@ func calculateProcessQuality(process *CognitiveProcess) float64 {
 }
 
 func calculateResourceCost(resources ResourceMetrics) float64 {
-	return resources.AttentionUsed*0.4 + 
-		   float64(resources.MemoryAccessed)*0.0001 + 
-		   resources.EnergyExpended*0.3
+	return resources.AttentionUsed*0.4 +
+		float64(resources.MemoryAccessed)*0.0001 +
+		resources.EnergyExpended*0.3
 }
 
 func extractProcessInsights(process *CognitiveProcess) []string {
 	insights := make([]string, 0)
-	
+
 	if process.Status == StatusCompleted && process.ActualDuration < process.EstimatedDuration {
 		insights = append(insights, "Process completed faster than expected")
 	}
-	
+
 	if process.Progress >= 1.0 {
 		insights = append(insights, "Process achieved full completion")
 	}
-	
+
 	return insights
 }
 
@@ -637,11 +637,11 @@ func generateMetaInsight(about, content string, depth int) string {
 		fmt.Sprintf("At depth %d, I notice meta-patterns in %s", depth, about),
 		fmt.Sprintf("This recursive reflection about %s deepens self-understanding", about),
 	}
-	
+
 	if depth < len(insights) {
 		return insights[depth]
 	}
-	
+
 	return fmt.Sprintf("Deep meta-reflection (level %d) about %s", depth, about)
 }
 

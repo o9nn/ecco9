@@ -40,10 +40,10 @@ func (et DiscreteEmotionType) String() string {
 
 // DiscreteEmotion represents a discrete emotional state with cognitive effects.
 type DiscreteEmotion struct {
-	Type      DiscreteEmotionType
-	Intensity float64
-	Duration  time.Duration
-	OnsetTime time.Time
+	Type              DiscreteEmotionType
+	Intensity         float64
+	Duration          time.Duration
+	OnsetTime         time.Time
 	AttentionScope    float64
 	ProcessingDepth   float64
 	ApproachAvoidance float64
@@ -240,7 +240,7 @@ func (es *EmotionSystem) GetEmotionalState() map[string]interface{} {
 	defer es.mu.RUnlock()
 	return map[string]interface{}{
 		"dominant_emotion": es.dominantEmotion.String(),
-		"arousal": es.arousal, "valence": es.valence,
+		"arousal":          es.arousal, "valence": es.valence,
 		"emotion_blend": es.emotionBlend, "history_size": len(es.emotionHistory),
 	}
 }

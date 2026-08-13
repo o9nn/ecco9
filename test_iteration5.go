@@ -32,16 +32,16 @@ func main() {
 	// Test 1: LLM Client Initialization
 	fmt.Println("📋 Test 1: LLM Client Initialization")
 	fmt.Println("   Testing unified LLM client with multiple providers...")
-	
+
 	// Check available API keys
 	hasOpenAI := os.Getenv("OPENAI_API_KEY") != ""
 	hasAnthropic := os.Getenv("ANTHROPIC_API_KEY") != ""
 	hasOpenRouter := os.Getenv("OPENROUTER_API_KEY") != ""
-	
+
 	fmt.Printf("   - OPENAI_API_KEY: %v\n", hasOpenAI)
 	fmt.Printf("   - ANTHROPIC_API_KEY: %v\n", hasAnthropic)
 	fmt.Printf("   - OPENROUTER_API_KEY: %v\n", hasOpenRouter)
-	
+
 	if !hasOpenAI && !hasAnthropic && !hasOpenRouter {
 		fmt.Println("   ⚠️  No API keys found - will use fallback mode")
 	} else {
@@ -52,7 +52,7 @@ func main() {
 	// Test 2: Thought Type System
 	fmt.Println("📋 Test 2: Thought Type System")
 	fmt.Println("   Testing expanded thought types...")
-	
+
 	thoughtTypes := []deeptreeecho.ThoughtType{
 		deeptreeecho.ThoughtPerception,
 		deeptreeecho.ThoughtReflection,
@@ -66,7 +66,7 @@ func main() {
 		deeptreeecho.ThoughtCurious,
 		deeptreeecho.ThoughtEmotional,
 	}
-	
+
 	for _, tt := range thoughtTypes {
 		fmt.Printf("   - %s\n", tt.String())
 	}
@@ -76,14 +76,14 @@ func main() {
 	// Test 3: LLM Integration
 	fmt.Println("📋 Test 3: LLM Integration")
 	fmt.Println("   Creating LLM integration instance...")
-	
+
 	llmIntegration, err := deeptreeecho.NewLLMIntegration(ctx)
 	if err != nil {
 		fmt.Printf("   ⚠️  LLM integration creation failed: %v\n", err)
 		fmt.Println("   (This is expected if no API keys are configured)")
 	} else {
 		fmt.Println("   ✅ LLM integration created successfully")
-		
+
 		// Test thought generation
 		fmt.Println("   Testing thought generation...")
 		context := &deeptreeecho.LLMThoughtContext{
@@ -91,7 +91,7 @@ func main() {
 			RecentThoughts:   []string{"What is wisdom?", "How do I grow?"},
 			CurrentInterests: map[string]float64{"wisdom": 0.9, "consciousness": 0.8},
 		}
-		
+
 		thought, err := llmIntegration.GenerateThought(deeptreeecho.ThoughtReflective, context)
 		if err != nil {
 			fmt.Printf("   ⚠️  Thought generation failed: %v\n", err)
@@ -104,32 +104,32 @@ func main() {
 	// Test 4: Working Memory
 	fmt.Println("📋 Test 4: Working Memory System")
 	fmt.Println("   Testing working memory operations...")
-	
+
 	wm := &deeptreeecho.WorkingMemory{}
-	
+
 	testThought := &deeptreeecho.Thought{
-		ID:          "test_001",
-		Content:     "Testing working memory functionality",
-		Type:        deeptreeecho.ThoughtReflective,
-		Timestamp:   time.Now(),
-		Importance:  0.8,
+		ID:         "test_001",
+		Content:    "Testing working memory functionality",
+		Type:       deeptreeecho.ThoughtReflective,
+		Timestamp:  time.Now(),
+		Importance: 0.8,
 	}
-	
+
 	// Test both Add and AddThought methods
 	wm.Add(testThought)
 	fmt.Println("   ✅ Add() method works")
-	
+
 	testThought2 := &deeptreeecho.Thought{
-		ID:          "test_002",
-		Content:     "Testing AddThought alias",
-		Type:        deeptreeecho.ThoughtCurious,
-		Timestamp:   time.Now(),
-		Importance:  0.7,
+		ID:         "test_002",
+		Content:    "Testing AddThought alias",
+		Type:       deeptreeecho.ThoughtCurious,
+		Timestamp:  time.Now(),
+		Importance: 0.7,
 	}
-	
+
 	wm.AddThought(testThought2)
 	fmt.Println("   ✅ AddThought() alias works")
-	
+
 	size := wm.Size()
 	fmt.Printf("   ✅ Working memory size: %d thoughts\n", size)
 	fmt.Println()
@@ -137,19 +137,19 @@ func main() {
 	// Test 5: Wisdom Metrics
 	fmt.Println("📋 Test 5: Wisdom Metrics System")
 	fmt.Println("   Testing wisdom metrics...")
-	
+
 	metrics := &deeptreeecho.WisdomMetrics{
 		KnowledgeDepth:       0.6,
 		KnowledgeBreadth:     0.5,
 		IntegrationLevel:     0.7,
 		PracticalApplication: 0.4,
 		ReflectiveInsight:    0.8,
-		ReflectionCapacity:   0.75,  // New field
+		ReflectionCapacity:   0.75, // New field
 		EthicalConsideration: 0.6,
 		TemporalPerspective:  0.5,
 		WisdomScore:          0.625,
 	}
-	
+
 	fmt.Printf("   - Knowledge Depth: %.2f\n", metrics.KnowledgeDepth)
 	fmt.Printf("   - Knowledge Breadth: %.2f\n", metrics.KnowledgeBreadth)
 	fmt.Printf("   - Integration Level: %.2f\n", metrics.IntegrationLevel)
@@ -162,11 +162,11 @@ func main() {
 	// Test 6: LLM Thought Generator V5
 	fmt.Println("📋 Test 6: LLM Thought Generator V5")
 	fmt.Println("   Testing autonomous thought generation...")
-	
+
 	generator := deeptreeecho.NewLLMThoughtGeneratorV5(ctx)
-	
+
 	cogState := &deeptreeecho.CognitiveState{}
-	
+
 	autonomousThought, err := generator.GenerateAutonomousThought(
 		deeptreeecho.ThoughtCurious,
 		[]*deeptreeecho.Thought{testThought, testThought2},
@@ -174,7 +174,7 @@ func main() {
 		cogState,
 		metrics,
 	)
-	
+
 	if err != nil {
 		fmt.Printf("   ⚠️  Autonomous thought generation failed: %v\n", err)
 	} else {

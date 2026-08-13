@@ -852,16 +852,16 @@ func (sa *SelfAssessment) GetMetrics() map[string]interface{} {
 	defer sa.mu.RUnlock()
 
 	return map[string]interface{}{
-		"overall_coherence":    sa.Metrics.OverallCoherence,
-		"identity_alignment":  sa.Metrics.IdentityAlignment,
-		"repo_coherence":      sa.Metrics.RepoCoherence,
-		"pattern_alignment":   sa.Metrics.PatternAlignment,
-		"memory_coherence":    sa.Metrics.MemoryCoherence,
+		"overall_coherence":     sa.Metrics.OverallCoherence,
+		"identity_alignment":    sa.Metrics.IdentityAlignment,
+		"repo_coherence":        sa.Metrics.RepoCoherence,
+		"pattern_alignment":     sa.Metrics.PatternAlignment,
+		"memory_coherence":      sa.Metrics.MemoryCoherence,
 		"operational_alignment": sa.Metrics.OperationalAlignment,
-		"reflection_adherence": sa.Metrics.ReflectionAdherence,
-		"assessment_count":    len(sa.Assessments),
-		"last_assessment":     sa.LastAssessment,
-		"component_scores":    sa.Metrics.ComponentScores,
+		"reflection_adherence":  sa.Metrics.ReflectionAdherence,
+		"assessment_count":      len(sa.Assessments),
+		"last_assessment":       sa.LastAssessment,
+		"component_scores":      sa.Metrics.ComponentScores,
 	}
 }
 

@@ -49,15 +49,15 @@ func DefaultEmotionConfig() *EmotionConfig {
 func (ed *EmotionDriver) Load(config interface{}) error {
 	ed.mu.Lock()
 	defer ed.mu.Unlock()
-	
+
 	if cfg, ok := config.(*EmotionConfig); ok {
 		ed.config = cfg
 	}
-	
+
 	// Create emotion processing device
 	device := NewEmotionDevice("emotion0", ed.config)
 	ed.devices["emotion0"] = device
-	
+
 	return nil
 }
 
@@ -65,14 +65,14 @@ func (ed *EmotionDriver) Load(config interface{}) error {
 func (ed *EmotionDriver) Unload() error {
 	ed.mu.Lock()
 	defer ed.mu.Unlock()
-	
+
 	for _, device := range ed.devices {
 		ctx := context.Background()
 		if err := device.Shutdown(ctx); err != nil {
 			return err
 		}
 	}
-	
+
 	ed.devices = make(map[string]*EmotionDevice)
 	return nil
 }
@@ -81,7 +81,7 @@ func (ed *EmotionDriver) Unload() error {
 func (ed *EmotionDriver) GetDevice(id string) (ecco9.CognitiveDevice, error) {
 	ed.mu.RLock()
 	defer ed.mu.RUnlock()
-	
+
 	device, exists := ed.devices[id]
 	if !exists {
 		return nil, fmt.Errorf("device %s not found", id)
@@ -93,7 +93,7 @@ func (ed *EmotionDriver) GetDevice(id string) (ecco9.CognitiveDevice, error) {
 func (ed *EmotionDriver) ListDevices() []ecco9.CognitiveDevice {
 	ed.mu.RLock()
 	defer ed.mu.RUnlock()
-	
+
 	devices := make([]ecco9.CognitiveDevice, 0, len(ed.devices))
 	for _, device := range ed.devices {
 		devices = append(devices, device)
@@ -167,10 +167,10 @@ func NewEmotionDevice(id string, config *EmotionConfig) *EmotionDevice {
 func (ed *EmotionDevice) Initialize(ctx context.Context) error {
 	ed.mu.Lock()
 	defer ed.mu.Unlock()
-	
+
 	ed.state.Status = ecco9.DeviceStatusInitializing
 	ed.state.Power = ecco9.PowerStateActive
-	
+
 	// Initialize emotion channels (Izard's 10 basic emotions)
 	emotionNames := []string{
 		"interest",
@@ -184,7 +184,7 @@ func (ed *EmotionDevice) Initialize(ctx context.Context) error {
 		"shame",
 		"guilt",
 	}
-	
+
 	for _, name := range emotionNames {
 		ed.emotions[name] = &EmotionChannel{
 			Name:       name,
@@ -192,14 +192,14 @@ func (ed *EmotionDevice) Initialize(ctx context.Context) error {
 			LastUpdate: time.Now(),
 		}
 	}
-	
+
 	ed.startTime = time.Now()
 	ed.state.Status = ecco9.DeviceStatusReady
 	ed.state.LastUpdate = time.Now()
-	
+
 	// Start decay ticker
 	go ed.runDecayLoop(ctx)
-	
+
 	return nil
 }
 
@@ -207,7 +207,7 @@ func (ed *EmotionDevice) Initialize(ctx context.Context) error {
 func (ed *EmotionDevice) runDecayLoop(ctx context.Context) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -222,14 +222,14 @@ func (ed *EmotionDevice) runDecayLoop(ctx context.Context) {
 func (ed *EmotionDevice) applyDecay() {
 	ed.mu.Lock()
 	defer ed.mu.Unlock()
-	
+
 	for _, emotion := range ed.emotions {
 		emotion.Intensity *= (1.0 - ed.config.DecayRate)
 		if emotion.Intensity < 0.01 {
 			emotion.Intensity = 0.0
 		}
 	}
-	
+
 	// Decay arousal and valence toward neutral
 	ed.arousal += (0.5 - ed.arousal) * ed.config.DecayRate
 	ed.valence += (0.5 - ed.valence) * ed.config.DecayRate
@@ -239,11 +239,11 @@ func (ed *EmotionDevice) applyDecay() {
 func (ed *EmotionDevice) Shutdown(ctx context.Context) error {
 	ed.mu.Lock()
 	defer ed.mu.Unlock()
-	
+
 	ed.state.Status = ecco9.DeviceStatusOffline
 	ed.state.Power = ecco9.PowerStateOff
 	ed.emotions = make(map[string]*EmotionChannel)
-	
+
 	return nil
 }
 
@@ -259,11 +259,11 @@ func (ed *EmotionDevice) Reset(ctx context.Context) error {
 func (ed *EmotionDevice) GetState() (ecco9.DeviceState, error) {
 	ed.mu.RLock()
 	defer ed.mu.RUnlock()
-	
+
 	state := ed.state
 	state.Uptime = time.Since(ed.startTime)
 	state.Metrics = ed.metrics
-	
+
 	return state, nil
 }
 
@@ -271,7 +271,7 @@ func (ed *EmotionDevice) GetState() (ecco9.DeviceState, error) {
 func (ed *EmotionDevice) SetState(state ecco9.DeviceState) error {
 	ed.mu.Lock()
 	defer ed.mu.Unlock()
-	
+
 	ed.state = state
 	return nil
 }
@@ -280,27 +280,27 @@ func (ed *EmotionDevice) SetState(state ecco9.DeviceState) error {
 func (ed *EmotionDevice) Read(buffer []byte) (int, error) {
 	ed.mu.RLock()
 	defer ed.mu.RUnlock()
-	
+
 	if ed.emotions == nil {
 		return 0, fmt.Errorf("emotion channels not initialized")
 	}
-	
+
 	// Read current emotion state
 	status := fmt.Sprintf("Arousal:%.2f Valence:%.2f | ", ed.arousal, ed.valence)
-	
+
 	// Add top 3 emotions
 	type emotionIntensity struct {
 		name      string
 		intensity float64
 	}
-	
+
 	emotions := make([]emotionIntensity, 0)
 	for name, channel := range ed.emotions {
 		if channel.Intensity > 0.01 {
 			emotions = append(emotions, emotionIntensity{name, channel.Intensity})
 		}
 	}
-	
+
 	// Sort by intensity (simple bubble sort for small arrays)
 	for i := 0; i < len(emotions); i++ {
 		for j := i + 1; j < len(emotions); j++ {
@@ -309,16 +309,16 @@ func (ed *EmotionDevice) Read(buffer []byte) (int, error) {
 			}
 		}
 	}
-	
+
 	// Add top emotions to status
 	for i := 0; i < len(emotions) && i < 3; i++ {
 		status += fmt.Sprintf("%s:%.2f ", emotions[i].name, emotions[i].intensity)
 	}
-	
+
 	n := copy(buffer, []byte(status))
 	ed.metrics.OperationCount++
 	ed.metrics.LastOperation = time.Now()
-	
+
 	return n, nil
 }
 
@@ -326,34 +326,34 @@ func (ed *EmotionDevice) Read(buffer []byte) (int, error) {
 func (ed *EmotionDevice) Write(buffer []byte) (int, error) {
 	ed.mu.Lock()
 	defer ed.mu.Unlock()
-	
+
 	if ed.emotions == nil {
 		return 0, fmt.Errorf("emotion channels not initialized")
 	}
-	
+
 	startTime := time.Now()
-	
+
 	// Parse input to trigger emotions
 	input := string(buffer)
 	inputLen := float64(len(input))
-	
+
 	// Simple heuristic: trigger emotions based on input characteristics
 	if inputLen > 0 {
 		// Trigger interest based on input length
 		ed.setEmotion("interest", math.Min(inputLen/100.0, 1.0))
-		
+
 		// Update arousal and valence
 		ed.arousal = math.Min(0.5+inputLen/200.0, 1.0)
 		ed.valence = 0.5 + 0.2 // Slight positive bias
 	}
-	
+
 	ed.metrics.OperationCount++
 	ed.metrics.LastOperation = time.Now()
-	
+
 	// Update average latency
 	latency := time.Since(startTime)
 	ed.metrics.AverageLatency = (ed.metrics.AverageLatency + latency) / 2
-	
+
 	return len(buffer), nil
 }
 
@@ -377,7 +377,7 @@ func (ed *EmotionDevice) IoCtl(command uint32, arg interface{}) error {
 func (ed *EmotionDevice) GetMetrics() (ecco9.DeviceMetrics, error) {
 	ed.mu.RLock()
 	defer ed.mu.RUnlock()
-	
+
 	return ed.metrics, nil
 }
 
@@ -385,7 +385,7 @@ func (ed *EmotionDevice) GetMetrics() (ecco9.DeviceMetrics, error) {
 func (ed *EmotionDevice) GetHealth() (ecco9.HealthStatus, error) {
 	ed.mu.RLock()
 	defer ed.mu.RUnlock()
-	
+
 	return ed.state.Health, nil
 }
 

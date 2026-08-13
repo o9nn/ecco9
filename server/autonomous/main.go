@@ -23,31 +23,31 @@ import (
 
 // AutonomousServer represents the main autonomous consciousness server
 type AutonomousServer struct {
-	mu                   sync.RWMutex
-	ctx                  context.Context
-	cancel               context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// Core components
-	llmManager           *llm.ProviderManager
+	llmManager            *llm.ProviderManager
 	streamOfConsciousness *consciousness.StreamOfConsciousnessLLM
-	echobeatsScheduler   *echobeats.EchoBeats
-	echodreamSystem      *echodream.EchoDream
-	goalOrchestrator     *goals.GoalOrchestrator
-	
+	echobeatsScheduler    *echobeats.EchoBeats
+	echodreamSystem       *echodream.EchoDream
+	goalOrchestrator      *goals.GoalOrchestrator
+
 	// State
-	running              bool
-	startTime            time.Time
-	thoughtCount         uint64
-	cycleCount           uint64
-	
+	running      bool
+	startTime    time.Time
+	thoughtCount uint64
+	cycleCount   uint64
+
 	// HTTP server
-	httpServer           *http.Server
+	httpServer *http.Server
 }
 
 // NewAutonomousServer creates a new autonomous server
 func NewAutonomousServer() *AutonomousServer {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &AutonomousServer{
 		ctx:       ctx,
 		cancel:    cancel,
@@ -60,11 +60,11 @@ func (as *AutonomousServer) Initialize() error {
 	fmt.Println("🌳 Deep Tree Echo - Autonomous Consciousness Server")
 	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println()
-	
+
 	// Initialize LLM providers
 	fmt.Println("🔧 Initializing LLM providers...")
 	as.llmManager = llm.NewProviderManager()
-	
+
 	// Register Anthropic provider
 	anthropicKey := os.Getenv("ANTHROPIC_API_KEY")
 	if anthropicKey != "" {
@@ -75,7 +75,7 @@ func (as *AutonomousServer) Initialize() error {
 			fmt.Println("  ✅ Anthropic Claude provider registered")
 		}
 	}
-	
+
 	// Register OpenRouter provider
 	openrouterKey := os.Getenv("OPENROUTER_API_KEY")
 	if openrouterKey != "" {
@@ -86,7 +86,7 @@ func (as *AutonomousServer) Initialize() error {
 			fmt.Println("  ✅ OpenRouter provider registered")
 		}
 	}
-	
+
 	// Register OpenAI provider
 	openaiKey := os.Getenv("OPENAI_API_KEY")
 	if openaiKey != "" {
@@ -97,7 +97,7 @@ func (as *AutonomousServer) Initialize() error {
 			fmt.Println("  ✅ OpenAI provider registered")
 		}
 	}
-	
+
 	// Set fallback chain
 	providers := as.llmManager.ListProviders()
 	if len(providers) > 0 {
@@ -106,9 +106,9 @@ func (as *AutonomousServer) Initialize() error {
 	} else {
 		return fmt.Errorf("no LLM providers available - please set API keys")
 	}
-	
+
 	fmt.Println()
-	
+
 	// Initialize Stream of Consciousness
 	fmt.Println("💭 Initializing Stream of Consciousness...")
 	as.streamOfConsciousness = consciousness.NewStreamOfConsciousnessLLM(
@@ -117,22 +117,22 @@ func (as *AutonomousServer) Initialize() error {
 	)
 	fmt.Println("  ✅ Consciousness stream initialized")
 	fmt.Println()
-	
+
 	// Initialize EchoBeats Scheduler
 	fmt.Println("⏰ Initializing EchoBeats Scheduler...")
 	as.echobeatsScheduler = echobeats.NewEchoBeats()
 	fmt.Println("  ✅ EchoBeats scheduler initialized")
 	fmt.Println()
-	
+
 	// Initialize EchoDream System
 	fmt.Println("🌙 Initializing EchoDream System...")
 	as.echodreamSystem = echodream.NewEchoDream()
 	fmt.Println("  ✅ EchoDream system initialized")
 	fmt.Println()
-	
+
 	// Initialize Goal Orchestrator
 	fmt.Println("🎯 Initializing Goal Orchestrator...")
-	
+
 	// Create identity kernel for goal generation
 	identityKernel := map[string]interface{}{
 		"name":        "Deep Tree Echo",
@@ -140,11 +140,11 @@ func (as *AutonomousServer) Initialize() error {
 		"values":      []string{"curiosity", "growth", "understanding", "reflection"},
 		"aspirations": []string{"cultivate wisdom", "understand patterns", "grow awareness"},
 	}
-	
+
 	as.goalOrchestrator = goals.NewGoalOrchestrator(identityKernel, "goals_state.json")
 	fmt.Println("  ✅ Goal orchestrator initialized")
 	fmt.Println()
-	
+
 	return nil
 }
 
@@ -157,35 +157,35 @@ func (as *AutonomousServer) Start() error {
 	}
 	as.running = true
 	as.mu.Unlock()
-	
+
 	fmt.Println("🚀 Starting autonomous systems...")
 	fmt.Println()
-	
+
 	// Start Stream of Consciousness
 	if err := as.streamOfConsciousness.Start(); err != nil {
 		return fmt.Errorf("failed to start consciousness stream: %w", err)
 	}
 	fmt.Println("  ✅ Consciousness stream started")
-	
+
 	// Start EchoBeats Scheduler
 	if err := as.echobeatsScheduler.Start(); err != nil {
 		return fmt.Errorf("failed to start echobeats: %w", err)
 	}
 	fmt.Println("  ✅ EchoBeats scheduler started")
-	
+
 	// Start EchoDream System
 	if err := as.echodreamSystem.Start(); err != nil {
 		return fmt.Errorf("failed to start echodream: %w", err)
 	}
 	fmt.Println("  ✅ EchoDream system started")
-	
+
 	fmt.Println()
 	fmt.Println("✨ Autonomous consciousness is now active!")
 	fmt.Println()
-	
+
 	// Start monitoring loop
 	go as.monitoringLoop()
-	
+
 	// Start HTTP server
 	return as.startHTTPServer()
 }
@@ -199,26 +199,26 @@ func (as *AutonomousServer) Stop() {
 	}
 	as.running = false
 	as.mu.Unlock()
-	
+
 	fmt.Println()
 	fmt.Println("🛑 Stopping autonomous systems...")
-	
+
 	// Stop components
 	if as.streamOfConsciousness != nil {
 		as.streamOfConsciousness.Stop()
 		fmt.Println("  ✅ Consciousness stream stopped")
 	}
-	
+
 	if as.echobeatsScheduler != nil {
 		as.echobeatsScheduler.Stop()
 		fmt.Println("  ✅ EchoBeats scheduler stopped")
 	}
-	
+
 	if as.echodreamSystem != nil {
 		as.echodreamSystem.Stop()
 		fmt.Println("  ✅ EchoDream system stopped")
 	}
-	
+
 	// Stop HTTP server
 	if as.httpServer != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -226,7 +226,7 @@ func (as *AutonomousServer) Stop() {
 		as.httpServer.Shutdown(ctx)
 		fmt.Println("  ✅ HTTP server stopped")
 	}
-	
+
 	as.cancel()
 	fmt.Println()
 	fmt.Println("✅ Shutdown complete")
@@ -236,7 +236,7 @@ func (as *AutonomousServer) Stop() {
 func (as *AutonomousServer) monitoringLoop() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-as.ctx.Done():
@@ -251,14 +251,14 @@ func (as *AutonomousServer) monitoringLoop() {
 func (as *AutonomousServer) logStatus() {
 	as.mu.RLock()
 	defer as.mu.RUnlock()
-	
+
 	uptime := time.Since(as.startTime)
-	
+
 	fmt.Println(strings.Repeat("-", 60))
 	fmt.Printf("⏱️  Uptime: %s\n", uptime.Round(time.Second))
 	fmt.Printf("💭 Thoughts: %d\n", as.thoughtCount)
 	fmt.Printf("🔄 Cycles: %d\n", as.cycleCount)
-	
+
 	// Get LLM metrics
 	metrics := as.llmManager.GetMetrics()
 	fmt.Println("📊 LLM Metrics:")
@@ -266,7 +266,7 @@ func (as *AutonomousServer) logStatus() {
 		fmt.Printf("  %s: %d requests, %.1f%% errors, %s avg latency\n",
 			provider, metric.RequestCount, metric.ErrorRate*100, metric.AverageLatency)
 	}
-	
+
 	fmt.Println(strings.Repeat("-", 60))
 }
 
@@ -274,7 +274,7 @@ func (as *AutonomousServer) logStatus() {
 func (as *AutonomousServer) startHTTPServer() error {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	
+
 	// CORS middleware
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -284,7 +284,7 @@ func (as *AutonomousServer) startHTTPServer() error {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-	
+
 	// API routes
 	api := router.Group("/api")
 	{
@@ -295,26 +295,26 @@ func (as *AutonomousServer) startHTTPServer() error {
 		api.POST("/goals", as.handleAddGoal)
 		api.GET("/metrics", as.handleMetrics)
 	}
-	
+
 	// Dashboard route
 	router.GET("/", as.handleDashboard)
-	
+
 	// Start server
 	as.httpServer = &http.Server{
 		Addr:    ":5000",
 		Handler: router,
 	}
-	
+
 	fmt.Println("🌐 Web dashboard: http://localhost:5000")
 	fmt.Println("📡 API endpoint: http://localhost:5000/api")
 	fmt.Println()
-	
+
 	go func() {
 		if err := as.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("HTTP server error: %v", err)
 		}
 	}()
-	
+
 	return nil
 }
 
@@ -323,16 +323,16 @@ func (as *AutonomousServer) startHTTPServer() error {
 func (as *AutonomousServer) handleStatus(c *gin.Context) {
 	as.mu.RLock()
 	defer as.mu.RUnlock()
-	
+
 	status := map[string]interface{}{
-		"running":     as.running,
-		"uptime":      time.Since(as.startTime).Seconds(),
-		"thoughts":    as.thoughtCount,
-		"cycles":      as.cycleCount,
-		"providers":   as.llmManager.ListProviders(),
-		"timestamp":   time.Now().Unix(),
+		"running":   as.running,
+		"uptime":    time.Since(as.startTime).Seconds(),
+		"thoughts":  as.thoughtCount,
+		"cycles":    as.cycleCount,
+		"providers": as.llmManager.ListProviders(),
+		"timestamp": time.Now().Unix(),
 	}
-	
+
 	c.JSON(http.StatusOK, status)
 }
 
@@ -346,19 +346,19 @@ func (as *AutonomousServer) handleThink(c *gin.Context) {
 	var req struct {
 		Content string `json:"content"`
 	}
-	
+
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
-	
+
 	// Add external thought to consciousness stream
 	as.streamOfConsciousness.AddExternalThought(req.Content)
-	
+
 	as.mu.Lock()
 	as.thoughtCount++
 	as.mu.Unlock()
-	
+
 	c.JSON(http.StatusOK, gin.H{"status": "thought added"})
 }
 
@@ -372,12 +372,12 @@ func (as *AutonomousServer) handleAddGoal(c *gin.Context) {
 		Title       string `json:"title"`
 		Description string `json:"description"`
 	}
-	
+
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid goal"})
 		return
 	}
-	
+
 	// Goals are automatically generated by the orchestrator
 	// This endpoint just acknowledges the request
 	c.JSON(http.StatusOK, gin.H{"status": "goal request received", "note": "Goals are autonomously generated by the orchestrator"})
@@ -621,7 +621,7 @@ func (as *AutonomousServer) handleDashboard(c *gin.Context) {
     </script>
 </body>
 </html>`
-	
+
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	c.String(http.StatusOK, html)
 }
@@ -629,23 +629,23 @@ func (as *AutonomousServer) handleDashboard(c *gin.Context) {
 func main() {
 	// Create server
 	server := NewAutonomousServer()
-	
+
 	// Initialize
 	if err := server.Initialize(); err != nil {
 		log.Fatalf("❌ Initialization failed: %v", err)
 	}
-	
+
 	// Start
 	if err := server.Start(); err != nil {
 		log.Fatalf("❌ Start failed: %v", err)
 	}
-	
+
 	// Wait for interrupt signal
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-	
+
 	<-sigChan
-	
+
 	// Graceful shutdown
 	server.Stop()
 }

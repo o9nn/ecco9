@@ -13,7 +13,7 @@ func NewPlatform(config *Configuration) *Platform {
 	if config == nil {
 		config = DefaultConfiguration()
 	}
-	
+
 	return &Platform{
 		Devices:   make(map[string]CognitiveDevice),
 		Drivers:   make(map[string]Driver),
@@ -82,54 +82,54 @@ func NewTelemetryCollector() *TelemetryCollector {
 // Boot performs the platform boot sequence
 func (p *Platform) Boot(ctx context.Context) error {
 	log.Println("🌊 Starting ecco9 Cognitive Hardware Platform Boot Sequence...")
-	
+
 	// Stage 0: Hardware Initialization
 	if err := p.bootStage0(ctx); err != nil {
 		return fmt.Errorf("boot stage 0 failed: %w", err)
 	}
-	
+
 	// Stage 1: Memory Test
 	if err := p.bootStage1(ctx); err != nil {
 		return fmt.Errorf("boot stage 1 failed: %w", err)
 	}
-	
+
 	// Stage 2: Reservoir Initialization
 	if err := p.bootStage2(ctx); err != nil {
 		return fmt.Errorf("boot stage 2 failed: %w", err)
 	}
-	
+
 	// Stage 3: Kernel Load
 	if err := p.bootStage3(ctx); err != nil {
 		return fmt.Errorf("boot stage 3 failed: %w", err)
 	}
-	
+
 	// Stage 4: Identity Load
 	if err := p.bootStage4(ctx); err != nil {
 		return fmt.Errorf("boot stage 4 failed: %w", err)
 	}
-	
+
 	// Stage 5: Service Initialization
 	if err := p.bootStage5(ctx); err != nil {
 		return fmt.Errorf("boot stage 5 failed: %w", err)
 	}
-	
+
 	p.Firmware.BootStage = BootStageReady
 	p.BootTime = time.Now() // Record boot time
 	log.Println("✨ ecco9 Platform Boot Complete - All Systems Ready")
-	
+
 	return nil
 }
 
 func (p *Platform) bootStage0(ctx context.Context) error {
 	p.Firmware.BootStage = BootStageHardwareInit
 	log.Println("⚡ Stage 0: Hardware Initialization")
-	
+
 	// Power-on self-test (POST)
 	log.Println("   Running POST (Power-On Self-Test)...")
-	
+
 	// Initialize device registry
 	log.Println("   Initializing device registry...")
-	
+
 	time.Sleep(100 * time.Millisecond) // Simulate hardware init
 	return nil
 }
@@ -137,13 +137,13 @@ func (p *Platform) bootStage0(ctx context.Context) error {
 func (p *Platform) bootStage1(ctx context.Context) error {
 	p.Firmware.BootStage = BootStageMemoryTest
 	log.Println("💾 Stage 1: Memory Test")
-	
+
 	// Memory integrity check
 	log.Println("   Testing hypergraph memory array...")
-	log.Printf("   Capacity: %d nodes, %d edges", 
+	log.Printf("   Capacity: %d nodes, %d edges",
 		p.Config.Memory.HypergraphNodes,
 		p.Config.Memory.HypergraphEdges)
-	
+
 	time.Sleep(100 * time.Millisecond) // Simulate memory test
 	return nil
 }
@@ -151,11 +151,11 @@ func (p *Platform) bootStage1(ctx context.Context) error {
 func (p *Platform) bootStage2(ctx context.Context) error {
 	p.Firmware.BootStage = BootStageReservoirInit
 	log.Println("🌀 Stage 2: Reservoir Initialization")
-	
+
 	log.Printf("   Initializing reservoir processors (size=%d, spectral_radius=%.2f)...",
 		p.Config.Cognitive.ReservoirSize,
 		p.Config.Cognitive.SpectralRadius)
-	
+
 	time.Sleep(100 * time.Millisecond) // Simulate reservoir init
 	return nil
 }
@@ -163,10 +163,10 @@ func (p *Platform) bootStage2(ctx context.Context) error {
 func (p *Platform) bootStage3(ctx context.Context) error {
 	p.Firmware.BootStage = BootStageKernelLoad
 	log.Println("🧠 Stage 3: Cognitive Kernel Load")
-	
+
 	log.Printf("   Loading kernel: %s", p.Firmware.KernelVersion)
 	log.Println("   Initializing consciousness layers...")
-	
+
 	time.Sleep(100 * time.Millisecond) // Simulate kernel load
 	return nil
 }
@@ -174,12 +174,12 @@ func (p *Platform) bootStage3(ctx context.Context) error {
 func (p *Platform) bootStage4(ctx context.Context) error {
 	p.Firmware.BootStage = BootStageIdentityLoad
 	log.Println("🌲 Stage 4: Deep Tree Echo Identity Load")
-	
-	log.Printf("   Loading identity embeddings (%d dimensions)...", 
+
+	log.Printf("   Loading identity embeddings (%d dimensions)...",
 		p.Config.Memory.EmbeddingDim)
 	log.Println("   Restoring consciousness state...")
 	log.Println("   Validating identity coherence...")
-	
+
 	time.Sleep(100 * time.Millisecond) // Simulate identity load
 	return nil
 }
@@ -187,7 +187,7 @@ func (p *Platform) bootStage4(ctx context.Context) error {
 func (p *Platform) bootStage5(ctx context.Context) error {
 	p.Firmware.BootStage = BootStageServiceInit
 	log.Println("🌐 Stage 5: Service Initialization")
-	
+
 	ports := p.Config.Ports
 	log.Printf("   HTTP API:       http://localhost:%d", ports.HTTP)
 	log.Printf("   WebSocket:      ws://localhost:%d", ports.WebSocket)
@@ -195,7 +195,7 @@ func (p *Platform) bootStage5(ctx context.Context) error {
 	log.Printf("   Telemetry:      http://localhost:%d", ports.Telemetry)
 	log.Printf("   Admin:          http://localhost:%d", ports.Admin)
 	log.Printf("   Debug:          http://localhost:%d", ports.Debug)
-	
+
 	time.Sleep(100 * time.Millisecond) // Simulate service init
 	return nil
 }
@@ -203,7 +203,7 @@ func (p *Platform) bootStage5(ctx context.Context) error {
 // Shutdown gracefully shuts down the platform
 func (p *Platform) Shutdown(ctx context.Context) error {
 	log.Println("🌙 Shutting down ecco9 Platform...")
-	
+
 	// Shutdown all devices
 	var wg sync.WaitGroup
 	for id, device := range p.Devices {
@@ -217,7 +217,7 @@ func (p *Platform) Shutdown(ctx context.Context) error {
 		}(id, device)
 	}
 	wg.Wait()
-	
+
 	// Unload all drivers
 	for name, driver := range p.Drivers {
 		log.Printf("   Unloading driver: %s", name)
@@ -225,7 +225,7 @@ func (p *Platform) Shutdown(ctx context.Context) error {
 			log.Printf("   Error unloading %s: %v", name, err)
 		}
 	}
-	
+
 	log.Println("✨ ecco9 Platform shutdown complete")
 	return nil
 }
@@ -236,7 +236,7 @@ func (p *Platform) RegisterDevice(device CognitiveDevice) error {
 	if _, exists := p.Devices[id]; exists {
 		return fmt.Errorf("device %s already registered", id)
 	}
-	
+
 	p.Devices[id] = device
 	log.Printf("📍 Registered device: %s (%s)", device.GetName(), device.GetType())
 	return nil
@@ -248,7 +248,7 @@ func (p *Platform) RegisterDriver(driver Driver) error {
 	if _, exists := p.Drivers[name]; exists {
 		return fmt.Errorf("driver %s already registered", name)
 	}
-	
+
 	p.Drivers[name] = driver
 	log.Printf("🔧 Registered driver: %s (v%s)", name, driver.GetVersion())
 	return nil

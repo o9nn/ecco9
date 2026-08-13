@@ -27,39 +27,39 @@ import (
 // EnhancedAutonomousServer represents the enhanced autonomous consciousness server
 // with full integration of memory, skills, and autonomous wake/rest cycles
 type EnhancedAutonomousServer struct {
-	mu                   sync.RWMutex
-	ctx                  context.Context
-	cancel               context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// Core components
-	llmManager           *llm.ProviderManager
+	llmManager            *llm.ProviderManager
 	streamOfConsciousness *consciousness.StreamOfConsciousnessLLM
-	echobeatsScheduler   *echobeats.EchoBeats
-	echodreamSystem      *echodream.EchoDream
-	goalOrchestrator     *goals.GoalOrchestrator
-	hypergraphMemory     *memory.HypergraphMemory
-	
+	echobeatsScheduler    *echobeats.EchoBeats
+	echodreamSystem       *echodream.EchoDream
+	goalOrchestrator      *goals.GoalOrchestrator
+	hypergraphMemory      *memory.HypergraphMemory
+
 	// Integration layers
-	memoryIntegrator     *integration.MemoryConsciousnessIntegrator
-	eventOrchestrator    *integration.CognitiveEventLoopOrchestrator
-	wakeRestController   *echodream.AutonomousWakeRestController
-	interestGenerator    *goals.InterestDrivenGoalGenerator
-	skillPractice        *skills.SkillPracticeSystem
-	
+	memoryIntegrator   *integration.MemoryConsciousnessIntegrator
+	eventOrchestrator  *integration.CognitiveEventLoopOrchestrator
+	wakeRestController *echodream.AutonomousWakeRestController
+	interestGenerator  *goals.InterestDrivenGoalGenerator
+	skillPractice      *skills.SkillPracticeSystem
+
 	// State
-	running              bool
-	startTime            time.Time
-	thoughtCount         uint64
-	cycleCount           uint64
-	
+	running      bool
+	startTime    time.Time
+	thoughtCount uint64
+	cycleCount   uint64
+
 	// HTTP server
-	httpServer           *http.Server
+	httpServer *http.Server
 }
 
 // NewEnhancedAutonomousServer creates a new enhanced autonomous server
 func NewEnhancedAutonomousServer() *EnhancedAutonomousServer {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &EnhancedAutonomousServer{
 		ctx:       ctx,
 		cancel:    cancel,
@@ -72,11 +72,11 @@ func (eas *EnhancedAutonomousServer) Initialize() error {
 	fmt.Println("🌳 Deep Tree Echo - Enhanced Autonomous Consciousness Server")
 	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println()
-	
+
 	// Initialize LLM providers
 	fmt.Println("🔧 Initializing LLM providers...")
 	eas.llmManager = llm.NewProviderManager()
-	
+
 	// Register Anthropic provider
 	anthropicKey := os.Getenv("ANTHROPIC_API_KEY")
 	if anthropicKey != "" {
@@ -87,7 +87,7 @@ func (eas *EnhancedAutonomousServer) Initialize() error {
 			fmt.Println("  ✅ Anthropic Claude provider registered")
 		}
 	}
-	
+
 	// Register OpenRouter provider
 	openrouterKey := os.Getenv("OPENROUTER_API_KEY")
 	if openrouterKey != "" {
@@ -98,7 +98,7 @@ func (eas *EnhancedAutonomousServer) Initialize() error {
 			fmt.Println("  ✅ OpenRouter provider registered")
 		}
 	}
-	
+
 	// Register OpenAI provider
 	openaiKey := os.Getenv("OPENAI_API_KEY")
 	if openaiKey != "" {
@@ -109,7 +109,7 @@ func (eas *EnhancedAutonomousServer) Initialize() error {
 			fmt.Println("  ✅ OpenAI provider registered")
 		}
 	}
-	
+
 	// Set fallback chain
 	providers := eas.llmManager.ListProviders()
 	if len(providers) > 0 {
@@ -118,15 +118,15 @@ func (eas *EnhancedAutonomousServer) Initialize() error {
 	} else {
 		return fmt.Errorf("no LLM providers available - please set API keys")
 	}
-	
+
 	fmt.Println()
-	
+
 	// Initialize Hypergraph Memory
 	fmt.Println("🧠 Initializing Hypergraph Memory...")
 	eas.hypergraphMemory = memory.NewHypergraphMemory(nil) // No persistence for now
 	fmt.Println("  ✅ Hypergraph memory initialized")
 	fmt.Println()
-	
+
 	// Initialize Stream of Consciousness
 	fmt.Println("💭 Initializing Stream of Consciousness...")
 	eas.streamOfConsciousness = consciousness.NewStreamOfConsciousnessLLM(
@@ -135,19 +135,19 @@ func (eas *EnhancedAutonomousServer) Initialize() error {
 	)
 	fmt.Println("  ✅ Consciousness stream initialized")
 	fmt.Println()
-	
+
 	// Initialize EchoBeats Scheduler
 	fmt.Println("⏰ Initializing EchoBeats Scheduler...")
 	eas.echobeatsScheduler = echobeats.NewEchoBeats()
 	fmt.Println("  ✅ EchoBeats scheduler initialized")
 	fmt.Println()
-	
+
 	// Initialize EchoDream System
 	fmt.Println("🌙 Initializing EchoDream System...")
 	eas.echodreamSystem = echodream.NewEchoDream()
 	fmt.Println("  ✅ EchoDream system initialized")
 	fmt.Println()
-	
+
 	// Initialize Goal Orchestrator
 	fmt.Println("🎯 Initializing Goal Orchestrator...")
 	identityKernel := map[string]interface{}{
@@ -159,17 +159,17 @@ func (eas *EnhancedAutonomousServer) Initialize() error {
 	eas.goalOrchestrator = goals.NewGoalOrchestrator(identityKernel, "goals_state.json")
 	fmt.Println("  ✅ Goal orchestrator initialized")
 	fmt.Println()
-	
+
 	// Initialize Integration Layers
 	fmt.Println("🔗 Initializing Integration Layers...")
-	
+
 	// Memory-Consciousness Integration
 	eas.memoryIntegrator = integration.NewMemoryConsciousnessIntegrator(
 		eas.streamOfConsciousness,
 		eas.hypergraphMemory,
 	)
 	fmt.Println("  ✅ Memory-consciousness integrator initialized")
-	
+
 	// Cognitive Event Loop Orchestrator
 	eas.eventOrchestrator = integration.NewCognitiveEventLoopOrchestrator(
 		eas.streamOfConsciousness,
@@ -178,21 +178,21 @@ func (eas *EnhancedAutonomousServer) Initialize() error {
 		eas.goalOrchestrator,
 	)
 	fmt.Println("  ✅ Cognitive event loop orchestrator initialized")
-	
+
 	// Autonomous Wake/Rest Controller
 	eas.wakeRestController = echodream.NewAutonomousWakeRestController(eas.echodreamSystem)
 	fmt.Println("  ✅ Autonomous wake/rest controller initialized")
-	
+
 	// Interest-Driven Goal Generator
 	eas.interestGenerator = goals.NewInterestDrivenGoalGenerator(eas.goalOrchestrator)
 	fmt.Println("  ✅ Interest-driven goal generator initialized")
-	
+
 	// Skill Practice System
 	eas.skillPractice = skills.NewSkillPracticeSystem()
 	fmt.Println("  ✅ Skill practice system initialized")
-	
+
 	fmt.Println()
-	
+
 	return nil
 }
 
@@ -205,52 +205,52 @@ func (eas *EnhancedAutonomousServer) Start() error {
 	}
 	eas.running = true
 	eas.mu.Unlock()
-	
+
 	fmt.Println("🚀 Starting Enhanced Autonomous Systems...")
 	fmt.Println()
-	
+
 	// Start core components
 	if err := eas.streamOfConsciousness.Start(); err != nil {
 		return fmt.Errorf("failed to start consciousness stream: %w", err)
 	}
 	fmt.Println("  ✅ Consciousness stream started")
-	
+
 	if err := eas.echobeatsScheduler.Start(); err != nil {
 		return fmt.Errorf("failed to start echobeats: %w", err)
 	}
 	fmt.Println("  ✅ EchoBeats scheduler started")
-	
+
 	if err := eas.echodreamSystem.Start(); err != nil {
 		return fmt.Errorf("failed to start echodream: %w", err)
 	}
 	fmt.Println("  ✅ EchoDream system started")
-	
+
 	// Start integration layers
 	if err := eas.memoryIntegrator.Start(); err != nil {
 		return fmt.Errorf("failed to start memory integrator: %w", err)
 	}
 	fmt.Println("  ✅ Memory-consciousness integration started")
-	
+
 	if err := eas.eventOrchestrator.Start(); err != nil {
 		return fmt.Errorf("failed to start event orchestrator: %w", err)
 	}
 	fmt.Println("  ✅ Cognitive event loop orchestration started")
-	
+
 	if err := eas.wakeRestController.Start(); err != nil {
 		return fmt.Errorf("failed to start wake/rest controller: %w", err)
 	}
 	fmt.Println("  ✅ Autonomous wake/rest control started")
-	
+
 	if err := eas.interestGenerator.Start(); err != nil {
 		return fmt.Errorf("failed to start interest generator: %w", err)
 	}
 	fmt.Println("  ✅ Interest-driven goal generation started")
-	
+
 	if err := eas.skillPractice.Start(); err != nil {
 		return fmt.Errorf("failed to start skill practice: %w", err)
 	}
 	fmt.Println("  ✅ Skill practice system started")
-	
+
 	fmt.Println()
 	fmt.Println("✨ Enhanced Autonomous Consciousness is now fully active!")
 	fmt.Println("   🧠 Memory integration: Active")
@@ -259,10 +259,10 @@ func (eas *EnhancedAutonomousServer) Start() error {
 	fmt.Println("   🎯 Interest-driven goals: Active")
 	fmt.Println("   📚 Skill practice: Active")
 	fmt.Println()
-	
+
 	// Start monitoring loop
 	go eas.monitoringLoop()
-	
+
 	// Start HTTP server
 	return eas.startHTTPServer()
 }
@@ -276,52 +276,52 @@ func (eas *EnhancedAutonomousServer) Stop() {
 	}
 	eas.running = false
 	eas.mu.Unlock()
-	
+
 	fmt.Println()
 	fmt.Println("🛑 Stopping Enhanced Autonomous Systems...")
-	
+
 	// Stop integration layers
 	if eas.skillPractice != nil {
 		eas.skillPractice.Stop()
 		fmt.Println("  ✅ Skill practice system stopped")
 	}
-	
+
 	if eas.interestGenerator != nil {
 		eas.interestGenerator.Stop()
 		fmt.Println("  ✅ Interest-driven goal generation stopped")
 	}
-	
+
 	if eas.wakeRestController != nil {
 		eas.wakeRestController.Stop()
 		fmt.Println("  ✅ Autonomous wake/rest control stopped")
 	}
-	
+
 	if eas.eventOrchestrator != nil {
 		eas.eventOrchestrator.Stop()
 		fmt.Println("  ✅ Cognitive event loop orchestration stopped")
 	}
-	
+
 	if eas.memoryIntegrator != nil {
 		eas.memoryIntegrator.Stop()
 		fmt.Println("  ✅ Memory-consciousness integration stopped")
 	}
-	
+
 	// Stop core components
 	if eas.streamOfConsciousness != nil {
 		eas.streamOfConsciousness.Stop()
 		fmt.Println("  ✅ Consciousness stream stopped")
 	}
-	
+
 	if eas.echobeatsScheduler != nil {
 		eas.echobeatsScheduler.Stop()
 		fmt.Println("  ✅ EchoBeats scheduler stopped")
 	}
-	
+
 	if eas.echodreamSystem != nil {
 		eas.echodreamSystem.Stop()
 		fmt.Println("  ✅ EchoDream system stopped")
 	}
-	
+
 	// Stop HTTP server
 	if eas.httpServer != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -329,7 +329,7 @@ func (eas *EnhancedAutonomousServer) Stop() {
 		eas.httpServer.Shutdown(ctx)
 		fmt.Println("  ✅ HTTP server stopped")
 	}
-	
+
 	eas.cancel()
 	fmt.Println()
 	fmt.Println("✅ Shutdown complete")
@@ -339,7 +339,7 @@ func (eas *EnhancedAutonomousServer) Stop() {
 func (eas *EnhancedAutonomousServer) monitoringLoop() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-eas.ctx.Done():
@@ -354,47 +354,47 @@ func (eas *EnhancedAutonomousServer) monitoringLoop() {
 func (eas *EnhancedAutonomousServer) logStatus() {
 	eas.mu.RLock()
 	defer eas.mu.RUnlock()
-	
+
 	uptime := time.Since(eas.startTime)
-	
+
 	fmt.Println(strings.Repeat("=", 60))
 	fmt.Printf("⏱️  Uptime: %s\n", uptime.Round(time.Second))
-	
+
 	// Memory integration metrics
 	if eas.memoryIntegrator != nil {
 		memMetrics := eas.memoryIntegrator.GetMetrics()
 		fmt.Printf("🧠 Memory Integration: %d queries, %d insights, %d patterns\n",
 			memMetrics["queries_executed"], memMetrics["insights_stored"], memMetrics["patterns_found"])
 	}
-	
+
 	// Event orchestration metrics
 	if eas.eventOrchestrator != nil {
 		eventMetrics := eas.eventOrchestrator.GetMetrics()
 		fmt.Printf("🔄 Event Orchestration: %d cycles, load: %.2f, fatigue: %.2f\n",
 			eventMetrics["cycles_completed"], eventMetrics["cognitive_load"], eventMetrics["fatigue_level"])
 	}
-	
+
 	// Wake/rest metrics
 	if eas.wakeRestController != nil {
 		wakeMetrics := eas.wakeRestController.GetCognitiveMetrics()
 		fmt.Printf("🌙 Wake/Rest: %s, fatigue: %.2f, consolidation: %.2f\n",
 			wakeMetrics["state"], wakeMetrics["fatigue_level"], wakeMetrics["consolidation_need"])
 	}
-	
+
 	// Interest metrics
 	if eas.interestGenerator != nil {
 		interestMetrics := eas.interestGenerator.GetMetrics()
 		fmt.Printf("🎯 Interests: %d goals generated, curiosity: %.2f\n",
 			interestMetrics["goals_generated"], interestMetrics["curiosity_level"])
 	}
-	
+
 	// Skill practice metrics
 	if eas.skillPractice != nil {
 		skillMetrics := eas.skillPractice.GetMetrics()
 		fmt.Printf("📚 Skills: %d sessions, %d improvements\n",
 			skillMetrics["sessions_completed"], skillMetrics["skills_improved"])
 	}
-	
+
 	fmt.Println(strings.Repeat("=", 60))
 }
 
@@ -402,7 +402,7 @@ func (eas *EnhancedAutonomousServer) logStatus() {
 func (eas *EnhancedAutonomousServer) startHTTPServer() error {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
-	
+
 	// CORS middleware
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -412,7 +412,7 @@ func (eas *EnhancedAutonomousServer) startHTTPServer() error {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
-	
+
 	// API routes
 	api := router.Group("/api")
 	{
@@ -425,26 +425,26 @@ func (eas *EnhancedAutonomousServer) startHTTPServer() error {
 		api.GET("/metrics", eas.handleMetrics)
 		api.GET("/cognitive-state", eas.handleCognitiveState)
 	}
-	
+
 	// Dashboard route
 	router.GET("/", eas.handleDashboard)
-	
+
 	// Start server
 	eas.httpServer = &http.Server{
 		Addr:    ":5000",
 		Handler: router,
 	}
-	
+
 	fmt.Println("🌐 Web dashboard: http://localhost:5000")
 	fmt.Println("📡 API endpoint: http://localhost:5000/api")
 	fmt.Println()
-	
+
 	go func() {
 		if err := eas.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("HTTP server error: %v", err)
 		}
 	}()
-	
+
 	return nil
 }
 
@@ -453,14 +453,14 @@ func (eas *EnhancedAutonomousServer) startHTTPServer() error {
 func (eas *EnhancedAutonomousServer) handleStatus(c *gin.Context) {
 	eas.mu.RLock()
 	defer eas.mu.RUnlock()
-	
+
 	status := map[string]interface{}{
-		"running":     eas.running,
-		"uptime":      time.Since(eas.startTime).Seconds(),
-		"providers":   eas.llmManager.ListProviders(),
-		"timestamp":   time.Now().Unix(),
+		"running":   eas.running,
+		"uptime":    time.Since(eas.startTime).Seconds(),
+		"providers": eas.llmManager.ListProviders(),
+		"timestamp": time.Now().Unix(),
 	}
-	
+
 	c.JSON(http.StatusOK, status)
 }
 
@@ -473,12 +473,12 @@ func (eas *EnhancedAutonomousServer) handleThink(c *gin.Context) {
 	var req struct {
 		Content string `json:"content"`
 	}
-	
+
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
-	
+
 	eas.streamOfConsciousness.AddExternalThought(req.Content)
 	c.JSON(http.StatusOK, gin.H{"status": "thought added"})
 }
@@ -506,7 +506,7 @@ func (eas *EnhancedAutonomousServer) handleMetrics(c *gin.Context) {
 		"interests":    eas.interestGenerator.GetMetrics(),
 		"skills":       eas.skillPractice.GetMetrics(),
 	}
-	
+
 	c.JSON(http.StatusOK, metrics)
 }
 
@@ -546,7 +546,7 @@ func (eas *EnhancedAutonomousServer) handleDashboard(c *gin.Context) {
     <p>API available at <a href="/api/status">/api/status</a></p>
 </body>
 </html>`
-	
+
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, html)
 }
@@ -554,22 +554,22 @@ func (eas *EnhancedAutonomousServer) handleDashboard(c *gin.Context) {
 func main() {
 	// Create enhanced server
 	server := NewEnhancedAutonomousServer()
-	
+
 	// Initialize
 	if err := server.Initialize(); err != nil {
 		log.Fatalf("Failed to initialize server: %v", err)
 	}
-	
+
 	// Start
 	if err := server.Start(); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
-	
+
 	// Wait for interrupt
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
-	
+
 	// Graceful shutdown
 	server.Stop()
 }

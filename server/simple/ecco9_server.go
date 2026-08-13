@@ -20,20 +20,20 @@ import (
 
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
-	
+
 	// Create ecco9 platform
 	config := ecco9.DefaultConfiguration()
 	platform := ecco9.NewPlatform(config)
-	
+
 	// Boot the platform
 	ctx := context.Background()
 	if err := platform.Boot(ctx); err != nil {
 		log.Fatalf("Failed to boot ecco9 platform: %v", err)
 	}
-	
+
 	// Create LLM provider manager
 	providerManager := llm.NewProviderManager()
-	
+
 	// Register all drivers
 	allDrivers := []struct {
 		driver ecco9.Driver
@@ -45,7 +45,7 @@ func main() {
 		{drivers.NewMemoryDriver(), drivers.DefaultMemoryConfig()},
 		{drivers.NewLLMDriver(providerManager), nil},
 	}
-	
+
 	for _, d := range allDrivers {
 		if err := d.driver.Load(d.config); err != nil {
 			log.Fatalf("Failed to load %s driver: %v", d.driver.GetName(), err)
@@ -53,7 +53,7 @@ func main() {
 		if err := platform.RegisterDriver(d.driver); err != nil {
 			log.Fatalf("Failed to register %s driver: %v", d.driver.GetName(), err)
 		}
-		
+
 		// Initialize devices from this driver
 		for _, device := range d.driver.ListDevices() {
 			if err := device.Initialize(ctx); err != nil {
@@ -64,37 +64,37 @@ func main() {
 			}
 		}
 	}
-	
+
 	// Create HTTP server
 	router := setupRouter(platform, providerManager)
-	
+
 	// Start server
 	port := config.Ports.HTTP
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: router,
 	}
-	
+
 	// Graceful shutdown
 	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt, syscall.SIGTERM)
 		<-sigint
-		
+
 		log.Println("\n🛑 Received shutdown signal")
-		
+
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		
+
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			log.Printf("Server shutdown error: %v", err)
 		}
-		
+
 		if err := platform.Shutdown(shutdownCtx); err != nil {
 			log.Printf("Platform shutdown error: %v", err)
 		}
 	}()
-	
+
 	log.Printf("\n🌊 ecco9 Platform listening on http://localhost:%d\n", port)
 	log.Println("📡 Available endpoints:")
 	log.Printf("   GET  /              - Platform status dashboard")
@@ -104,7 +104,7 @@ func main() {
 	log.Printf("   GET  /api/health    - Health check")
 	log.Printf("   POST /api/generate  - Generate text")
 	log.Println()
-	
+
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Server error: %v", err)
 	}
@@ -115,13 +115,13 @@ func setupRouter(platform *ecco9.Platform, providerManager *llm.ProviderManager)
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(cors.Default())
-	
+
 	// Root endpoint - Platform dashboard
 	router.GET("/", func(c *gin.Context) {
 		html := generateDashboardHTML(platform)
 		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(html))
 	})
-	
+
 	// API endpoints
 	api := router.Group("/api")
 	{
@@ -133,7 +133,7 @@ func setupRouter(platform *ecco9.Platform, providerManager *llm.ProviderManager)
 				"status":   status,
 			})
 		})
-		
+
 		// List devices
 		api.GET("/devices", func(c *gin.Context) {
 			devices := make([]map[string]interface{}, 0)
@@ -149,7 +149,7 @@ func setupRouter(platform *ecco9.Platform, providerManager *llm.ProviderManager)
 			}
 			c.JSON(http.StatusOK, gin.H{"devices": devices})
 		})
-		
+
 		// List drivers
 		api.GET("/drivers", func(c *gin.Context) {
 			drivers := make([]map[string]interface{}, 0)
@@ -162,7 +162,7 @@ func setupRouter(platform *ecco9.Platform, providerManager *llm.ProviderManager)
 			}
 			c.JSON(http.StatusOK, gin.H{"drivers": drivers})
 		})
-		
+
 		// Health check
 		api.GET("/health", func(c *gin.Context) {
 			healthy := true
@@ -173,60 +173,60 @@ func setupRouter(platform *ecco9.Platform, providerManager *llm.ProviderManager)
 					break
 				}
 			}
-			
+
 			status := http.StatusOK
 			if !healthy {
 				status = http.StatusServiceUnavailable
 			}
-			
+
 			c.JSON(status, gin.H{
-				"healthy": healthy,
+				"healthy":   healthy,
 				"timestamp": time.Now(),
 			})
 		})
-		
+
 		// Generate text
 		api.POST("/generate", func(c *gin.Context) {
 			var req struct {
 				Prompt string `json:"prompt"`
 				Model  string `json:"model"`
 			}
-			
+
 			if err := c.BindJSON(&req); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 				return
 			}
-			
+
 			// Use ecco9 platform for generation
 			response := fmt.Sprintf(
 				"🌊 ecco9 Cognitive Platform Response\n\n"+
-				"Platform: %s\n"+
-				"Firmware: %s\n"+
-				"Devices: %d active\n"+
-				"Prompt: %s\n\n"+
-				"This is a demonstration of the ecco9 virtual cognitive hardware platform. "+
-				"The platform provides device drivers, firmware interfaces, and hardware "+
-				"simulation for Deep Tree Echo's embodied cognition architecture.\n",
+					"Platform: %s\n"+
+					"Firmware: %s\n"+
+					"Devices: %d active\n"+
+					"Prompt: %s\n\n"+
+					"This is a demonstration of the ecco9 virtual cognitive hardware platform. "+
+					"The platform provides device drivers, firmware interfaces, and hardware "+
+					"simulation for Deep Tree Echo's embodied cognition architecture.\n",
 				"ecco9",
 				platform.Firmware.Version,
 				len(platform.Devices),
 				req.Prompt,
 			)
-			
+
 			c.JSON(http.StatusOK, gin.H{
 				"response": response,
 				"platform": "ecco9",
 			})
 		})
 	}
-	
+
 	return router
 }
 
 func generateDashboardHTML(platform *ecco9.Platform) string {
 	status := platform.GetStatus()
 	statusJSON, _ := json.MarshalIndent(status, "", "  ")
-	
+
 	devices := make([]map[string]interface{}, 0)
 	for id, device := range platform.Devices {
 		state, _ := device.GetState()
@@ -239,7 +239,7 @@ func generateDashboardHTML(platform *ecco9.Platform) string {
 		})
 	}
 	devicesJSON, _ := json.MarshalIndent(devices, "", "  ")
-	
+
 	html := fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
@@ -358,6 +358,6 @@ func generateDashboardHTML(platform *ecco9.Platform) string {
 </body>
 </html>
 `, string(statusJSON), string(devicesJSON))
-	
+
 	return html
 }

@@ -5,54 +5,54 @@ import (
 	"fmt"
 	"sync"
 	"time"
-	
+
 	"github.com/EchoCog/echollama/core/llm"
 )
 
 // SelfDirectedLearningSystem manages autonomous learning and skill development
 type SelfDirectedLearningSystem struct {
-	mu              sync.RWMutex
-	ctx             context.Context
-	cancel          context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// LLM provider for learning
-	llmProvider     llm.LLMProvider
-	
+	llmProvider llm.LLMProvider
+
 	// Identity and context
-	identity        string
-	wisdomDomains   []string
-	
+	identity      string
+	wisdomDomains []string
+
 	// Knowledge gaps
-	knowledgeGaps   map[string]*KnowledgeGap
-	
+	knowledgeGaps map[string]*KnowledgeGap
+
 	// Learning goals
-	learningGoals   map[string]*LearningGoal
-	
+	learningGoals map[string]*LearningGoal
+
 	// Skills in development
 	skillsInProgress map[string]*SkillDevelopment
-	
+
 	// Practice sessions
 	practiceSessions []*LearningPracticeSession
-	
+
 	// Metrics
-	totalGapsIdentified  uint64
-	totalGoalsGenerated  uint64
+	totalGapsIdentified   uint64
+	totalGoalsGenerated   uint64
 	totalPracticeSessions uint64
-	totalSkillsAcquired  uint64
-	
+	totalSkillsAcquired   uint64
+
 	// Running state
-	running         bool
+	running bool
 }
 
 // KnowledgeGap represents an identified gap in knowledge
 type KnowledgeGap struct {
-	ID              string
-	Domain          string
-	Description     string
-	Severity        float64      // 0.0-1.0 (how critical is this gap)
-	IdentifiedAt    time.Time
-	AddressedBy     []string     // Learning goal IDs
-	Status          GapStatus
+	ID           string
+	Domain       string
+	Description  string
+	Severity     float64 // 0.0-1.0 (how critical is this gap)
+	IdentifiedAt time.Time
+	AddressedBy  []string // Learning goal IDs
+	Status       GapStatus
 }
 
 // GapStatus represents the status of a knowledge gap
@@ -70,42 +70,42 @@ func (gs GapStatus) String() string {
 
 // LearningGoal represents a goal to address a knowledge gap
 type LearningGoal struct {
-	ID              string
-	Description     string
-	KnowledgeGapID  string
-	Strategy        LearningStrategy
-	Progress        float64      // 0.0-1.0
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
-	CompletedAt     *time.Time
-	
+	ID             string
+	Description    string
+	KnowledgeGapID string
+	Strategy       LearningStrategy
+	Progress       float64 // 0.0-1.0
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	CompletedAt    *time.Time
+
 	// Resources
 	ResourcesNeeded []string
 	ResourcesFound  []string
-	
+
 	// Practice
 	PracticeSchedule string
-	NextPractice    time.Time
+	NextPractice     time.Time
 }
 
 // LearningStrategy defines how to learn
 type LearningStrategy struct {
-	Approach        string   // e.g., "study", "practice", "experiment", "teach"
-	Steps           []string
+	Approach         string // e.g., "study", "practice", "experiment", "teach"
+	Steps            []string
 	CurrentStepIndex int
-	TimeEstimate    time.Duration
+	TimeEstimate     time.Duration
 }
 
 // SkillDevelopment tracks skill acquisition
 type SkillDevelopment struct {
-	ID              string
-	SkillName       string
-	Domain          string
-	Proficiency     float64      // 0.0-1.0
-	StartedAt       time.Time
-	LastPracticed   time.Time
-	PracticeCount   int
-	
+	ID            string
+	SkillName     string
+	Domain        string
+	Proficiency   float64 // 0.0-1.0
+	StartedAt     time.Time
+	LastPracticed time.Time
+	PracticeCount int
+
 	// Learning curve
 	ProficiencyHistory []ProficiencyRecord
 }
@@ -124,7 +124,7 @@ type LearningPracticeSession struct {
 	StartTime       time.Time
 	EndTime         time.Time
 	Duration        time.Duration
-	Effectiveness   float64      // 0.0-1.0
+	Effectiveness   float64 // 0.0-1.0
 	Notes           string
 	ProficiencyGain float64
 }
@@ -136,7 +136,7 @@ func NewSelfDirectedLearningSystem(
 	wisdomDomains []string,
 ) *SelfDirectedLearningSystem {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &SelfDirectedLearningSystem{
 		ctx:              ctx,
 		cancel:           cancel,
@@ -159,18 +159,18 @@ func (sdl *SelfDirectedLearningSystem) Start() error {
 	}
 	sdl.running = true
 	sdl.mu.Unlock()
-	
+
 	fmt.Println("📚 Starting Self-Directed Learning System...")
 	fmt.Printf("   Identity: %s\n", sdl.identity)
 	fmt.Printf("   Wisdom Domains: %v\n", sdl.wisdomDomains)
-	
+
 	// Initial knowledge gap analysis
 	if err := sdl.identifyKnowledgeGaps(); err != nil {
 		fmt.Printf("⚠️  Initial gap analysis error: %v\n", err)
 	}
-	
+
 	go sdl.run()
-	
+
 	return nil
 }
 
@@ -178,15 +178,15 @@ func (sdl *SelfDirectedLearningSystem) Start() error {
 func (sdl *SelfDirectedLearningSystem) Stop() error {
 	sdl.mu.Lock()
 	defer sdl.mu.Unlock()
-	
+
 	if !sdl.running {
 		return fmt.Errorf("not running")
 	}
-	
+
 	fmt.Println("📚 Stopping self-directed learning system...")
 	sdl.running = false
 	sdl.cancel()
-	
+
 	return nil
 }
 
@@ -194,7 +194,7 @@ func (sdl *SelfDirectedLearningSystem) Stop() error {
 func (sdl *SelfDirectedLearningSystem) run() {
 	ticker := time.NewTicker(30 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-sdl.ctx.Done():
@@ -204,10 +204,10 @@ func (sdl *SelfDirectedLearningSystem) run() {
 			if err := sdl.identifyKnowledgeGaps(); err != nil {
 				fmt.Printf("⚠️  Gap analysis error: %v\n", err)
 			}
-			
+
 			// Generate learning goals for gaps
 			sdl.generateLearningGoals()
-			
+
 			// Schedule practice sessions
 			sdl.schedulePractice()
 		}
@@ -220,7 +220,7 @@ func (sdl *SelfDirectedLearningSystem) identifyKnowledgeGaps() error {
 	identity := sdl.identity
 	domains := sdl.wisdomDomains
 	sdl.mu.RUnlock()
-	
+
 	prompt := fmt.Sprintf(`You are %s, analyzing your knowledge to identify gaps.
 
 Your wisdom cultivation focuses on: %v
@@ -236,18 +236,18 @@ DOMAIN: [domain name]
 SEVERITY: [0.0-1.0]
 
 Identify the gaps:`, identity, domains)
-	
+
 	opts := llm.GenerateOptions{
 		Temperature:  0.7,
 		MaxTokens:    400,
 		SystemPrompt: "You are a self-reflective AI analyzing your own knowledge gaps.",
 	}
-	
+
 	response, err := sdl.llmProvider.Generate(sdl.ctx, prompt, opts)
 	if err != nil {
 		return fmt.Errorf("LLM gap identification failed: %w", err)
 	}
-	
+
 	// Parse gaps from response (simplified)
 	gap := &KnowledgeGap{
 		ID:           fmt.Sprintf("gap_%d", time.Now().Unix()),
@@ -258,19 +258,19 @@ Identify the gaps:`, identity, domains)
 		AddressedBy:  make([]string, 0),
 		Status:       GapStatusIdentified,
 	}
-	
+
 	sdl.mu.Lock()
 	sdl.knowledgeGaps[gap.ID] = gap
 	sdl.totalGapsIdentified++
 	sdl.mu.Unlock()
-	
+
 	fmt.Printf("📚 Identified knowledge gap: %s (Severity: %.2f)\n", gap.Description, gap.Severity)
 	respLen := len(response)
 	if respLen > 100 {
 		respLen = 100
 	}
 	fmt.Printf("   LLM Response: %s\n", response[:respLen])
-	
+
 	return nil
 }
 
@@ -278,7 +278,7 @@ Identify the gaps:`, identity, domains)
 func (sdl *SelfDirectedLearningSystem) generateLearningGoals() {
 	sdl.mu.Lock()
 	defer sdl.mu.Unlock()
-	
+
 	for gapID, gap := range sdl.knowledgeGaps {
 		if gap.Status == GapStatusIdentified {
 			// Create learning goal
@@ -292,20 +292,20 @@ func (sdl *SelfDirectedLearningSystem) generateLearningGoals() {
 					CurrentStepIndex: 0,
 					TimeEstimate:     2 * time.Hour,
 				},
-				Progress:        0.0,
-				CreatedAt:       time.Now(),
-				UpdatedAt:       time.Now(),
-				ResourcesNeeded: []string{"documentation", "examples", "practice exercises"},
-				ResourcesFound:  make([]string, 0),
+				Progress:         0.0,
+				CreatedAt:        time.Now(),
+				UpdatedAt:        time.Now(),
+				ResourcesNeeded:  []string{"documentation", "examples", "practice exercises"},
+				ResourcesFound:   make([]string, 0),
 				PracticeSchedule: "daily",
-				NextPractice:    time.Now().Add(1 * time.Hour),
+				NextPractice:     time.Now().Add(1 * time.Hour),
 			}
-			
+
 			sdl.learningGoals[goal.ID] = goal
 			gap.AddressedBy = append(gap.AddressedBy, goal.ID)
 			gap.Status = GapStatusAddressing
 			sdl.totalGoalsGenerated++
-			
+
 			fmt.Printf("📚 Created learning goal: %s\n", goal.Description)
 		}
 	}
@@ -315,7 +315,7 @@ func (sdl *SelfDirectedLearningSystem) generateLearningGoals() {
 func (sdl *SelfDirectedLearningSystem) schedulePractice() {
 	sdl.mu.Lock()
 	defer sdl.mu.Unlock()
-	
+
 	for _, skill := range sdl.skillsInProgress {
 		// Check if practice is due
 		if time.Since(skill.LastPracticed) > 24*time.Hour {
@@ -329,22 +329,22 @@ func (sdl *SelfDirectedLearningSystem) schedulePractice() {
 				Notes:           "Scheduled practice session",
 				ProficiencyGain: 0.05,
 			}
-			
+
 			sdl.practiceSessions = append(sdl.practiceSessions, session)
 			skill.LastPracticed = time.Now()
 			skill.PracticeCount++
 			skill.Proficiency = min(1.0, skill.Proficiency+session.ProficiencyGain)
-			
+
 			// Record proficiency
 			skill.ProficiencyHistory = append(skill.ProficiencyHistory, ProficiencyRecord{
 				Timestamp:   time.Now(),
 				Proficiency: skill.Proficiency,
 				Notes:       "Practice session completed",
 			})
-			
+
 			sdl.totalPracticeSessions++
-			
-			fmt.Printf("📚 Practice session for skill '%s' (Proficiency: %.2f)\n", 
+
+			fmt.Printf("📚 Practice session for skill '%s' (Proficiency: %.2f)\n",
 				skill.SkillName, skill.Proficiency)
 		}
 	}
@@ -354,7 +354,7 @@ func (sdl *SelfDirectedLearningSystem) schedulePractice() {
 func (sdl *SelfDirectedLearningSystem) AddSkill(skillName, domain string) error {
 	sdl.mu.Lock()
 	defer sdl.mu.Unlock()
-	
+
 	skill := &SkillDevelopment{
 		ID:                 fmt.Sprintf("skill_%d", time.Now().Unix()),
 		SkillName:          skillName,
@@ -365,11 +365,11 @@ func (sdl *SelfDirectedLearningSystem) AddSkill(skillName, domain string) error 
 		PracticeCount:      0,
 		ProficiencyHistory: make([]ProficiencyRecord, 0),
 	}
-	
+
 	sdl.skillsInProgress[skill.ID] = skill
-	
+
 	fmt.Printf("📚 Added skill for development: %s (Domain: %s)\n", skillName, domain)
-	
+
 	return nil
 }
 
@@ -377,12 +377,12 @@ func (sdl *SelfDirectedLearningSystem) AddSkill(skillName, domain string) error 
 func (sdl *SelfDirectedLearningSystem) GetKnowledgeGaps() []*KnowledgeGap {
 	sdl.mu.RLock()
 	defer sdl.mu.RUnlock()
-	
+
 	gaps := make([]*KnowledgeGap, 0, len(sdl.knowledgeGaps))
 	for _, gap := range sdl.knowledgeGaps {
 		gaps = append(gaps, gap)
 	}
-	
+
 	return gaps
 }
 
@@ -390,12 +390,12 @@ func (sdl *SelfDirectedLearningSystem) GetKnowledgeGaps() []*KnowledgeGap {
 func (sdl *SelfDirectedLearningSystem) GetLearningGoals() []*LearningGoal {
 	sdl.mu.RLock()
 	defer sdl.mu.RUnlock()
-	
+
 	goals := make([]*LearningGoal, 0, len(sdl.learningGoals))
 	for _, goal := range sdl.learningGoals {
 		goals = append(goals, goal)
 	}
-	
+
 	return goals
 }
 
@@ -403,7 +403,7 @@ func (sdl *SelfDirectedLearningSystem) GetLearningGoals() []*LearningGoal {
 func (sdl *SelfDirectedLearningSystem) GetMetrics() map[string]interface{} {
 	sdl.mu.RLock()
 	defer sdl.mu.RUnlock()
-	
+
 	return map[string]interface{}{
 		"knowledge_gaps":        len(sdl.knowledgeGaps),
 		"learning_goals":        len(sdl.learningGoals),

@@ -15,7 +15,7 @@ func main() {
 	fmt.Println()
 
 	baseURL := "http://localhost:8080/api"
-	
+
 	// Wait for server to be ready
 	fmt.Println("⏳ Waiting for server to be ready...")
 	if !waitForServer(baseURL, 30*time.Second) {

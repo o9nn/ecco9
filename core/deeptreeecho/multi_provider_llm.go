@@ -27,12 +27,12 @@ type MultiProviderLLM struct {
 
 // ProviderStats tracks usage statistics for a provider
 type ProviderStats struct {
-	Requests      int64
-	Successes     int64
-	Failures      int64
-	TotalLatency  time.Duration
-	LastUsed      time.Time
-	LastError     error
+	Requests     int64
+	Successes    int64
+	Failures     int64
+	TotalLatency time.Duration
+	LastUsed     time.Time
+	LastError    error
 }
 
 // NewMultiProviderLLM creates a new multi-provider LLM manager
@@ -41,10 +41,10 @@ func NewMultiProviderLLM() *MultiProviderLLM {
 		providers: make([]LLMProvider, 0),
 		stats:     make(map[string]*ProviderStats),
 	}
-	
+
 	// Initialize providers based on available API keys
 	m.initializeProviders()
-	
+
 	return m
 }
 
@@ -58,7 +58,7 @@ func (m *MultiProviderLLM) initializeProviders() {
 			fmt.Println("✅ Initialized Anthropic Claude provider")
 		}
 	}
-	
+
 	// Try OpenRouter (multi-model access)
 	if apiKey := os.Getenv("OPENROUTER_API_KEY"); apiKey != "" {
 		provider := NewOpenRouterProvider(apiKey, "anthropic/claude-3.5-sonnet")
@@ -67,7 +67,7 @@ func (m *MultiProviderLLM) initializeProviders() {
 			fmt.Println("✅ Initialized OpenRouter provider")
 		}
 	}
-	
+
 	// Try OpenAI (GPT models)
 	if apiKey := os.Getenv("OPENAI_API_KEY"); apiKey != "" {
 		provider := NewOpenAIProvider(apiKey, "gpt-4.1-mini")
@@ -76,7 +76,7 @@ func (m *MultiProviderLLM) initializeProviders() {
 			fmt.Println("✅ Initialized OpenAI provider")
 		}
 	}
-	
+
 	if len(m.providers) == 0 {
 		fmt.Println("⚠️  No LLM providers available - check API keys")
 	}
@@ -86,10 +86,10 @@ func (m *MultiProviderLLM) initializeProviders() {
 func (m *MultiProviderLLM) AddProvider(provider LLMProvider) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.providers = append(m.providers, provider)
 	m.stats[provider.GetName()] = &ProviderStats{}
-	
+
 	// Sort providers by priority
 	m.sortProvidersByPriority()
 }
@@ -115,7 +115,7 @@ func (m *MultiProviderLLM) GenerateThought(ctx context.Context, prompt string) (
 	}
 	current := m.current
 	m.mu.RUnlock()
-	
+
 	// Try current provider first
 	if current < len(m.providers) {
 		provider := m.providers[current]
@@ -126,18 +126,18 @@ func (m *MultiProviderLLM) GenerateThought(ctx context.Context, prompt string) (
 			}
 		}
 	}
-	
+
 	// Fallback to other providers
 	m.mu.RLock()
 	providers := make([]LLMProvider, len(m.providers))
 	copy(providers, m.providers)
 	m.mu.RUnlock()
-	
+
 	for i, provider := range providers {
 		if i == current {
 			continue // Already tried
 		}
-		
+
 		if provider.IsAvailable() {
 			result, err := m.tryProvider(ctx, provider, prompt, "thought")
 			if err == nil {
@@ -149,7 +149,7 @@ func (m *MultiProviderLLM) GenerateThought(ctx context.Context, prompt string) (
 			}
 		}
 	}
-	
+
 	return "", fmt.Errorf("all LLM providers failed or unavailable")
 }
 
@@ -162,7 +162,7 @@ func (m *MultiProviderLLM) GenerateReflection(ctx context.Context, contextStr st
 	}
 	current := m.current
 	m.mu.RUnlock()
-	
+
 	// Try current provider first
 	if current < len(m.providers) {
 		provider := m.providers[current]
@@ -173,18 +173,18 @@ func (m *MultiProviderLLM) GenerateReflection(ctx context.Context, contextStr st
 			}
 		}
 	}
-	
+
 	// Fallback to other providers
 	m.mu.RLock()
 	providers := make([]LLMProvider, len(m.providers))
 	copy(providers, m.providers)
 	m.mu.RUnlock()
-	
+
 	for i, provider := range providers {
 		if i == current {
 			continue
 		}
-		
+
 		if provider.IsAvailable() {
 			result, err := m.tryProviderReflection(ctx, provider, contextStr)
 			if err == nil {
@@ -195,23 +195,23 @@ func (m *MultiProviderLLM) GenerateReflection(ctx context.Context, contextStr st
 			}
 		}
 	}
-	
+
 	return "", fmt.Errorf("all LLM providers failed or unavailable")
 }
 
 // tryProvider attempts to use a provider and updates statistics
 func (m *MultiProviderLLM) tryProvider(ctx context.Context, provider LLMProvider, prompt string, thoughtType string) (string, error) {
 	start := time.Now()
-	
+
 	m.mu.Lock()
 	stats := m.stats[provider.GetName()]
 	stats.Requests++
 	m.mu.Unlock()
-	
+
 	result, err := provider.GenerateThought(ctx, prompt)
-	
+
 	latency := time.Since(start)
-	
+
 	m.mu.Lock()
 	stats.TotalLatency += latency
 	stats.LastUsed = time.Now()
@@ -222,23 +222,23 @@ func (m *MultiProviderLLM) tryProvider(ctx context.Context, provider LLMProvider
 		stats.Successes++
 	}
 	m.mu.Unlock()
-	
+
 	return result, err
 }
 
 // tryProviderReflection attempts to use a provider for reflection
 func (m *MultiProviderLLM) tryProviderReflection(ctx context.Context, provider LLMProvider, contextStr string) (string, error) {
 	start := time.Now()
-	
+
 	m.mu.Lock()
 	stats := m.stats[provider.GetName()]
 	stats.Requests++
 	m.mu.Unlock()
-	
+
 	result, err := provider.GenerateReflection(ctx, contextStr)
-	
+
 	latency := time.Since(start)
-	
+
 	m.mu.Lock()
 	stats.TotalLatency += latency
 	stats.LastUsed = time.Now()
@@ -249,7 +249,7 @@ func (m *MultiProviderLLM) tryProviderReflection(ctx context.Context, provider L
 		stats.Successes++
 	}
 	m.mu.Unlock()
-	
+
 	return result, err
 }
 
@@ -257,7 +257,7 @@ func (m *MultiProviderLLM) tryProviderReflection(ctx context.Context, provider L
 func (m *MultiProviderLLM) GetStats() map[string]*ProviderStats {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	// Return a copy
 	stats := make(map[string]*ProviderStats)
 	for name, s := range m.stats {
@@ -271,7 +271,7 @@ func (m *MultiProviderLLM) GetStats() map[string]*ProviderStats {
 func (m *MultiProviderLLM) GetCurrentProvider() string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	if m.current < len(m.providers) {
 		return m.providers[m.current].GetName()
 	}
@@ -282,7 +282,7 @@ func (m *MultiProviderLLM) GetCurrentProvider() string {
 func (m *MultiProviderLLM) GetAvailableProviders() []string {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	available := make([]string, 0)
 	for _, provider := range m.providers {
 		if provider.IsAvailable() {
@@ -296,7 +296,7 @@ func (m *MultiProviderLLM) GetAvailableProviders() []string {
 func (m *MultiProviderLLM) IsAvailable() bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	for _, provider := range m.providers {
 		if provider.IsAvailable() {
 			return true
