@@ -17,12 +17,12 @@ func main() {
 	// Create autonomous consciousness
 	fmt.Println("🧠 Initializing Autonomous Consciousness V4...")
 	ac := deeptreeecho.NewAutonomousConsciousnessV4("EchoSelf")
-	
+
 	if ac == nil {
 		fmt.Println("❌ Failed to create autonomous consciousness")
 		return
 	}
-	
+
 	fmt.Println("✅ Autonomous Consciousness V4 created")
 	fmt.Println()
 
@@ -47,7 +47,7 @@ func main() {
 	fmt.Println("📋 Test 3: Autonomous Operation")
 	fmt.Println("   Running for 5 seconds to observe autonomous behavior...")
 	time.Sleep(5 * time.Second)
-	
+
 	status = ac.GetStatus()
 	fmt.Printf("   Iterations after 5s: %v\n", status["iterations"])
 	fmt.Println("   ✅ System is operating autonomously")

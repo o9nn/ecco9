@@ -12,18 +12,18 @@ import (
 
 // MMIO register offsets for the NPU coprocessor (PERIPH space base 0x40001000).
 const (
-	regBase           uint64 = 0x40001000
-	regCmd            uint64 = regBase + 0x00
-	regStatus         uint64 = regBase + 0x04
-	regPromptAddr     uint64 = regBase + 0x08
-	regPromptLen      uint64 = regBase + 0x0C
-	regNPredict       uint64 = regBase + 0x10
-	regTokenOut       uint64 = regBase + 0x14
-	regTokenReady     uint64 = regBase + 0x18
-	regModelID        uint64 = regBase + 0x1C
-	regCtxUsed        uint64 = regBase + 0x20
-	regErrorCode      uint64 = regBase + 0x24
-	regPerfTokensSec  uint64 = regBase + 0x28
+	regBase          uint64 = 0x40001000
+	regCmd           uint64 = regBase + 0x00
+	regStatus        uint64 = regBase + 0x04
+	regPromptAddr    uint64 = regBase + 0x08
+	regPromptLen     uint64 = regBase + 0x0C
+	regNPredict      uint64 = regBase + 0x10
+	regTokenOut      uint64 = regBase + 0x14
+	regTokenReady    uint64 = regBase + 0x18
+	regModelID       uint64 = regBase + 0x1C
+	regCtxUsed       uint64 = regBase + 0x20
+	regErrorCode     uint64 = regBase + 0x24
+	regPerfTokensSec uint64 = regBase + 0x28
 )
 
 // Command bits written to regCmd.
@@ -59,14 +59,14 @@ const (
 
 // NPUModelConfig holds GGUF model and runtime parameters.
 type NPUModelConfig struct {
-	ModelPath    string
-	ModelName    string
-	NCtx         int32
-	NThreads     int32
-	NGPULayers   int32
-	BatchSize    int32
+	ModelPath      string
+	ModelName      string
+	NCtx           int32
+	NThreads       int32
+	NGPULayers     int32
+	BatchSize      int32
 	OffloadKVCache bool
-	LowVRAMMode  bool
+	LowVRAMMode    bool
 }
 
 // DefaultNPUModelConfig returns sensible defaults for the NPU model.
@@ -101,13 +101,13 @@ func DefaultNPUSequenceConfig() NPUSequenceConfig {
 
 // NPUTelemetry holds real-time performance data exposed via hardware registers.
 type NPUTelemetry struct {
-	TokensPerSecond        float64
-	TotalTokensGenerated   uint64
-	TotalPrompts           uint64
-	LastPromptTokens       uint64
-	LastCompletionTokens   uint64
-	LastInferenceStart     time.Time
-	LastInferenceEnd       time.Time
+	TokensPerSecond      float64
+	TotalTokensGenerated uint64
+	TotalPrompts         uint64
+	LastPromptTokens     uint64
+	LastCompletionTokens uint64
+	LastInferenceStart   time.Time
+	LastInferenceEnd     time.Time
 }
 
 // TokenCallback is called for each token during streaming inference.
@@ -117,26 +117,26 @@ type TokenCallback func(tokenText string, tokenID int32, isLast bool)
 
 // OntologicalHealth scores the structural completeness of the NPU.
 type OntologicalHealth struct {
-	FoundationIntegrity   float64
-	CoreCompleteness      float64
-	SpecializedFeatures   float64
+	FoundationIntegrity    float64
+	CoreCompleteness       float64
+	SpecializedFeatures    float64
 	ArchitecturalCoherence float64
 }
 
 // TeleologicalAlignment scores purpose clarity and development progress.
 type TeleologicalAlignment struct {
-	PhaseCompletion        [5]float64
-	RoadmapAlignment       float64
+	PhaseCompletion         [5]float64
+	RoadmapAlignment        float64
 	ActualizationTrajectory float64
-	PurposeClarity         float64
+	PurposeClarity          float64
 }
 
 // CognitiveCompleteness scores inference and meta-cognitive capability.
 type CognitiveCompleteness struct {
-	InferenceQuality       float64
+	InferenceQuality        float64
 	PerformanceIntelligence float64
-	MetaCognitiveDepth     float64
-	OverallCognition       float64
+	MetaCognitiveDepth      float64
+	OverallCognition        float64
 }
 
 // IntegrativeHealth scores component coherence and inter-driver harmony.
@@ -149,20 +149,20 @@ type IntegrativeHealth struct {
 
 // EvolutionaryPotential scores the NPU's capacity for growth.
 type EvolutionaryPotential struct {
-	ImplementationDepth      float64
-	SelfImprovementCapacity  float64
-	EvolutionaryFitness      float64
+	ImplementationDepth     float64
+	SelfImprovementCapacity float64
+	EvolutionaryFitness     float64
 }
 
 // NPUSelfAssessment is the full entelechy report produced by assessSelf.
 type NPUSelfAssessment struct {
-	Ontological              OntologicalHealth
-	Teleological             TeleologicalAlignment
-	Cognitive                CognitiveCompleteness
-	Integrative              IntegrativeHealth
-	Evolutionary             EvolutionaryPotential
-	OverallActualization     float64
-	FitnessScore             float64
+	Ontological                OntologicalHealth
+	Teleological               TeleologicalAlignment
+	Cognitive                  CognitiveCompleteness
+	Integrative                IntegrativeHealth
+	Evolutionary               EvolutionaryPotential
+	OverallActualization       float64
+	FitnessScore               float64
 	ImprovementRecommendations []string
 }
 
@@ -699,13 +699,13 @@ func (nd *NPUDevice) assessSelf() NPUSelfAssessment {
 	recommendations := nd.generateRecommendations(ont, tel, cog, intg, evo)
 
 	return NPUSelfAssessment{
-		Ontological:              ont,
-		Teleological:             tel,
-		Cognitive:                cog,
-		Integrative:              intg,
-		Evolutionary:             evo,
-		OverallActualization:     overall,
-		FitnessScore:             fitness,
+		Ontological:                ont,
+		Teleological:               tel,
+		Cognitive:                  cog,
+		Integrative:                intg,
+		Evolutionary:               evo,
+		OverallActualization:       overall,
+		FitnessScore:               fitness,
 		ImprovementRecommendations: recommendations,
 	}
 }
@@ -748,9 +748,9 @@ func (nd *NPUDevice) assessCognitive() CognitiveCompleteness {
 }
 
 func (nd *NPUDevice) assessIntegrative() IntegrativeHealth {
-	hw := 0.9   // MMIO registers + CognitiveDevice interface fully wired
-	sw := 0.85  // Driver interface, IoCtl, streaming API consistent
-	sys := 0.8  // Coexists with other drivers; interrupt/DMA not yet implemented
+	hw := 0.9  // MMIO registers + CognitiveDevice interface fully wired
+	sw := 0.85 // Driver interface, IoCtl, streaming API consistent
+	sys := 0.8 // Coexists with other drivers; interrupt/DMA not yet implemented
 	overall := (hw + sw + sys) / 3.0
 	return IntegrativeHealth{
 		HardwareIntegration: hw,
@@ -761,7 +761,7 @@ func (nd *NPUDevice) assessIntegrative() IntegrativeHealth {
 }
 
 func (nd *NPUDevice) assessEvolutionary() EvolutionaryPotential {
-	depth := 0.6  // Core stub present; production GGUF path not wired
+	depth := 0.6    // Core stub present; production GGUF path not wired
 	capacity := 0.8 // Clear extension points; ontogenesis framework ready
 	fitness := (depth + capacity) / 2.0
 	return EvolutionaryPotential{

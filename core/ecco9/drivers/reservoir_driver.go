@@ -11,20 +11,20 @@ import (
 
 // ReservoirDriver implements the driver for Echo State Reservoir processors
 type ReservoirDriver struct {
-	mu          sync.RWMutex
-	name        string
-	version     string
-	devices     map[string]*ReservoirDevice
-	config      *ReservoirConfig
+	mu      sync.RWMutex
+	name    string
+	version string
+	devices map[string]*ReservoirDevice
+	config  *ReservoirConfig
 }
 
 // ReservoirConfig holds configuration for reservoir processors
 type ReservoirConfig struct {
-	ReservoirSize   int
-	SpectralRadius  float64
-	InputScaling    float64
-	LeakRate        float64
-	NumReservoirs   int
+	ReservoirSize  int
+	SpectralRadius float64
+	InputScaling   float64
+	LeakRate       float64
+	NumReservoirs  int
 }
 
 // NewReservoirDriver creates a new reservoir driver
@@ -52,18 +52,18 @@ func DefaultReservoirConfig() *ReservoirConfig {
 func (rd *ReservoirDriver) Load(config interface{}) error {
 	rd.mu.Lock()
 	defer rd.mu.Unlock()
-	
+
 	if cfg, ok := config.(*ReservoirConfig); ok {
 		rd.config = cfg
 	}
-	
+
 	// Initialize reservoir devices
 	for i := 0; i < rd.config.NumReservoirs; i++ {
 		id := fmt.Sprintf("reservoir%d", i)
 		device := NewReservoirDevice(id, rd.config)
 		rd.devices[id] = device
 	}
-	
+
 	return nil
 }
 
@@ -71,7 +71,7 @@ func (rd *ReservoirDriver) Load(config interface{}) error {
 func (rd *ReservoirDriver) Unload() error {
 	rd.mu.Lock()
 	defer rd.mu.Unlock()
-	
+
 	// Shutdown all devices
 	for _, device := range rd.devices {
 		ctx := context.Background()
@@ -79,7 +79,7 @@ func (rd *ReservoirDriver) Unload() error {
 			return err
 		}
 	}
-	
+
 	rd.devices = make(map[string]*ReservoirDevice)
 	return nil
 }
@@ -88,7 +88,7 @@ func (rd *ReservoirDriver) Unload() error {
 func (rd *ReservoirDriver) GetDevice(id string) (ecco9.CognitiveDevice, error) {
 	rd.mu.RLock()
 	defer rd.mu.RUnlock()
-	
+
 	device, exists := rd.devices[id]
 	if !exists {
 		return nil, fmt.Errorf("device %s not found", id)
@@ -100,7 +100,7 @@ func (rd *ReservoirDriver) GetDevice(id string) (ecco9.CognitiveDevice, error) {
 func (rd *ReservoirDriver) ListDevices() []ecco9.CognitiveDevice {
 	rd.mu.RLock()
 	defer rd.mu.RUnlock()
-	
+
 	devices := make([]ecco9.CognitiveDevice, 0, len(rd.devices))
 	for _, device := range rd.devices {
 		devices = append(devices, device)
@@ -130,14 +130,14 @@ func (rd *ReservoirDriver) GetCapabilities() []string {
 
 // ReservoirDevice represents a single Echo State Reservoir processor
 type ReservoirDevice struct {
-	mu          sync.RWMutex
-	id          string
-	name        string
-	state       ecco9.DeviceState
-	config      *ReservoirConfig
-	reservoir   *EchoStateReservoir
-	metrics     ecco9.DeviceMetrics
-	startTime   time.Time
+	mu        sync.RWMutex
+	id        string
+	name      string
+	state     ecco9.DeviceState
+	config    *ReservoirConfig
+	reservoir *EchoStateReservoir
+	metrics   ecco9.DeviceMetrics
+	startTime time.Time
 }
 
 // NewReservoirDevice creates a new reservoir device
@@ -161,27 +161,27 @@ func NewReservoirDevice(id string, config *ReservoirConfig) *ReservoirDevice {
 func (rd *ReservoirDevice) Initialize(ctx context.Context) error {
 	rd.mu.Lock()
 	defer rd.mu.Unlock()
-	
+
 	rd.state.Status = ecco9.DeviceStatusInitializing
 	rd.state.Power = ecco9.PowerStateActive
-	
+
 	// Create reservoir
 	rd.reservoir = NewEchoStateReservoir(
 		rd.config.ReservoirSize,
 		rd.config.SpectralRadius,
 		rd.config.LeakRate,
 	)
-	
+
 	if err := rd.reservoir.Initialize(); err != nil {
 		rd.state.Status = ecco9.DeviceStatusError
 		rd.state.Health = ecco9.HealthStatusFailed
 		return err
 	}
-	
+
 	rd.startTime = time.Now()
 	rd.state.Status = ecco9.DeviceStatusReady
 	rd.state.LastUpdate = time.Now()
-	
+
 	return nil
 }
 
@@ -189,11 +189,11 @@ func (rd *ReservoirDevice) Initialize(ctx context.Context) error {
 func (rd *ReservoirDevice) Shutdown(ctx context.Context) error {
 	rd.mu.Lock()
 	defer rd.mu.Unlock()
-	
+
 	rd.state.Status = ecco9.DeviceStatusOffline
 	rd.state.Power = ecco9.PowerStateOff
 	rd.reservoir = nil
-	
+
 	return nil
 }
 
@@ -209,11 +209,11 @@ func (rd *ReservoirDevice) Reset(ctx context.Context) error {
 func (rd *ReservoirDevice) GetState() (ecco9.DeviceState, error) {
 	rd.mu.RLock()
 	defer rd.mu.RUnlock()
-	
+
 	state := rd.state
 	state.Uptime = time.Since(rd.startTime)
 	state.Metrics = rd.metrics
-	
+
 	return state, nil
 }
 
@@ -221,7 +221,7 @@ func (rd *ReservoirDevice) GetState() (ecco9.DeviceState, error) {
 func (rd *ReservoirDevice) SetState(state ecco9.DeviceState) error {
 	rd.mu.Lock()
 	defer rd.mu.Unlock()
-	
+
 	rd.state = state
 	return nil
 }
@@ -230,18 +230,18 @@ func (rd *ReservoirDevice) SetState(state ecco9.DeviceState) error {
 func (rd *ReservoirDevice) Read(buffer []byte) (int, error) {
 	rd.mu.RLock()
 	defer rd.mu.RUnlock()
-	
+
 	if rd.reservoir == nil {
 		return 0, fmt.Errorf("reservoir not initialized")
 	}
-	
+
 	// Read current reservoir state
 	state := rd.reservoir.GetState()
 	n := copy(buffer, state)
-	
+
 	rd.metrics.OperationCount++
 	rd.metrics.LastOperation = time.Now()
-	
+
 	return n, nil
 }
 
@@ -249,26 +249,26 @@ func (rd *ReservoirDevice) Read(buffer []byte) (int, error) {
 func (rd *ReservoirDevice) Write(buffer []byte) (int, error) {
 	rd.mu.Lock()
 	defer rd.mu.Unlock()
-	
+
 	if rd.reservoir == nil {
 		return 0, fmt.Errorf("reservoir not initialized")
 	}
-	
+
 	startTime := time.Now()
-	
+
 	// Update reservoir with input
 	if err := rd.reservoir.Update(buffer); err != nil {
 		rd.metrics.ErrorCount++
 		return 0, err
 	}
-	
+
 	rd.metrics.OperationCount++
 	rd.metrics.LastOperation = time.Now()
-	
+
 	// Update average latency
 	latency := time.Since(startTime)
 	rd.metrics.AverageLatency = (rd.metrics.AverageLatency + latency) / 2
-	
+
 	return len(buffer), nil
 }
 
@@ -282,7 +282,7 @@ func (rd *ReservoirDevice) IoCtl(command uint32, arg interface{}) error {
 func (rd *ReservoirDevice) GetMetrics() (ecco9.DeviceMetrics, error) {
 	rd.mu.RLock()
 	defer rd.mu.RUnlock()
-	
+
 	return rd.metrics, nil
 }
 
@@ -290,7 +290,7 @@ func (rd *ReservoirDevice) GetMetrics() (ecco9.DeviceMetrics, error) {
 func (rd *ReservoirDevice) GetHealth() (ecco9.HealthStatus, error) {
 	rd.mu.RLock()
 	defer rd.mu.RUnlock()
-	
+
 	return rd.state.Health, nil
 }
 
@@ -340,7 +340,7 @@ func (esr *EchoStateReservoir) Initialize() error {
 			esr.weights[i][j] = (float64(i+j) / float64(esr.size*esr.size)) * esr.spectralRadius
 		}
 	}
-	
+
 	esr.initialized = true
 	return nil
 }
@@ -350,14 +350,14 @@ func (esr *EchoStateReservoir) Update(input []byte) error {
 	if !esr.initialized {
 		return fmt.Errorf("reservoir not initialized")
 	}
-	
+
 	// Convert input to reservoir activation
 	inputSize := min(len(input), esr.size)
 	for i := 0; i < inputSize; i++ {
-		esr.state[i] = (1-esr.leakRate)*esr.state[i] + 
+		esr.state[i] = (1-esr.leakRate)*esr.state[i] +
 			esr.leakRate*float64(input[i])/255.0
 	}
-	
+
 	return nil
 }
 

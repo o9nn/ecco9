@@ -10,40 +10,40 @@ import (
 // ConsciousnessLayerCommunication manages multi-layer consciousness architecture
 // Implements bottom-up and top-down processing for emergent awareness
 type ConsciousnessLayerCommunication struct {
-	mu              sync.RWMutex
-	ctx             context.Context
-	cancel          context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// Three consciousness layers
 	basicLayer      *BasicConsciousnessLayer
 	reflectiveLayer *ReflectiveConsciousnessLayer
 	metaLayer       *MetaCognitiveLayer
-	
+
 	// Communication channels
-	bottomUpChannel   chan LayerMessage
-	topDownChannel    chan LayerMessage
-	lateralChannel    chan LayerMessage
-	
+	bottomUpChannel chan LayerMessage
+	topDownChannel  chan LayerMessage
+	lateralChannel  chan LayerMessage
+
 	// Emergent insights
-	emergentInsights  []EmergentInsight
-	
+	emergentInsights []EmergentInsight
+
 	// Metrics
-	totalMessages     uint64
-	totalInsights     uint64
-	
+	totalMessages uint64
+	totalInsights uint64
+
 	// Running state
-	running           bool
+	running bool
 }
 
 // LayerMessage represents communication between layers
 type LayerMessage struct {
-	ID              string
-	SourceLayer     LayerType
-	TargetLayer     LayerType
-	MessageType     MessageType
-	Content         interface{}
-	Timestamp       time.Time
-	Priority        float64
+	ID          string
+	SourceLayer LayerType
+	TargetLayer LayerType
+	MessageType MessageType
+	Content     interface{}
+	Timestamp   time.Time
+	Priority    float64
 }
 
 // LayerType identifies consciousness layers
@@ -84,87 +84,87 @@ func (mt MessageType) String() string {
 
 // BasicConsciousnessLayer handles immediate sensory and reactive processing
 type BasicConsciousnessLayer struct {
-	mu              sync.RWMutex
-	
+	mu sync.RWMutex
+
 	// Sensory processing
-	currentInputs   []SensoryInput
-	attentionFocus  string
-	
+	currentInputs  []SensoryInput
+	attentionFocus string
+
 	// Reactive responses
 	immediateActions []string
-	
+
 	// Metrics
-	inputCount      uint64
-	actionCount     uint64
+	inputCount  uint64
+	actionCount uint64
 }
 
 // SensoryInput represents basic sensory data
 type SensoryInput struct {
-	Type        string
-	Content     string
-	Timestamp   time.Time
-	Salience    float64
+	Type      string
+	Content   string
+	Timestamp time.Time
+	Salience  float64
 }
 
 // ReflectiveConsciousnessLayer handles deliberate thought and reasoning
 type ReflectiveConsciousnessLayer struct {
-	mu              sync.RWMutex
-	
+	mu sync.RWMutex
+
 	// Thought processing
 	currentThoughts []LayerThought
 	reasoningChains []ReasoningChain
-	
+
 	// Memory integration
-	recentMemories  []string
-	
+	recentMemories []string
+
 	// Metrics
-	thoughtCount    uint64
-	reasoningCount  uint64
+	thoughtCount   uint64
+	reasoningCount uint64
 }
 
 // LayerThought represents a reflective thought
 type LayerThought struct {
-	ID          string
-	Content     string
-	Type        string
-	Timestamp   time.Time
-	Depth       int
+	ID        string
+	Content   string
+	Type      string
+	Timestamp time.Time
+	Depth     int
 }
 
 // ReasoningChain represents a chain of reasoning
 type ReasoningChain struct {
-	ID          string
-	Steps       []string
-	Conclusion  string
-	Confidence  float64
+	ID         string
+	Steps      []string
+	Conclusion string
+	Confidence float64
 }
 
 // MetaCognitiveLayer handles self-awareness and strategic planning
 type MetaCognitiveLayer struct {
-	mu              sync.RWMutex
-	
+	mu sync.RWMutex
+
 	// Self-awareness
-	selfModel       SelfModel
-	awarenessLevel  float64
-	
+	selfModel      SelfModel
+	awarenessLevel float64
+
 	// Strategic planning
 	activeStrategies []Strategy
-	
+
 	// Goal management
-	topLevelGoals   []string
-	
+	topLevelGoals []string
+
 	// Metrics
-	strategyCount   uint64
-	insightCount    uint64
+	strategyCount uint64
+	insightCount  uint64
 }
 
 // SelfModel represents the system's model of itself
 type SelfModel struct {
-	Identity        string
-	Capabilities    []string
-	Limitations     []string
-	CurrentState    string
-	Confidence      float64
+	Identity     string
+	Capabilities []string
+	Limitations  []string
+	CurrentState string
+	Confidence   float64
 }
 
 // Strategy represents a high-level strategy
@@ -188,7 +188,7 @@ type EmergentInsight struct {
 // NewConsciousnessLayerCommunication creates a new layer communication system
 func NewConsciousnessLayerCommunication() *ConsciousnessLayerCommunication {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &ConsciousnessLayerCommunication{
 		ctx:              ctx,
 		cancel:           cancel,
@@ -211,9 +211,9 @@ func newBasicLayer() *BasicConsciousnessLayer {
 
 func newReflectiveLayer() *ReflectiveConsciousnessLayer {
 	return &ReflectiveConsciousnessLayer{
-		currentThoughts:  make([]LayerThought, 0),
-		reasoningChains:  make([]ReasoningChain, 0),
-		recentMemories:   make([]string, 0),
+		currentThoughts: make([]LayerThought, 0),
+		reasoningChains: make([]ReasoningChain, 0),
+		recentMemories:  make([]string, 0),
 	}
 }
 
@@ -241,15 +241,15 @@ func (clc *ConsciousnessLayerCommunication) Start() error {
 	}
 	clc.running = true
 	clc.mu.Unlock()
-	
+
 	fmt.Println("🧠 Starting Consciousness Layer Communication...")
 	fmt.Println("   Layers: Basic → Reflective → Meta")
 	fmt.Println("   Modes: Bottom-Up, Top-Down, Lateral")
-	
+
 	go clc.runBottomUpProcessing()
 	go clc.runTopDownProcessing()
 	go clc.runInsightIntegration()
-	
+
 	return nil
 }
 
@@ -257,15 +257,15 @@ func (clc *ConsciousnessLayerCommunication) Start() error {
 func (clc *ConsciousnessLayerCommunication) Stop() error {
 	clc.mu.Lock()
 	defer clc.mu.Unlock()
-	
+
 	if !clc.running {
 		return fmt.Errorf("not running")
 	}
-	
+
 	fmt.Println("🧠 Stopping consciousness layer communication...")
 	clc.running = false
 	clc.cancel()
-	
+
 	return nil
 }
 
@@ -303,7 +303,7 @@ func (clc *ConsciousnessLayerCommunication) runTopDownProcessing() {
 func (clc *ConsciousnessLayerCommunication) runInsightIntegration() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-clc.ctx.Done():
@@ -318,9 +318,9 @@ func (clc *ConsciousnessLayerCommunication) runInsightIntegration() {
 func (clc *ConsciousnessLayerCommunication) processBottomUpMessage(msg LayerMessage) {
 	clc.mu.Lock()
 	defer clc.mu.Unlock()
-	
+
 	clc.totalMessages++
-	
+
 	switch msg.TargetLayer {
 	case LayerReflective:
 		// Basic → Reflective
@@ -335,15 +335,15 @@ func (clc *ConsciousnessLayerCommunication) processBottomUpMessage(msg LayerMess
 		clc.reflectiveLayer.currentThoughts = append(clc.reflectiveLayer.currentThoughts, thought)
 		clc.reflectiveLayer.thoughtCount++
 		clc.reflectiveLayer.mu.Unlock()
-		
+
 		fmt.Printf("🧠 Bottom-Up: Basic → Reflective (Thought generated)\n")
-		
+
 	case LayerMeta:
 		// Reflective → Meta
 		clc.metaLayer.mu.Lock()
 		clc.metaLayer.awarenessLevel = min(1.0, clc.metaLayer.awarenessLevel+0.01)
 		clc.metaLayer.mu.Unlock()
-		
+
 		fmt.Printf("🧠 Bottom-Up: Reflective → Meta (Awareness: %.2f)\n", clc.metaLayer.awarenessLevel)
 	}
 }
@@ -352,20 +352,20 @@ func (clc *ConsciousnessLayerCommunication) processBottomUpMessage(msg LayerMess
 func (clc *ConsciousnessLayerCommunication) processTopDownMessage(msg LayerMessage) {
 	clc.mu.Lock()
 	defer clc.mu.Unlock()
-	
+
 	clc.totalMessages++
-	
+
 	switch msg.TargetLayer {
 	case LayerReflective:
 		// Meta → Reflective
 		fmt.Printf("🧠 Top-Down: Meta → Reflective (Goal directive)\n")
-		
+
 	case LayerBasic:
 		// Reflective → Basic or Meta → Basic
 		clc.basicLayer.mu.Lock()
 		clc.basicLayer.attentionFocus = fmt.Sprintf("%v", msg.Content)
 		clc.basicLayer.mu.Unlock()
-		
+
 		fmt.Printf("🧠 Top-Down: → Basic (Attention focus updated)\n")
 	}
 }
@@ -375,7 +375,7 @@ func (clc *ConsciousnessLayerCommunication) propagateSensoryToReflective() {
 	clc.basicLayer.mu.RLock()
 	inputCount := len(clc.basicLayer.currentInputs)
 	clc.basicLayer.mu.RUnlock()
-	
+
 	if inputCount > 0 {
 		msg := LayerMessage{
 			ID:          fmt.Sprintf("msg_%d", time.Now().Unix()),
@@ -386,7 +386,7 @@ func (clc *ConsciousnessLayerCommunication) propagateSensoryToReflective() {
 			Timestamp:   time.Now(),
 			Priority:    0.5,
 		}
-		
+
 		select {
 		case clc.bottomUpChannel <- msg:
 		default:
@@ -399,7 +399,7 @@ func (clc *ConsciousnessLayerCommunication) propagateGoalsToLowerLayers() {
 	clc.metaLayer.mu.RLock()
 	goalCount := len(clc.metaLayer.topLevelGoals)
 	clc.metaLayer.mu.RUnlock()
-	
+
 	if goalCount > 0 {
 		msg := LayerMessage{
 			ID:          fmt.Sprintf("msg_%d", time.Now().Unix()),
@@ -410,7 +410,7 @@ func (clc *ConsciousnessLayerCommunication) propagateGoalsToLowerLayers() {
 			Timestamp:   time.Now(),
 			Priority:    0.8,
 		}
-		
+
 		select {
 		case clc.topDownChannel <- msg:
 		default:
@@ -422,22 +422,22 @@ func (clc *ConsciousnessLayerCommunication) propagateGoalsToLowerLayers() {
 func (clc *ConsciousnessLayerCommunication) detectEmergentInsights() {
 	clc.mu.Lock()
 	defer clc.mu.Unlock()
-	
+
 	// Check for patterns indicating emergent insight
 	if clc.totalMessages > 10 {
 		insight := EmergentInsight{
-			ID:           fmt.Sprintf("insight_%d", time.Now().Unix()),
-			Description:  "Emergent pattern detected from layer interactions",
-			SourceLayers: []LayerType{LayerBasic, LayerReflective, LayerMeta},
-			Timestamp:    time.Now(),
-			Significance: 0.6,
+			ID:              fmt.Sprintf("insight_%d", time.Now().Unix()),
+			Description:     "Emergent pattern detected from layer interactions",
+			SourceLayers:    []LayerType{LayerBasic, LayerReflective, LayerMeta},
+			Timestamp:       time.Now(),
+			Significance:    0.6,
 			IntegrationPath: "bottom-up → top-down → lateral",
 		}
-		
+
 		clc.emergentInsights = append(clc.emergentInsights, insight)
 		clc.totalInsights++
-		
-		fmt.Printf("💡 Emergent Insight: %s (Significance: %.2f)\n", 
+
+		fmt.Printf("💡 Emergent Insight: %s (Significance: %.2f)\n",
 			insight.Description, insight.Significance)
 	}
 }
@@ -446,17 +446,17 @@ func (clc *ConsciousnessLayerCommunication) detectEmergentInsights() {
 func (clc *ConsciousnessLayerCommunication) ProcessSensoryInput(inputType, content string, salience float64) {
 	clc.basicLayer.mu.Lock()
 	defer clc.basicLayer.mu.Unlock()
-	
+
 	input := SensoryInput{
 		Type:      inputType,
 		Content:   content,
 		Timestamp: time.Now(),
 		Salience:  salience,
 	}
-	
+
 	clc.basicLayer.currentInputs = append(clc.basicLayer.currentInputs, input)
 	clc.basicLayer.inputCount++
-	
+
 	// Trigger bottom-up processing
 	msg := LayerMessage{
 		ID:          fmt.Sprintf("msg_%d", time.Now().Unix()),
@@ -467,7 +467,7 @@ func (clc *ConsciousnessLayerCommunication) ProcessSensoryInput(inputType, conte
 		Timestamp:   time.Now(),
 		Priority:    salience,
 	}
-	
+
 	select {
 	case clc.bottomUpChannel <- msg:
 	default:
@@ -478,9 +478,9 @@ func (clc *ConsciousnessLayerCommunication) ProcessSensoryInput(inputType, conte
 func (clc *ConsciousnessLayerCommunication) SetTopLevelGoal(goal string) {
 	clc.metaLayer.mu.Lock()
 	defer clc.metaLayer.mu.Unlock()
-	
+
 	clc.metaLayer.topLevelGoals = append(clc.metaLayer.topLevelGoals, goal)
-	
+
 	// Trigger top-down processing
 	msg := LayerMessage{
 		ID:          fmt.Sprintf("msg_%d", time.Now().Unix()),
@@ -491,7 +491,7 @@ func (clc *ConsciousnessLayerCommunication) SetTopLevelGoal(goal string) {
 		Timestamp:   time.Now(),
 		Priority:    0.9,
 	}
-	
+
 	select {
 	case clc.topDownChannel <- msg:
 	default:
@@ -502,7 +502,7 @@ func (clc *ConsciousnessLayerCommunication) SetTopLevelGoal(goal string) {
 func (clc *ConsciousnessLayerCommunication) GetMetrics() map[string]interface{} {
 	clc.mu.RLock()
 	defer clc.mu.RUnlock()
-	
+
 	return map[string]interface{}{
 		"total_messages":      clc.totalMessages,
 		"total_insights":      clc.totalInsights,

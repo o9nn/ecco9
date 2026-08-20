@@ -48,15 +48,15 @@ func DefaultConsciousnessConfig() *ConsciousnessConfig {
 func (cd *ConsciousnessDriver) Load(config interface{}) error {
 	cd.mu.Lock()
 	defer cd.mu.Unlock()
-	
+
 	if cfg, ok := config.(*ConsciousnessConfig); ok {
 		cd.config = cfg
 	}
-	
+
 	// Create consciousness layer device
 	device := NewConsciousnessDevice("consciousness0", cd.config)
 	cd.devices["consciousness0"] = device
-	
+
 	return nil
 }
 
@@ -64,14 +64,14 @@ func (cd *ConsciousnessDriver) Load(config interface{}) error {
 func (cd *ConsciousnessDriver) Unload() error {
 	cd.mu.Lock()
 	defer cd.mu.Unlock()
-	
+
 	for _, device := range cd.devices {
 		ctx := context.Background()
 		if err := device.Shutdown(ctx); err != nil {
 			return err
 		}
 	}
-	
+
 	cd.devices = make(map[string]*ConsciousnessDevice)
 	return nil
 }
@@ -80,7 +80,7 @@ func (cd *ConsciousnessDriver) Unload() error {
 func (cd *ConsciousnessDriver) GetDevice(id string) (ecco9.CognitiveDevice, error) {
 	cd.mu.RLock()
 	defer cd.mu.RUnlock()
-	
+
 	device, exists := cd.devices[id]
 	if !exists {
 		return nil, fmt.Errorf("device %s not found", id)
@@ -92,7 +92,7 @@ func (cd *ConsciousnessDriver) GetDevice(id string) (ecco9.CognitiveDevice, erro
 func (cd *ConsciousnessDriver) ListDevices() []ecco9.CognitiveDevice {
 	cd.mu.RLock()
 	defer cd.mu.RUnlock()
-	
+
 	devices := make([]ecco9.CognitiveDevice, 0, len(cd.devices))
 	for _, device := range cd.devices {
 		devices = append(devices, device)
@@ -123,23 +123,23 @@ func (cd *ConsciousnessDriver) GetCapabilities() []string {
 
 // ConsciousnessDevice represents a Consciousness Layer Processor
 type ConsciousnessDevice struct {
-	mu          sync.RWMutex
-	id          string
-	name        string
-	state       ecco9.DeviceState
-	config      *ConsciousnessConfig
-	layers      []*ConsciousnessLayer
-	metrics     ecco9.DeviceMetrics
-	startTime   time.Time
+	mu           sync.RWMutex
+	id           string
+	name         string
+	state        ecco9.DeviceState
+	config       *ConsciousnessConfig
+	layers       []*ConsciousnessLayer
+	metrics      ecco9.DeviceMetrics
+	startTime    time.Time
 	messageQueue chan ConsciousnessMessage
 }
 
 // ConsciousnessLayer represents a single layer of consciousness
 type ConsciousnessLayer struct {
-	ID          int
-	Name        string
-	Activation  float64
-	LastUpdate  time.Time
+	ID         int
+	Name       string
+	Activation float64
+	LastUpdate time.Time
 }
 
 // ConsciousnessMessage represents a message between layers
@@ -172,10 +172,10 @@ func NewConsciousnessDevice(id string, config *ConsciousnessConfig) *Consciousne
 func (cd *ConsciousnessDevice) Initialize(ctx context.Context) error {
 	cd.mu.Lock()
 	defer cd.mu.Unlock()
-	
+
 	cd.state.Status = ecco9.DeviceStatusInitializing
 	cd.state.Power = ecco9.PowerStateActive
-	
+
 	// Initialize consciousness layers
 	layerNames := []string{"Basic", "Reflective", "Meta-cognitive"}
 	cd.layers = make([]*ConsciousnessLayer, cd.config.NumLayers)
@@ -191,11 +191,11 @@ func (cd *ConsciousnessDevice) Initialize(ctx context.Context) error {
 			LastUpdate: time.Now(),
 		}
 	}
-	
+
 	cd.startTime = time.Now()
 	cd.state.Status = ecco9.DeviceStatusReady
 	cd.state.LastUpdate = time.Now()
-	
+
 	return nil
 }
 
@@ -203,17 +203,17 @@ func (cd *ConsciousnessDevice) Initialize(ctx context.Context) error {
 func (cd *ConsciousnessDevice) Shutdown(ctx context.Context) error {
 	cd.mu.Lock()
 	defer cd.mu.Unlock()
-	
+
 	cd.state.Status = ecco9.DeviceStatusOffline
 	cd.state.Power = ecco9.PowerStateOff
-	
+
 	// Close message queue if not already closed
 	if cd.messageQueue != nil {
 		close(cd.messageQueue)
 		cd.messageQueue = nil
 	}
 	cd.layers = nil
-	
+
 	return nil
 }
 
@@ -230,11 +230,11 @@ func (cd *ConsciousnessDevice) Reset(ctx context.Context) error {
 func (cd *ConsciousnessDevice) GetState() (ecco9.DeviceState, error) {
 	cd.mu.RLock()
 	defer cd.mu.RUnlock()
-	
+
 	state := cd.state
 	state.Uptime = time.Since(cd.startTime)
 	state.Metrics = cd.metrics
-	
+
 	return state, nil
 }
 
@@ -242,7 +242,7 @@ func (cd *ConsciousnessDevice) GetState() (ecco9.DeviceState, error) {
 func (cd *ConsciousnessDevice) SetState(state ecco9.DeviceState) error {
 	cd.mu.Lock()
 	defer cd.mu.Unlock()
-	
+
 	cd.state = state
 	return nil
 }
@@ -251,21 +251,21 @@ func (cd *ConsciousnessDevice) SetState(state ecco9.DeviceState) error {
 func (cd *ConsciousnessDevice) Read(buffer []byte) (int, error) {
 	cd.mu.RLock()
 	defer cd.mu.RUnlock()
-	
+
 	if cd.layers == nil {
 		return 0, fmt.Errorf("consciousness layers not initialized")
 	}
-	
+
 	// Read current layer activations
 	status := fmt.Sprintf("Layers: %d | ", len(cd.layers))
 	for _, layer := range cd.layers {
 		status += fmt.Sprintf("%s:%.2f ", layer.Name, layer.Activation)
 	}
-	
+
 	n := copy(buffer, []byte(status))
 	cd.metrics.OperationCount++
 	cd.metrics.LastOperation = time.Now()
-	
+
 	return n, nil
 }
 
@@ -273,33 +273,33 @@ func (cd *ConsciousnessDevice) Read(buffer []byte) (int, error) {
 func (cd *ConsciousnessDevice) Write(buffer []byte) (int, error) {
 	cd.mu.Lock()
 	defer cd.mu.Unlock()
-	
+
 	if cd.layers == nil {
 		return 0, fmt.Errorf("consciousness layers not initialized")
 	}
-	
+
 	startTime := time.Now()
-	
+
 	// Process input through layers (bottom-up)
 	input := string(buffer)
 	activation := float64(len(input)) / 100.0
 	if activation > 1.0 {
 		activation = 1.0
 	}
-	
+
 	// Update layer activations
 	for i, layer := range cd.layers {
 		layer.Activation = activation * (1.0 - float64(i)*0.2)
 		layer.LastUpdate = time.Now()
 	}
-	
+
 	cd.metrics.OperationCount++
 	cd.metrics.LastOperation = time.Now()
-	
+
 	// Update average latency
 	latency := time.Since(startTime)
 	cd.metrics.AverageLatency = (cd.metrics.AverageLatency + latency) / 2
-	
+
 	return len(buffer), nil
 }
 
@@ -313,7 +313,7 @@ func (cd *ConsciousnessDevice) IoCtl(command uint32, arg interface{}) error {
 func (cd *ConsciousnessDevice) GetMetrics() (ecco9.DeviceMetrics, error) {
 	cd.mu.RLock()
 	defer cd.mu.RUnlock()
-	
+
 	return cd.metrics, nil
 }
 
@@ -321,7 +321,7 @@ func (cd *ConsciousnessDevice) GetMetrics() (ecco9.DeviceMetrics, error) {
 func (cd *ConsciousnessDevice) GetHealth() (ecco9.HealthStatus, error) {
 	cd.mu.RLock()
 	defer cd.mu.RUnlock()
-	
+
 	return cd.state.Health, nil
 }
 

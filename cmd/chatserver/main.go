@@ -31,11 +31,11 @@ type ChatResponse struct {
 
 // StatusResponse represents system status
 type StatusResponse struct {
-	Running          bool    `json:"running"`
-	Awake            bool    `json:"awake"`
-	WisdomScore      float64 `json:"wisdom_score"`
-	ActiveDiscussions int    `json:"active_discussions"`
-	Iterations       int64   `json:"iterations"`
+	Running           bool    `json:"running"`
+	Awake             bool    `json:"awake"`
+	WisdomScore       float64 `json:"wisdom_score"`
+	ActiveDiscussions int     `json:"active_discussions"`
+	Iterations        int64   `json:"iterations"`
 }
 
 func main() {
@@ -163,11 +163,11 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 	activeDiscussions := consciousness.GetDiscussionManager().GetActiveDiscussions()
 
 	resp := StatusResponse{
-		Running:          status["running"].(bool),
-		Awake:            status["awake"].(bool),
-		WisdomScore:      0.0, // TODO: Get from wisdom metrics
+		Running:           status["running"].(bool),
+		Awake:             status["awake"].(bool),
+		WisdomScore:       0.0, // TODO: Get from wisdom metrics
 		ActiveDiscussions: len(activeDiscussions),
-		Iterations:       status["iterations"].(int64),
+		Iterations:        status["iterations"].(int64),
 	}
 
 	json.NewEncoder(w).Encode(resp)

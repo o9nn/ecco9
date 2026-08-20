@@ -10,89 +10,89 @@ import (
 
 // WisdomApplicationEngine refines how wisdom is matched and applied to contexts
 type WisdomApplicationEngine struct {
-	mu                      sync.RWMutex
-	ctx                     context.Context
-	cancel                  context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// Wisdom repository
-	wisdomBase              map[string]*WisdomEntry
-	wisdomCategories        map[string][]*WisdomEntry
-	
+	wisdomBase       map[string]*WisdomEntry
+	wisdomCategories map[string][]*WisdomEntry
+
 	// Context-wisdom matching
-	contextMatcher          *ContextMatcher
-	relevanceCache          map[string]*RelevanceScore
-	
+	contextMatcher *ContextMatcher
+	relevanceCache map[string]*RelevanceScore
+
 	// Wisdom synthesis
-	synthesizer             *WisdomSynthesizer
-	synthesizedWisdom       []*WisdomEntry
-	
+	synthesizer       *WisdomSynthesizer
+	synthesizedWisdom []*WisdomEntry
+
 	// Application feedback
-	applicationHistory      []*WisdomApplication
-	feedbackLoop            *WisdomFeedbackLoop
-	
+	applicationHistory []*WisdomApplication
+	feedbackLoop       *WisdomFeedbackLoop
+
 	// Metrics
-	totalApplications       uint64
-	successfulApplications  uint64
-	totalSyntheses          uint64
-	
+	totalApplications      uint64
+	successfulApplications uint64
+	totalSyntheses         uint64
+
 	// Running state
-	running                 bool
+	running bool
 }
 
 // WisdomEntry represents a piece of wisdom
 type WisdomEntry struct {
-	ID              string
-	Content         string
-	Category        string
-	Source          string
-	Applicability   []string // Contexts where applicable
-	Confidence      float64
-	Usefulness      float64
-	Generality      float64
-	Specificity     float64
-	Tags            []string
-	RelatedWisdom   []string
-	CreatedAt       time.Time
-	LastApplied     time.Time
-	TimesApplied    uint64
-	SuccessRate     float64
-	Metadata        map[string]interface{}
+	ID            string
+	Content       string
+	Category      string
+	Source        string
+	Applicability []string // Contexts where applicable
+	Confidence    float64
+	Usefulness    float64
+	Generality    float64
+	Specificity   float64
+	Tags          []string
+	RelatedWisdom []string
+	CreatedAt     time.Time
+	LastApplied   time.Time
+	TimesApplied  uint64
+	SuccessRate   float64
+	Metadata      map[string]interface{}
 }
 
 // ContextMatcher matches contexts to relevant wisdom
 type ContextMatcher struct {
-	mu                      sync.RWMutex
-	
+	mu sync.RWMutex
+
 	// Context analysis
-	contextFeatures         map[string][]string
-	contextPatterns         map[string]*ContextPattern
-	
+	contextFeatures map[string][]string
+	contextPatterns map[string]*ContextPattern
+
 	// Matching strategies
-	exactMatchWeight        float64
-	semanticMatchWeight     float64
-	analogyMatchWeight      float64
-	
+	exactMatchWeight    float64
+	semanticMatchWeight float64
+	analogyMatchWeight  float64
+
 	// Cache
-	matchCache              map[string][]*WisdomMatch
+	matchCache map[string][]*WisdomMatch
 }
 
 // ContextPattern represents recurring context patterns
 type ContextPattern struct {
-	ID              string
-	Name            string
-	Features        []string
-	Frequency       uint64
+	ID               string
+	Name             string
+	Features         []string
+	Frequency        uint64
 	AssociatedWisdom []string
 }
 
 // WisdomMatch represents a context-wisdom match
 type WisdomMatch struct {
-	WisdomID        string
-	Wisdom          *WisdomEntry
-	RelevanceScore  float64
-	MatchType       MatchType
-	Explanation     string
-	Confidence      float64
+	WisdomID       string
+	Wisdom         *WisdomEntry
+	RelevanceScore float64
+	MatchType      MatchType
+	Explanation    string
+	Confidence     float64
 }
 
 // MatchType categorizes how wisdom matches context
@@ -118,65 +118,65 @@ func (mt MatchType) String() string {
 
 // RelevanceScore quantifies wisdom relevance to context
 type RelevanceScore struct {
-	WisdomID        string
-	ContextID       string
-	Overall         float64
-	Applicability   float64
-	Timeliness      float64
-	Specificity     float64
-	Novelty         float64
-	ComputedAt      time.Time
+	WisdomID      string
+	ContextID     string
+	Overall       float64
+	Applicability float64
+	Timeliness    float64
+	Specificity   float64
+	Novelty       float64
+	ComputedAt    time.Time
 }
 
 // WisdomSynthesizer creates new wisdom by combining existing wisdom
 type WisdomSynthesizer struct {
-	mu                      sync.RWMutex
-	
+	mu sync.RWMutex
+
 	// Synthesis methods
-	abstractionEngine       *AbstractionEngine
-	integrationEngine       *IntegrationEngine
-	
+	abstractionEngine *AbstractionEngine
+	integrationEngine *IntegrationEngine
+
 	// Generated wisdom
-	synthesisHistory        []*SynthesisRecord
+	synthesisHistory []*SynthesisRecord
 }
 
 // AbstractionEngine generalizes specific wisdom
 type AbstractionEngine struct {
-	abstractionLevels       map[string]int
-	generalizations         []*Generalization
+	abstractionLevels map[string]int
+	generalizations   []*Generalization
 }
 
 // IntegrationEngine combines related wisdom
 type IntegrationEngine struct {
-	integrationPatterns     []*IntegrationPattern
-	integratedWisdom        []*WisdomEntry
+	integrationPatterns []*IntegrationPattern
+	integratedWisdom    []*WisdomEntry
 }
 
 // Generalization represents abstracted wisdom
 type Generalization struct {
-	ID              string
-	SpecificWisdom  []string
+	ID               string
+	SpecificWisdom   []string
 	GeneralPrinciple string
 	AbstractionLevel int
-	Confidence      float64
+	Confidence       float64
 }
 
 // IntegrationPattern describes how to combine wisdom
 type IntegrationPattern struct {
-	ID              string
-	Name            string
+	ID               string
+	Name             string
 	SourceCategories []string
-	SynthesisMethod string
+	SynthesisMethod  string
 }
 
 // SynthesisRecord logs wisdom synthesis events
 type SynthesisRecord struct {
-	ID              string
-	SourceWisdom    []string
+	ID                string
+	SourceWisdom      []string
 	SynthesizedWisdom *WisdomEntry
-	Method          string
-	Quality         float64
-	Timestamp       time.Time
+	Method            string
+	Quality           float64
+	Timestamp         time.Time
 }
 
 // WisdomApplication tracks wisdom usage
@@ -207,47 +207,47 @@ func (ao ApplicationOutcome) String() string {
 
 // WisdomFeedbackLoop learns from wisdom applications
 type WisdomFeedbackLoop struct {
-	mu                      sync.RWMutex
-	
+	mu sync.RWMutex
+
 	// Feedback collection
-	feedbackEntries         []*FeedbackEntry
-	
+	feedbackEntries []*FeedbackEntry
+
 	// Learning
-	wisdomAdjustments       map[string]*WisdomAdjustment
-	contextRefinements      []*ContextRefinement
+	wisdomAdjustments  map[string]*WisdomAdjustment
+	contextRefinements []*ContextRefinement
 }
 
 // FeedbackEntry captures application feedback
 type FeedbackEntry struct {
-	ApplicationID   string
-	WisdomID        string
-	Rating          float64
-	Comments        string
-	Timestamp       time.Time
+	ApplicationID string
+	WisdomID      string
+	Rating        float64
+	Comments      string
+	Timestamp     time.Time
 }
 
 // WisdomAdjustment modifies wisdom based on feedback
 type WisdomAdjustment struct {
-	WisdomID        string
-	Field           string
-	OldValue        interface{}
-	NewValue        interface{}
-	Reason          string
-	Timestamp       time.Time
+	WisdomID  string
+	Field     string
+	OldValue  interface{}
+	NewValue  interface{}
+	Reason    string
+	Timestamp time.Time
 }
 
 // ContextRefinement improves context understanding
 type ContextRefinement struct {
-	ContextPattern  string
-	Refinement      string
-	ImpactedWisdom  []string
-	Timestamp       time.Time
+	ContextPattern string
+	Refinement     string
+	ImpactedWisdom []string
+	Timestamp      time.Time
 }
 
 // NewWisdomApplicationEngine creates a new wisdom application engine
 func NewWisdomApplicationEngine() *WisdomApplicationEngine {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	wae := &WisdomApplicationEngine{
 		ctx:                ctx,
 		cancel:             cancel,
@@ -260,17 +260,17 @@ func NewWisdomApplicationEngine() *WisdomApplicationEngine {
 		synthesizer:        newWisdomSynthesizer(),
 		feedbackLoop:       newFeedbackLoop(),
 	}
-	
+
 	// Initialize with some foundational wisdom
 	wae.initializeFoundationalWisdom()
-	
+
 	return wae
 }
 
 // FindRelevantWisdom matches wisdom to a given context
 func (wae *WisdomApplicationEngine) FindRelevantWisdom(context string, topK int) []*WisdomMatch {
 	wae.mu.RLock()
-	
+
 	// Check cache
 	cacheKey := fmt.Sprintf("%s_%d", context, topK)
 	if cached, exists := wae.contextMatcher.matchCache[cacheKey]; exists {
@@ -278,16 +278,16 @@ func (wae *WisdomApplicationEngine) FindRelevantWisdom(context string, topK int)
 		return cached
 	}
 	wae.mu.RUnlock()
-	
+
 	wae.mu.Lock()
 	defer wae.mu.Unlock()
-	
+
 	// Find matches
 	matches := make([]*WisdomMatch, 0)
-	
+
 	for _, wisdom := range wae.wisdomBase {
 		relevance := wae.calculateRelevance(context, wisdom)
-		
+
 		if relevance.Overall > 0.3 {
 			matchType := determineMatchType(context, wisdom)
 			match := &WisdomMatch{
@@ -301,18 +301,18 @@ func (wae *WisdomApplicationEngine) FindRelevantWisdom(context string, topK int)
 			matches = append(matches, match)
 		}
 	}
-	
+
 	// Sort by relevance
 	sortByRelevance(matches)
-	
+
 	// Take top K
 	if len(matches) > topK {
 		matches = matches[:topK]
 	}
-	
+
 	// Cache results
 	wae.contextMatcher.matchCache[cacheKey] = matches
-	
+
 	return matches
 }
 
@@ -320,12 +320,12 @@ func (wae *WisdomApplicationEngine) FindRelevantWisdom(context string, topK int)
 func (wae *WisdomApplicationEngine) ApplyWisdom(wisdomID, context string) *WisdomApplication {
 	wae.mu.Lock()
 	defer wae.mu.Unlock()
-	
+
 	wisdom, exists := wae.wisdomBase[wisdomID]
 	if !exists {
 		return nil
 	}
-	
+
 	// Create application record
 	application := &WisdomApplication{
 		ID:        generateApplicationID(),
@@ -333,12 +333,12 @@ func (wae *WisdomApplicationEngine) ApplyWisdom(wisdomID, context string) *Wisdo
 		Context:   context,
 		Timestamp: time.Now(),
 	}
-	
+
 	// Simulate application (in practice, would actually apply)
 	application.Effectiveness = 0.7 + (wisdom.SuccessRate * 0.3)
 	application.Appropriateness = 0.8
 	application.Impact = application.Effectiveness * application.Appropriateness
-	
+
 	if application.Effectiveness > 0.7 {
 		application.Outcome = OutcomeSuccess
 	} else if application.Effectiveness > 0.4 {
@@ -346,21 +346,21 @@ func (wae *WisdomApplicationEngine) ApplyWisdom(wisdomID, context string) *Wisdo
 	} else {
 		application.Outcome = OutcomeFailure
 	}
-	
+
 	// Update wisdom statistics
 	wisdom.LastApplied = time.Now()
 	wisdom.TimesApplied++
-	
+
 	if application.Outcome == OutcomeSuccess {
 		wae.successfulApplications++
-		wisdom.SuccessRate = (wisdom.SuccessRate * float64(wisdom.TimesApplied-1) + 1.0) / float64(wisdom.TimesApplied)
+		wisdom.SuccessRate = (wisdom.SuccessRate*float64(wisdom.TimesApplied-1) + 1.0) / float64(wisdom.TimesApplied)
 	} else {
 		wisdom.SuccessRate = (wisdom.SuccessRate * float64(wisdom.TimesApplied-1)) / float64(wisdom.TimesApplied)
 	}
-	
+
 	wae.applicationHistory = append(wae.applicationHistory, application)
 	wae.totalApplications++
-	
+
 	return application
 }
 
@@ -368,11 +368,11 @@ func (wae *WisdomApplicationEngine) ApplyWisdom(wisdomID, context string) *Wisdo
 func (wae *WisdomApplicationEngine) SynthesizeWisdom(sourceIDs []string) *WisdomEntry {
 	wae.mu.Lock()
 	defer wae.mu.Unlock()
-	
+
 	if len(sourceIDs) < 2 {
 		return nil
 	}
-	
+
 	// Gather source wisdom
 	sources := make([]*WisdomEntry, 0)
 	for _, id := range sourceIDs {
@@ -380,11 +380,11 @@ func (wae *WisdomApplicationEngine) SynthesizeWisdom(sourceIDs []string) *Wisdom
 			sources = append(sources, wisdom)
 		}
 	}
-	
+
 	if len(sources) < 2 {
 		return nil
 	}
-	
+
 	// Synthesize new wisdom
 	synthesized := &WisdomEntry{
 		ID:            generateWisdomID(),
@@ -401,12 +401,12 @@ func (wae *WisdomApplicationEngine) SynthesizeWisdom(sourceIDs []string) *Wisdom
 		CreatedAt:     time.Now(),
 		Metadata:      make(map[string]interface{}),
 	}
-	
+
 	// Add to repository
 	wae.wisdomBase[synthesized.ID] = synthesized
 	wae.synthesizedWisdom = append(wae.synthesizedWisdom, synthesized)
 	wae.totalSyntheses++
-	
+
 	// Record synthesis
 	wae.synthesizer.synthesisHistory = append(wae.synthesizer.synthesisHistory, &SynthesisRecord{
 		ID:                generateSynthesisID(),
@@ -416,7 +416,7 @@ func (wae *WisdomApplicationEngine) SynthesizeWisdom(sourceIDs []string) *Wisdom
 		Quality:           0.7,
 		Timestamp:         time.Now(),
 	})
-	
+
 	return synthesized
 }
 
@@ -424,16 +424,16 @@ func (wae *WisdomApplicationEngine) SynthesizeWisdom(sourceIDs []string) *Wisdom
 func (wae *WisdomApplicationEngine) ProvideFeedback(applicationID string, rating float64, comments string) {
 	wae.mu.Lock()
 	defer wae.mu.Unlock()
-	
+
 	feedback := &FeedbackEntry{
 		ApplicationID: applicationID,
 		Rating:        rating,
 		Comments:      comments,
 		Timestamp:     time.Now(),
 	}
-	
+
 	wae.feedbackLoop.feedbackEntries = append(wae.feedbackLoop.feedbackEntries, feedback)
-	
+
 	// Learn from feedback
 	wae.processFeedback(feedback)
 }
@@ -442,20 +442,20 @@ func (wae *WisdomApplicationEngine) ProvideFeedback(applicationID string, rating
 func (wae *WisdomApplicationEngine) GetWisdomMetrics() map[string]interface{} {
 	wae.mu.RLock()
 	defer wae.mu.RUnlock()
-	
+
 	successRate := 0.0
 	if wae.totalApplications > 0 {
 		successRate = float64(wae.successfulApplications) / float64(wae.totalApplications)
 	}
-	
+
 	return map[string]interface{}{
-		"total_wisdom":          len(wae.wisdomBase),
-		"total_applications":    wae.totalApplications,
+		"total_wisdom":            len(wae.wisdomBase),
+		"total_applications":      wae.totalApplications,
 		"successful_applications": wae.successfulApplications,
-		"success_rate":          successRate,
-		"synthesized_wisdom":    wae.totalSyntheses,
-		"feedback_entries":      len(wae.feedbackLoop.feedbackEntries),
-		"cache_size":            len(wae.relevanceCache),
+		"success_rate":            successRate,
+		"synthesized_wisdom":      wae.totalSyntheses,
+		"feedback_entries":        len(wae.feedbackLoop.feedbackEntries),
+		"cache_size":              len(wae.relevanceCache),
 	}
 }
 
@@ -467,27 +467,27 @@ func (wae *WisdomApplicationEngine) calculateRelevance(context string, wisdom *W
 		ContextID:  context,
 		ComputedAt: time.Now(),
 	}
-	
+
 	// Calculate applicability
 	score.Applicability = calculateApplicability(context, wisdom)
-	
+
 	// Calculate timeliness
 	timeSinceApplied := time.Since(wisdom.LastApplied)
 	score.Timeliness = 1.0 / (1.0 + math.Log(1.0+timeSinceApplied.Hours()/24.0))
-	
+
 	// Calculate specificity match
 	score.Specificity = wisdom.Specificity
-	
+
 	// Calculate novelty
 	score.Novelty = 1.0 - (float64(wisdom.TimesApplied) / 100.0)
-	
+
 	// Overall score is weighted average
-	score.Overall = (score.Applicability * 0.4) + 
-		(score.Timeliness * 0.2) + 
-		(score.Specificity * 0.2) + 
-		(score.Novelty * 0.1) + 
+	score.Overall = (score.Applicability * 0.4) +
+		(score.Timeliness * 0.2) +
+		(score.Specificity * 0.2) +
+		(score.Novelty * 0.1) +
 		(wisdom.Usefulness * 0.1)
-	
+
 	return score
 }
 
@@ -500,11 +500,11 @@ func (wae *WisdomApplicationEngine) processFeedback(feedback *FeedbackEntry) {
 			break
 		}
 	}
-	
+
 	if application == nil {
 		return
 	}
-	
+
 	// Adjust wisdom based on feedback
 	if wisdom, exists := wae.wisdomBase[application.WisdomID]; exists {
 		adjustment := &WisdomAdjustment{
@@ -514,11 +514,11 @@ func (wae *WisdomApplicationEngine) processFeedback(feedback *FeedbackEntry) {
 			Reason:    fmt.Sprintf("Feedback rating: %.2f", feedback.Rating),
 			Timestamp: time.Now(),
 		}
-		
+
 		// Adjust usefulness based on feedback
 		learningRate := 0.1
 		wisdom.Usefulness = wisdom.Usefulness + learningRate*(feedback.Rating-wisdom.Usefulness)
-		
+
 		adjustment.NewValue = wisdom.Usefulness
 		wae.feedbackLoop.wisdomAdjustments[wisdom.ID] = adjustment
 	}
@@ -551,7 +551,7 @@ func (wae *WisdomApplicationEngine) initializeFoundationalWisdom() {
 			applicability: []string{"learning", "creativity", "adaptation"},
 		},
 	}
-	
+
 	for _, w := range foundational {
 		wisdom := &WisdomEntry{
 			ID:            generateWisdomID(),
@@ -568,9 +568,9 @@ func (wae *WisdomApplicationEngine) initializeFoundationalWisdom() {
 			SuccessRate:   0.7,
 			Metadata:      make(map[string]interface{}),
 		}
-		
+
 		wae.wisdomBase[wisdom.ID] = wisdom
-		
+
 		if _, exists := wae.wisdomCategories[w.category]; !exists {
 			wae.wisdomCategories[w.category] = make([]*WisdomEntry, 0)
 		}
@@ -593,13 +593,13 @@ func newContextMatcher() *ContextMatcher {
 
 func calculateApplicability(context string, wisdom *WisdomEntry) float64 {
 	score := 0.0
-	
+
 	for _, applicable := range wisdom.Applicability {
 		if contextContains(context, applicable) {
 			score += 0.3
 		}
 	}
-	
+
 	return math.Min(1.0, score)
 }
 
@@ -681,7 +681,7 @@ func combineApplicability(sources []*WisdomEntry) []string {
 			combined[app] = true
 		}
 	}
-	
+
 	result := make([]string, 0, len(combined))
 	for app := range combined {
 		result = append(result, app)
@@ -693,7 +693,7 @@ func averageConfidence(sources []*WisdomEntry) float64 {
 	if len(sources) == 0 {
 		return 0.5
 	}
-	
+
 	total := 0.0
 	for _, s := range sources {
 		total += s.Confidence
@@ -725,7 +725,7 @@ func combineTags(sources []*WisdomEntry) []string {
 		}
 	}
 	combined["synthesized"] = true
-	
+
 	result := make([]string, 0, len(combined))
 	for tag := range combined {
 		result = append(result, tag)

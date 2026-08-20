@@ -29,10 +29,10 @@ func (d *OntologicalDimension) String() string {
 }
 
 type TeleologicalDimension struct {
-	mu                     sync.RWMutex
+	mu                      sync.RWMutex
 	ActualizationTrajectory float64
-	PurposeClarity         float64
-	RoadmapAlignment       float64
+	PurposeClarity          float64
+	RoadmapAlignment        float64
 }
 
 func NewTeleologicalDimension() *TeleologicalDimension {
@@ -51,11 +51,11 @@ func (d *TeleologicalDimension) String() string {
 }
 
 type CognitiveDimension struct {
-	mu                   sync.RWMutex
+	mu                    sync.RWMutex
 	CognitiveCompleteness float64
-	LoopCoherence        float64
-	LearningCapacity     float64
-	Awareness            float64
+	LoopCoherence         float64
+	LearningCapacity      float64
+	Awareness             float64
 }
 
 func NewCognitiveDimension() *CognitiveDimension {
@@ -97,10 +97,10 @@ func (d *IntegrativeDimension) String() string {
 }
 
 type EvolutionaryDimension struct {
-	mu                    sync.RWMutex
-	EvolutionaryPotential float64
-	CodeHealth            float64
-	ImplementationDepth   float64
+	mu                      sync.RWMutex
+	EvolutionaryPotential   float64
+	CodeHealth              float64
+	ImplementationDepth     float64
 	SelfImprovementCapacity float64
 }
 
@@ -118,4 +118,5 @@ func (d *EvolutionaryDimension) Assess() float64 {
 func (d *EvolutionaryDimension) String() string {
 	return fmt.Sprintf("Evolutionary[%.2f%%]", d.EvolutionaryPotential*100)
 }
+
 // Dimensions module - placeholder for future implementation

@@ -33,49 +33,49 @@ type MessageType string
 
 const (
 	// Bottom-up messages (basic → reflective → meta)
-	MessagePerception   MessageType = "perception"    // Sensory input
-	MessagePattern      MessageType = "pattern"       // Recognized pattern
-	MessageAnomaly      MessageType = "anomaly"       // Unexpected observation
-	MessageReflection   MessageType = "reflection"    // Reflective insight
-	MessageQuestion     MessageType = "question"      // Inquiry from reflection
-	
+	MessagePerception MessageType = "perception" // Sensory input
+	MessagePattern    MessageType = "pattern"    // Recognized pattern
+	MessageAnomaly    MessageType = "anomaly"    // Unexpected observation
+	MessageReflection MessageType = "reflection" // Reflective insight
+	MessageQuestion   MessageType = "question"   // Inquiry from reflection
+
 	// Top-down messages (meta → reflective → basic)
-	MessageGoal         MessageType = "goal"          // High-level goal
-	MessageAttention    MessageType = "attention"     // Focus directive
-	MessageStrategy     MessageType = "strategy"      // Approach guidance
-	MessageInhibition   MessageType = "inhibition"    // Suppress certain processing
-	
+	MessageGoal       MessageType = "goal"       // High-level goal
+	MessageAttention  MessageType = "attention"  // Focus directive
+	MessageStrategy   MessageType = "strategy"   // Approach guidance
+	MessageInhibition MessageType = "inhibition" // Suppress certain processing
+
 	// Feedback messages
-	MessageFeedback     MessageType = "feedback"      // Response to previous message
-	MessageEmergence    MessageType = "emergence"     // Emergent property detected
+	MessageFeedback  MessageType = "feedback"  // Response to previous message
+	MessageEmergence MessageType = "emergence" // Emergent property detected
 )
 
 // LayerCommunicationHub manages message passing between consciousness layers
 type LayerCommunicationHub struct {
-	mu              sync.RWMutex
-	ctx             context.Context
-	cancel          context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// Message channels for each layer
 	basicChannel      chan *LayerMessage
 	reflectiveChannel chan *LayerMessage
 	metaCogChannel    chan *LayerMessage
-	
+
 	// Message history
-	messageHistory    []*LayerMessage
-	maxHistorySize    int
-	
+	messageHistory []*LayerMessage
+	maxHistorySize int
+
 	// Layer handlers
 	basicHandler      LayerHandler
 	reflectiveHandler LayerHandler
 	metaCogHandler    LayerHandler
-	
+
 	// Metrics
 	messagesProcessed uint64
 	emergenceDetected uint64
-	
+
 	// Control
-	running           bool
+	running bool
 }
 
 // LayerHandler processes messages for a specific layer
@@ -87,7 +87,7 @@ type LayerHandler interface {
 // NewLayerCommunicationHub creates a new inter-layer communication system
 func NewLayerCommunicationHub() *LayerCommunicationHub {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	return &LayerCommunicationHub{
 		ctx:               ctx,
 		cancel:            cancel,
@@ -103,7 +103,7 @@ func NewLayerCommunicationHub() *LayerCommunicationHub {
 func (hub *LayerCommunicationHub) RegisterHandler(layer LayerIdentifier, handler LayerHandler) {
 	hub.mu.Lock()
 	defer hub.mu.Unlock()
-	
+
 	switch layer {
 	case LayerBasic:
 		hub.basicHandler = handler
@@ -123,15 +123,15 @@ func (hub *LayerCommunicationHub) Start() error {
 	}
 	hub.running = true
 	hub.mu.Unlock()
-	
+
 	// Start message processors for each layer
 	go hub.processBasicLayer()
 	go hub.processReflectiveLayer()
 	go hub.processMetaCogLayer()
-	
+
 	// Start emergence detector
 	go hub.detectEmergence()
-	
+
 	return nil
 }
 
@@ -144,7 +144,7 @@ func (hub *LayerCommunicationHub) Stop() {
 	}
 	hub.running = false
 	hub.mu.Unlock()
-	
+
 	hub.cancel()
 }
 
@@ -156,7 +156,7 @@ func (hub *LayerCommunicationHub) SendMessage(msg *LayerMessage) error {
 		return fmt.Errorf("communication hub not running")
 	}
 	hub.mu.RUnlock()
-	
+
 	// Add to history
 	hub.mu.Lock()
 	hub.messageHistory = append(hub.messageHistory, msg)
@@ -164,7 +164,7 @@ func (hub *LayerCommunicationHub) SendMessage(msg *LayerMessage) error {
 		hub.messageHistory = hub.messageHistory[1:]
 	}
 	hub.mu.Unlock()
-	
+
 	// Route to appropriate channel
 	switch msg.ToLayer {
 	case LayerBasic:
@@ -188,7 +188,7 @@ func (hub *LayerCommunicationHub) SendMessage(msg *LayerMessage) error {
 	default:
 		return fmt.Errorf("unknown layer: %s", msg.ToLayer)
 	}
-	
+
 	return nil
 }
 
@@ -241,22 +241,22 @@ func (hub *LayerCommunicationHub) processLayerMessage(layer LayerIdentifier, msg
 		handler = hub.metaCogHandler
 	}
 	hub.mu.RUnlock()
-	
+
 	if handler == nil {
 		return // No handler registered
 	}
-	
+
 	// Process message and get response messages
 	responses, err := handler.ProcessMessage(msg)
 	if err != nil {
 		return
 	}
-	
+
 	// Send response messages
 	for _, response := range responses {
 		hub.SendMessage(response)
 	}
-	
+
 	hub.mu.Lock()
 	hub.messagesProcessed++
 	hub.mu.Unlock()
@@ -266,7 +266,7 @@ func (hub *LayerCommunicationHub) processLayerMessage(layer LayerIdentifier, msg
 func (hub *LayerCommunicationHub) detectEmergence() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-hub.ctx.Done():
@@ -281,27 +281,27 @@ func (hub *LayerCommunicationHub) detectEmergence() {
 func (hub *LayerCommunicationHub) analyzeEmergence() {
 	hub.mu.RLock()
 	defer hub.mu.RUnlock()
-	
+
 	if len(hub.messageHistory) < 10 {
 		return
 	}
-	
+
 	// Look for feedback loops
 	recentMessages := hub.messageHistory[len(hub.messageHistory)-20:]
-	
+
 	// Count message types
 	typeCount := make(map[MessageType]int)
 	for _, msg := range recentMessages {
 		typeCount[msg.MessageType]++
 	}
-	
+
 	// Detect emergence patterns
 	// Example: High reflection activity followed by meta-cognitive insights
 	if typeCount[MessageReflection] > 5 && typeCount[MessageQuestion] > 3 {
 		hub.emergenceDetected++
 		fmt.Println("🌟 Emergence detected: Reflective inquiry cascade")
 	}
-	
+
 	// Example: Bottom-up pattern recognition triggering top-down attention
 	if typeCount[MessagePattern] > 3 && typeCount[MessageAttention] > 2 {
 		hub.emergenceDetected++
@@ -313,14 +313,14 @@ func (hub *LayerCommunicationHub) analyzeEmergence() {
 func (hub *LayerCommunicationHub) GetMetrics() map[string]interface{} {
 	hub.mu.RLock()
 	defer hub.mu.RUnlock()
-	
+
 	return map[string]interface{}{
-		"messages_processed":  hub.messagesProcessed,
-		"emergence_detected":  hub.emergenceDetected,
+		"messages_processed":   hub.messagesProcessed,
+		"emergence_detected":   hub.emergenceDetected,
 		"message_history_size": len(hub.messageHistory),
-		"basic_queue":         len(hub.basicChannel),
-		"reflective_queue":    len(hub.reflectiveChannel),
-		"meta_cog_queue":      len(hub.metaCogChannel),
+		"basic_queue":          len(hub.basicChannel),
+		"reflective_queue":     len(hub.reflectiveChannel),
+		"meta_cog_queue":       len(hub.metaCogChannel),
 	}
 }
 
@@ -328,16 +328,16 @@ func (hub *LayerCommunicationHub) GetMetrics() map[string]interface{} {
 func (hub *LayerCommunicationHub) GetRecentMessages(n int) []*LayerMessage {
 	hub.mu.RLock()
 	defer hub.mu.RUnlock()
-	
+
 	if len(hub.messageHistory) == 0 {
 		return []*LayerMessage{}
 	}
-	
+
 	start := len(hub.messageHistory) - n
 	if start < 0 {
 		start = 0
 	}
-	
+
 	messages := make([]*LayerMessage, len(hub.messageHistory)-start)
 	copy(messages, hub.messageHistory[start:])
 	return messages

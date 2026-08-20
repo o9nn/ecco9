@@ -9,7 +9,7 @@ type EntelechyGenome struct {
 	ID         string
 	Generation int
 	Timestamp  time.Time
-	Genes struct {
+	Genes      struct {
 		Ontological  float64
 		Teleological float64
 		Cognitive    float64
@@ -29,13 +29,13 @@ func NewEntelechyGenome(id string, generation int) *EntelechyGenome {
 }
 
 func (g *EntelechyGenome) CalculateFitness() float64 {
-	g.Fitness = 
+	g.Fitness =
 		g.Genes.Ontological*0.20 +
-		g.Genes.Teleological*0.25 +
-		g.Genes.Cognitive*0.30 +
-		g.Genes.Integrative*0.10 +
-		g.Genes.Evolutionary*0.15
-	
+			g.Genes.Teleological*0.25 +
+			g.Genes.Cognitive*0.30 +
+			g.Genes.Integrative*0.10 +
+			g.Genes.Evolutionary*0.15
+
 	switch {
 	case g.Fitness < 0.3:
 		g.ActualizationLevel = "Embryonic"
@@ -48,7 +48,7 @@ func (g *EntelechyGenome) CalculateFitness() float64 {
 	default:
 		g.ActualizationLevel = "Transcendent"
 	}
-	
+
 	return g.Fitness
 }
 
@@ -68,4 +68,5 @@ func (g *EntelechyGenome) Clone() *EntelechyGenome {
 	clone.Genes = g.Genes
 	return clone
 }
+
 // Genome module - placeholder for future implementation

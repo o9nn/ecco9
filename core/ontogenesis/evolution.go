@@ -8,10 +8,10 @@ import (
 
 // Population represents a population of ontogenetic kernels
 type Population struct {
-	Kernels      []*OntogeneticKernel
-	Generation   int
-	BestFitness  float64
-	BestKernel   *OntogeneticKernel
+	Kernels        []*OntogeneticKernel
+	Generation     int
+	BestFitness    float64
+	BestKernel     *OntogeneticKernel
 	PopulationSize int
 }
 
@@ -23,11 +23,11 @@ func NewPopulation(size, kernelOrder int) *Population {
 		BestFitness:    0.0,
 		PopulationSize: size,
 	}
-	
+
 	for i := 0; i < size; i++ {
 		pop.Kernels[i] = NewRandomKernel(kernelOrder)
 	}
-	
+
 	return pop
 }
 
@@ -36,19 +36,19 @@ func (p *Population) Evolve(problem TestProblem, tournamentSize int) {
 	for _, kernel := range p.Kernels {
 		kernel.Evaluate(problem)
 	}
-	
+
 	p.updateBest()
-	
+
 	newKernels := make([]*OntogeneticKernel, p.PopulationSize)
 	newKernels[0] = p.BestKernel.Clone()
-	
+
 	for i := 1; i < p.PopulationSize; i++ {
 		parent1 := p.tournamentSelect(tournamentSize)
 		parent2 := p.tournamentSelect(tournamentSize)
 		offspring := SelfReproduce(parent1, parent2)
 		newKernels[i] = offspring
 	}
-	
+
 	p.Kernels = newKernels
 	p.Generation++
 }
@@ -56,17 +56,17 @@ func (p *Population) Evolve(problem TestProblem, tournamentSize int) {
 func (p *Population) tournamentSelect(tournamentSize int) *OntogeneticKernel {
 	var best *OntogeneticKernel
 	bestFitness := -1.0
-	
+
 	for i := 0; i < tournamentSize; i++ {
 		idx := rand.Intn(len(p.Kernels))
 		kernel := p.Kernels[idx]
-		
+
 		if kernel.Fitness > bestFitness {
 			best = kernel
 			bestFitness = kernel.Fitness
 		}
 	}
-	
+
 	return best
 }
 
@@ -85,24 +85,24 @@ func (p *Population) GetStatistics() PopulationStats {
 	for i, k := range p.Kernels {
 		fitnesses[i] = k.Fitness
 	}
-	
+
 	sort.Float64s(fitnesses)
-	
+
 	sum := 0.0
 	for _, f := range fitnesses {
 		sum += f
 	}
 	mean := sum / float64(len(fitnesses))
 	median := fitnesses[len(fitnesses)/2]
-	
+
 	return PopulationStats{
-		Generation:   p.Generation,
-		PopSize:      len(p.Kernels),
-		BestFitness:  p.BestFitness,
-		MeanFitness:  mean,
+		Generation:    p.Generation,
+		PopSize:       len(p.Kernels),
+		BestFitness:   p.BestFitness,
+		MeanFitness:   mean,
 		MedianFitness: median,
-		MinFitness:   fitnesses[0],
-		MaxFitness:   fitnesses[len(fitnesses)-1],
+		MinFitness:    fitnesses[0],
+		MaxFitness:    fitnesses[len(fitnesses)-1],
 	}
 }
 
@@ -121,4 +121,5 @@ type PopulationStats struct {
 	MinFitness    float64
 	MaxFitness    float64
 }
+
 // Evolution module - placeholder for future implementation

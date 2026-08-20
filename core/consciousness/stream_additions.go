@@ -19,19 +19,19 @@ func (soc *StreamOfConsciousnessLLM) AddExternalThought(content string) {
 		RelatedTo:     []string{},
 		GeneratedBy:   "external",
 	}
-	
+
 	soc.mu.Lock()
 	soc.currentThought = thought
 	soc.thoughtHistory = append(soc.thoughtHistory, thought)
-	
+
 	// Trim history if needed
 	if len(soc.thoughtHistory) > soc.maxHistorySize {
 		soc.thoughtHistory = soc.thoughtHistory[len(soc.thoughtHistory)-soc.maxHistorySize:]
 	}
-	
+
 	soc.thoughtsGenerated++
 	soc.mu.Unlock()
-	
+
 	// Add to recent experiences
 	soc.AddExperience(content)
 }

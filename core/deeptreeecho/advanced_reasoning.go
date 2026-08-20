@@ -10,63 +10,63 @@ import (
 
 // AdvancedReasoningEngine handles complex problem-solving and multi-step reasoning
 type AdvancedReasoningEngine struct {
-	mu                      sync.RWMutex
-	ctx                     context.Context
-	cancel                  context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// Reasoning chains
-	activeChains            map[string]*AdvancedReasoningChain
-	completedChains         []*AdvancedReasoningChain
-	
+	activeChains    map[string]*AdvancedReasoningChain
+	completedChains []*AdvancedReasoningChain
+
 	// Problem decomposition
 	problemRegistry         map[string]*Problem
 	decompositionStrategies map[string]*DecompositionStrategy
-	
+
 	// Causal reasoning
-	causalModel             *CausalModel
-	causalInferences        []*CausalInference
-	
+	causalModel      *CausalModel
+	causalInferences []*CausalInference
+
 	// Counterfactual thinking
-	counterfactuals         []*CounterfactualScenario
-	alternateOutcomes       map[string][]*AlternateOutcome
-	
+	counterfactuals   []*CounterfactualScenario
+	alternateOutcomes map[string][]*AlternateOutcome
+
 	// Chain-of-thought
-	thoughtChains           []*ThoughtChain
-	maxChainLength          int
-	
+	thoughtChains  []*ThoughtChain
+	maxChainLength int
+
 	// Metrics
-	totalProblemsProcessed  uint64
-	totalInferences         uint64
-	totalCounterfactuals    uint64
-	
+	totalProblemsProcessed uint64
+	totalInferences        uint64
+	totalCounterfactuals   uint64
+
 	// Running state
-	running                 bool
+	running bool
 }
 
 // AdvancedReasoningChain represents a multi-step reasoning process
 type AdvancedReasoningChain struct {
-	ID              string
-	Goal            string
-	Steps           []*ReasoningStep
-	Conclusion      string
-	Confidence      float64
-	StartTime       time.Time
-	CompletionTime  time.Time
-	Status          ChainStatus
-	Metadata        map[string]interface{}
+	ID             string
+	Goal           string
+	Steps          []*ReasoningStep
+	Conclusion     string
+	Confidence     float64
+	StartTime      time.Time
+	CompletionTime time.Time
+	Status         ChainStatus
+	Metadata       map[string]interface{}
 }
 
 // ReasoningStep is a single step in a reasoning chain
 type ReasoningStep struct {
-	Order           int
-	StepType        StepType
-	Premise         string
-	Inference       string
-	Conclusion      string
-	Confidence      float64
-	LogicalForm     string
-	Dependencies    []int // Which previous steps this depends on
-	Evidence        []string
+	Order        int
+	StepType     StepType
+	Premise      string
+	Inference    string
+	Conclusion   string
+	Confidence   float64
+	LogicalForm  string
+	Dependencies []int // Which previous steps this depends on
+	Evidence     []string
 }
 
 // StepType categorizes reasoning steps
@@ -96,16 +96,16 @@ const (
 
 // Problem represents a complex problem to be solved
 type Problem struct {
-	ID              string
-	Description     string
-	Type            ProblemType
-	Complexity      float64
-	Constraints     []string
-	Goals           []string
-	SubProblems     []*Problem
-	Solution        *Solution
-	CreatedAt       time.Time
-	SolvedAt        time.Time
+	ID          string
+	Description string
+	Type        ProblemType
+	Complexity  float64
+	Constraints []string
+	Goals       []string
+	SubProblems []*Problem
+	Solution    *Solution
+	CreatedAt   time.Time
+	SolvedAt    time.Time
 }
 
 // ProblemType categorizes problems
@@ -133,52 +133,52 @@ func (pt ProblemType) String() string {
 
 // Solution represents a problem solution
 type Solution struct {
-	ID              string
-	ProblemID       string
-	Approach        string
-	Steps           []string
-	Outcome         string
-	Quality         float64
-	Confidence      float64
-	Alternatives    []*Solution
-	Metadata        map[string]interface{}
+	ID           string
+	ProblemID    string
+	Approach     string
+	Steps        []string
+	Outcome      string
+	Quality      float64
+	Confidence   float64
+	Alternatives []*Solution
+	Metadata     map[string]interface{}
 }
 
 // DecompositionStrategy breaks down complex problems
 type DecompositionStrategy struct {
-	ID              string
-	Name            string
-	Description     string
-	Heuristics      []string
-	ApplicableTo    []ProblemType
+	ID           string
+	Name         string
+	Description  string
+	Heuristics   []string
+	ApplicableTo []ProblemType
 }
 
 // CausalModel represents causal relationships
 type CausalModel struct {
-	mu              sync.RWMutex
-	Nodes           map[string]*CausalNode
-	Edges           []*CausalEdge
-	Interventions   []*Intervention
+	mu            sync.RWMutex
+	Nodes         map[string]*CausalNode
+	Edges         []*CausalEdge
+	Interventions []*Intervention
 }
 
 // CausalNode represents an entity in the causal model
 type CausalNode struct {
-	ID              string
-	Name            string
-	State           interface{}
-	Probability     float64
-	Parents         []*CausalNode
-	Children        []*CausalNode
+	ID          string
+	Name        string
+	State       interface{}
+	Probability float64
+	Parents     []*CausalNode
+	Children    []*CausalNode
 }
 
 // CausalEdge represents a causal relationship
 type CausalEdge struct {
-	ID              string
-	From            *CausalNode
-	To              *CausalNode
-	Strength        float64
-	Type            CausalType
-	Evidence        []string
+	ID       string
+	From     *CausalNode
+	To       *CausalNode
+	Strength float64
+	Type     CausalType
+	Evidence []string
 }
 
 // CausalType categorizes causal relationships
@@ -193,60 +193,60 @@ const (
 
 // CausalInference represents a causal reasoning step
 type CausalInference struct {
-	ID              string
-	Hypothesis      string
-	Evidence        []string
-	Conclusion      string
-	Confidence      float64
-	Method          string
-	Timestamp       time.Time
+	ID         string
+	Hypothesis string
+	Evidence   []string
+	Conclusion string
+	Confidence float64
+	Method     string
+	Timestamp  time.Time
 }
 
 // Intervention represents a causal intervention
 type Intervention struct {
-	ID              string
-	Node            *CausalNode
-	NewState        interface{}
-	Timestamp       time.Time
-	Outcome         interface{}
+	ID        string
+	Node      *CausalNode
+	NewState  interface{}
+	Timestamp time.Time
+	Outcome   interface{}
 }
 
 // CounterfactualScenario represents "what if" thinking
 type CounterfactualScenario struct {
-	ID              string
-	BaseScenario    string
-	Alteration      string
+	ID               string
+	BaseScenario     string
+	Alteration       string
 	PredictedOutcome string
-	ActualOutcome   string
-	Plausibility    float64
-	Utility         float64
-	Timestamp       time.Time
+	ActualOutcome    string
+	Plausibility     float64
+	Utility          float64
+	Timestamp        time.Time
 }
 
 // AlternateOutcome represents possible alternative outcomes
 type AlternateOutcome struct {
-	Scenario        string
-	Probability     float64
-	Desirability    float64
-	Feasibility     float64
-	Description     string
+	Scenario     string
+	Probability  float64
+	Desirability float64
+	Feasibility  float64
+	Description  string
 }
 
 // ThoughtChain represents chain-of-thought reasoning
 type ThoughtChain struct {
-	ID              string
-	Question        string
-	Thoughts        []string
-	Reasoning       []string
-	Answer          string
-	Confidence      float64
-	Timestamp       time.Time
+	ID         string
+	Question   string
+	Thoughts   []string
+	Reasoning  []string
+	Answer     string
+	Confidence float64
+	Timestamp  time.Time
 }
 
 // NewAdvancedReasoningEngine creates a new reasoning engine
 func NewAdvancedReasoningEngine() *AdvancedReasoningEngine {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	are := &AdvancedReasoningEngine{
 		ctx:                     ctx,
 		cancel:                  cancel,
@@ -261,10 +261,10 @@ func NewAdvancedReasoningEngine() *AdvancedReasoningEngine {
 		thoughtChains:           make([]*ThoughtChain, 0),
 		maxChainLength:          10,
 	}
-	
+
 	// Initialize decomposition strategies
 	are.initializeStrategies()
-	
+
 	return are
 }
 
@@ -272,7 +272,7 @@ func NewAdvancedReasoningEngine() *AdvancedReasoningEngine {
 func (are *AdvancedReasoningEngine) StartReasoningChain(goal string) string {
 	are.mu.Lock()
 	defer are.mu.Unlock()
-	
+
 	chain := &AdvancedReasoningChain{
 		ID:        generateChainID(),
 		Goal:      goal,
@@ -281,9 +281,9 @@ func (are *AdvancedReasoningEngine) StartReasoningChain(goal string) string {
 		Status:    ChainActive,
 		Metadata:  make(map[string]interface{}),
 	}
-	
+
 	are.activeChains[chain.ID] = chain
-	
+
 	return chain.ID
 }
 
@@ -291,23 +291,23 @@ func (are *AdvancedReasoningEngine) StartReasoningChain(goal string) string {
 func (are *AdvancedReasoningEngine) AddReasoningStep(chainID string, stepType StepType, premise, inference, conclusion string, confidence float64) {
 	are.mu.Lock()
 	defer are.mu.Unlock()
-	
+
 	chain, exists := are.activeChains[chainID]
 	if !exists {
 		return
 	}
-	
+
 	step := &ReasoningStep{
-		Order:      len(chain.Steps),
-		StepType:   stepType,
-		Premise:    premise,
-		Inference:  inference,
-		Conclusion: conclusion,
-		Confidence: confidence,
+		Order:        len(chain.Steps),
+		StepType:     stepType,
+		Premise:      premise,
+		Inference:    inference,
+		Conclusion:   conclusion,
+		Confidence:   confidence,
 		Dependencies: make([]int, 0),
-		Evidence:   make([]string, 0),
+		Evidence:     make([]string, 0),
 	}
-	
+
 	chain.Steps = append(chain.Steps, step)
 }
 
@@ -315,17 +315,17 @@ func (are *AdvancedReasoningEngine) AddReasoningStep(chainID string, stepType St
 func (are *AdvancedReasoningEngine) CompleteReasoningChain(chainID, conclusion string, confidence float64) {
 	are.mu.Lock()
 	defer are.mu.Unlock()
-	
+
 	chain, exists := are.activeChains[chainID]
 	if !exists {
 		return
 	}
-	
+
 	chain.Conclusion = conclusion
 	chain.Confidence = confidence
 	chain.CompletionTime = time.Now()
 	chain.Status = ChainCompleted
-	
+
 	are.completedChains = append(are.completedChains, chain)
 	delete(are.activeChains, chainID)
 }
@@ -334,7 +334,7 @@ func (are *AdvancedReasoningEngine) CompleteReasoningChain(chainID, conclusion s
 func (are *AdvancedReasoningEngine) DecomposeProblem(problemDesc string, problemType ProblemType) *Problem {
 	are.mu.Lock()
 	defer are.mu.Unlock()
-	
+
 	problem := &Problem{
 		ID:          generateProblemID(),
 		Description: problemDesc,
@@ -343,7 +343,7 @@ func (are *AdvancedReasoningEngine) DecomposeProblem(problemDesc string, problem
 		SubProblems: make([]*Problem, 0),
 		CreatedAt:   time.Now(),
 	}
-	
+
 	// Find applicable decomposition strategy
 	strategy := are.findBestStrategy(problemType)
 	if strategy != nil {
@@ -351,10 +351,10 @@ func (are *AdvancedReasoningEngine) DecomposeProblem(problemDesc string, problem
 		subProblems := applyDecompositionStrategy(problem, strategy)
 		problem.SubProblems = subProblems
 	}
-	
+
 	are.problemRegistry[problem.ID] = problem
 	are.totalProblemsProcessed++
-	
+
 	return problem
 }
 
@@ -362,11 +362,11 @@ func (are *AdvancedReasoningEngine) DecomposeProblem(problemDesc string, problem
 func (are *AdvancedReasoningEngine) PerformCausalReasoning(hypothesis string, evidence []string) *CausalInference {
 	are.mu.Lock()
 	defer are.mu.Unlock()
-	
+
 	// Analyze causal structure
 	confidence := assessCausalEvidence(evidence)
 	conclusion := generateCausalConclusion(hypothesis, evidence, confidence)
-	
+
 	inference := &CausalInference{
 		ID:         generateInferenceID(),
 		Hypothesis: hypothesis,
@@ -376,10 +376,10 @@ func (are *AdvancedReasoningEngine) PerformCausalReasoning(hypothesis string, ev
 		Method:     "causal_inference",
 		Timestamp:  time.Now(),
 	}
-	
+
 	are.causalInferences = append(are.causalInferences, inference)
 	are.totalInferences++
-	
+
 	return inference
 }
 
@@ -387,12 +387,12 @@ func (are *AdvancedReasoningEngine) PerformCausalReasoning(hypothesis string, ev
 func (are *AdvancedReasoningEngine) GenerateCounterfactual(baseScenario, alteration string) *CounterfactualScenario {
 	are.mu.Lock()
 	defer are.mu.Unlock()
-	
+
 	// Predict outcome under alteration
 	predictedOutcome := simulateCounterfactual(baseScenario, alteration)
 	plausibility := assessPlausibility(alteration)
 	utility := assessUtility(predictedOutcome)
-	
+
 	counterfactual := &CounterfactualScenario{
 		ID:               generateCounterfactualID(),
 		BaseScenario:     baseScenario,
@@ -402,14 +402,14 @@ func (are *AdvancedReasoningEngine) GenerateCounterfactual(baseScenario, alterat
 		Utility:          utility,
 		Timestamp:        time.Now(),
 	}
-	
+
 	are.counterfactuals = append(are.counterfactuals, counterfactual)
 	are.totalCounterfactuals++
-	
+
 	// Generate alternate outcomes
 	alternates := generateAlternateOutcomes(baseScenario, alteration)
 	are.alternateOutcomes[counterfactual.ID] = alternates
-	
+
 	return counterfactual
 }
 
@@ -417,7 +417,7 @@ func (are *AdvancedReasoningEngine) GenerateCounterfactual(baseScenario, alterat
 func (are *AdvancedReasoningEngine) ChainOfThought(question string) *ThoughtChain {
 	are.mu.Lock()
 	defer are.mu.Unlock()
-	
+
 	chain := &ThoughtChain{
 		ID:        generateThoughtChainID(),
 		Question:  question,
@@ -425,7 +425,7 @@ func (are *AdvancedReasoningEngine) ChainOfThought(question string) *ThoughtChai
 		Reasoning: make([]string, 0),
 		Timestamp: time.Now(),
 	}
-	
+
 	// Generate thought steps
 	// In practice, this would use LLM to generate intermediate steps
 	steps := []struct {
@@ -449,18 +449,18 @@ func (are *AdvancedReasoningEngine) ChainOfThought(question string) *ThoughtChai
 			reasoning: "Checking consistency and plausibility",
 		},
 	}
-	
+
 	for _, step := range steps {
 		chain.Thoughts = append(chain.Thoughts, step.thought)
 		chain.Reasoning = append(chain.Reasoning, step.reasoning)
 	}
-	
+
 	// Generate final answer
 	chain.Answer = synthesizeAnswer(question, chain.Thoughts, chain.Reasoning)
 	chain.Confidence = calculateAnswerConfidence(chain)
-	
+
 	are.thoughtChains = append(are.thoughtChains, chain)
-	
+
 	return chain
 }
 
@@ -468,14 +468,14 @@ func (are *AdvancedReasoningEngine) ChainOfThought(question string) *ThoughtChai
 func (are *AdvancedReasoningEngine) GetReasoningMetrics() map[string]interface{} {
 	are.mu.RLock()
 	defer are.mu.RUnlock()
-	
+
 	return map[string]interface{}{
-		"active_chains":          len(are.activeChains),
-		"completed_chains":       len(are.completedChains),
-		"problems_processed":     are.totalProblemsProcessed,
-		"causal_inferences":      are.totalInferences,
-		"counterfactuals":        are.totalCounterfactuals,
-		"thought_chains":         len(are.thoughtChains),
+		"active_chains":            len(are.activeChains),
+		"completed_chains":         len(are.completedChains),
+		"problems_processed":       are.totalProblemsProcessed,
+		"causal_inferences":        are.totalInferences,
+		"counterfactuals":          are.totalCounterfactuals,
+		"thought_chains":           len(are.thoughtChains),
 		"decomposition_strategies": len(are.decompositionStrategies),
 	}
 }
@@ -485,28 +485,28 @@ func (are *AdvancedReasoningEngine) GetReasoningMetrics() map[string]interface{}
 func (are *AdvancedReasoningEngine) initializeStrategies() {
 	// Divide and conquer
 	are.decompositionStrategies["divide_conquer"] = &DecompositionStrategy{
-		ID:          "divide_conquer",
-		Name:        "Divide and Conquer",
-		Description: "Split problem into independent sub-problems",
-		Heuristics:  []string{"identify_subgoals", "minimize_dependencies"},
+		ID:           "divide_conquer",
+		Name:         "Divide and Conquer",
+		Description:  "Split problem into independent sub-problems",
+		Heuristics:   []string{"identify_subgoals", "minimize_dependencies"},
 		ApplicableTo: []ProblemType{ProblemSearch, ProblemOptimization},
 	}
-	
+
 	// Hierarchical decomposition
 	are.decompositionStrategies["hierarchical"] = &DecompositionStrategy{
-		ID:          "hierarchical",
-		Name:        "Hierarchical Decomposition",
-		Description: "Break down into layers of abstraction",
-		Heuristics:  []string{"identify_levels", "top_down_refinement"},
+		ID:           "hierarchical",
+		Name:         "Hierarchical Decomposition",
+		Description:  "Break down into layers of abstraction",
+		Heuristics:   []string{"identify_levels", "top_down_refinement"},
 		ApplicableTo: []ProblemType{ProblemPlanning, ProblemDesign},
 	}
-	
+
 	// Functional decomposition
 	are.decompositionStrategies["functional"] = &DecompositionStrategy{
-		ID:          "functional",
-		Name:        "Functional Decomposition",
-		Description: "Separate by functional components",
-		Heuristics:  []string{"identify_functions", "minimize_coupling"},
+		ID:           "functional",
+		Name:         "Functional Decomposition",
+		Description:  "Separate by functional components",
+		Heuristics:   []string{"identify_functions", "minimize_coupling"},
 		ApplicableTo: []ProblemType{ProblemDesign, ProblemDiagnosis},
 	}
 }
@@ -533,14 +533,14 @@ func initializeCausalModel() *CausalModel {
 func estimateComplexity(description string) float64 {
 	// Simple heuristic based on description length and keywords
 	baseComplexity := float64(len(description)) / 1000.0
-	
+
 	complexKeywords := []string{"multiple", "complex", "intricate", "interdependent"}
 	for _, keyword := range complexKeywords {
 		if contains(description, keyword) {
 			baseComplexity += 0.2
 		}
 	}
-	
+
 	return math.Min(1.0, baseComplexity)
 }
 
@@ -548,7 +548,7 @@ func applyDecompositionStrategy(problem *Problem, strategy *DecompositionStrateg
 	// Simple decomposition - split into 2-4 sub-problems
 	numSubs := 2 + int(problem.Complexity*2)
 	subProblems := make([]*Problem, numSubs)
-	
+
 	for i := 0; i < numSubs; i++ {
 		subProblems[i] = &Problem{
 			ID:          fmt.Sprintf("%s_sub%d", problem.ID, i),
@@ -558,7 +558,7 @@ func applyDecompositionStrategy(problem *Problem, strategy *DecompositionStrateg
 			CreatedAt:   time.Now(),
 		}
 	}
-	
+
 	return subProblems
 }
 
@@ -567,10 +567,10 @@ func assessCausalEvidence(evidence []string) float64 {
 	if len(evidence) == 0 {
 		return 0.1
 	}
-	
+
 	baseConfidence := 0.5
 	evidenceBonus := math.Min(0.4, float64(len(evidence))*0.1)
-	
+
 	return baseConfidence + evidenceBonus
 }
 
@@ -626,7 +626,7 @@ func generateAlternateOutcomes(baseScenario, alteration string) []*AlternateOutc
 
 func synthesizeAnswer(question string, thoughts, reasoning []string) string {
 	// Combine thoughts and reasoning into answer
-	return fmt.Sprintf("Based on analysis of '%s', the answer is derived from %d reasoning steps", 
+	return fmt.Sprintf("Based on analysis of '%s', the answer is derived from %d reasoning steps",
 		question, len(thoughts))
 }
 
@@ -634,7 +634,7 @@ func calculateAnswerConfidence(chain *ThoughtChain) float64 {
 	// Confidence based on chain length and consistency
 	baseConfidence := 0.5
 	lengthBonus := math.Min(0.3, float64(len(chain.Thoughts))*0.05)
-	
+
 	return baseConfidence + lengthBonus
 }
 

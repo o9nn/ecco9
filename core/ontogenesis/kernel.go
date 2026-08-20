@@ -7,15 +7,15 @@ import (
 )
 
 type OntogeneticKernel struct {
-	ID          string
-	Generation  int
-	Genome      *KernelGenome
-	BirthTime   time.Time
-	Age         time.Duration
-	Fitness     float64
-	State       []float64
-	Output      []float64
-	Metadata    map[string]interface{}
+	ID         string
+	Generation int
+	Genome     *KernelGenome
+	BirthTime  time.Time
+	Age        time.Duration
+	Fitness    float64
+	State      []float64
+	Output     []float64
+	Metadata   map[string]interface{}
 }
 
 func NewOntogeneticKernel(coefficients []float64, treeStructure []int) *OntogeneticKernel {
@@ -43,9 +43,9 @@ func (k *OntogeneticKernel) Step(y []float64, f func([]float64) []float64, h flo
 	n := len(y)
 	result := make([]float64, n)
 	copy(result, y)
-	
+
 	stages := k.computeStages(y, f, h)
-	
+
 	for i, coeff := range k.Genome.Coefficients {
 		if i < len(stages) {
 			for j := 0; j < n; j++ {
@@ -53,21 +53,21 @@ func (k *OntogeneticKernel) Step(y []float64, f func([]float64) []float64, h flo
 			}
 		}
 	}
-	
+
 	return result
 }
 
 func (k *OntogeneticKernel) computeStages(y []float64, f func([]float64) []float64, h float64) [][]float64 {
 	stages := make([][]float64, len(k.Genome.Coefficients))
-	
+
 	if len(stages) > 0 {
 		stages[0] = f(y)
 	}
-	
+
 	for i := 1; i < len(stages); i++ {
 		yTemp := make([]float64, len(y))
 		copy(yTemp, y)
-		
+
 		if i < len(k.Genome.TreeStructure) {
 			parentIdx := k.Genome.TreeStructure[i]
 			if parentIdx >= 0 && parentIdx < len(stages) && stages[parentIdx] != nil {
@@ -76,24 +76,24 @@ func (k *OntogeneticKernel) computeStages(y []float64, f func([]float64) []float
 				}
 			}
 		}
-		
+
 		stages[i] = f(yTemp)
 	}
-	
+
 	return stages
 }
 
 func (k *OntogeneticKernel) Evaluate(problem TestProblem) float64 {
 	y := make([]float64, len(problem.InitialCondition))
 	copy(y, problem.InitialCondition)
-	
+
 	h := (problem.TEnd - problem.TStart) / float64(problem.Steps)
-	
+
 	totalError := 0.0
 	for step := 0; step < problem.Steps; step++ {
 		y = k.Step(y, problem.Derivative, h)
 	}
-	
+
 	if problem.ExactSolution != nil {
 		exactY := problem.ExactSolution(problem.TEnd)
 		for i := range y {
@@ -101,7 +101,7 @@ func (k *OntogeneticKernel) Evaluate(problem TestProblem) float64 {
 			totalError += diff * diff
 		}
 	}
-	
+
 	k.Fitness = 1.0 / (1.0 + math.Sqrt(totalError))
 	return k.Fitness
 }
@@ -122,14 +122,14 @@ func (k *OntogeneticKernel) Clone() *OntogeneticKernel {
 		Output:     make([]float64, len(k.Output)),
 		Metadata:   make(map[string]interface{}),
 	}
-	
+
 	copy(clone.State, k.State)
 	copy(clone.Output, k.Output)
-	
+
 	for key, value := range k.Metadata {
 		clone.Metadata[key] = value
 	}
-	
+
 	return clone
 }
 
@@ -154,4 +154,5 @@ func generateKernelID() string {
 	kernelIDCounter++
 	return fmt.Sprintf("kernel-%d-%d", time.Now().Unix(), kernelIDCounter)
 }
+
 // Kernel module - placeholder for future implementation

@@ -65,7 +65,7 @@ func main() {
 			if err := agent.Stop(); err != nil {
 				fmt.Printf("⚠️  Error stopping agent: %v\n", err)
 			}
-			
+
 			// Print final metrics
 			fmt.Println("\n📊 Final Agent Metrics:")
 			metrics := agent.GetMetrics()
@@ -74,7 +74,7 @@ func main() {
 			fmt.Printf("   Thoughts Generated: %d\n", metrics["thoughts_generated"])
 			fmt.Printf("   Goals Achieved: %d\n", metrics["goals_achieved"])
 			fmt.Printf("   Final State: %s\n", metrics["wake_state"])
-			
+
 			fmt.Println("\n✅ Agent stopped successfully")
 			return
 

@@ -46,9 +46,9 @@ type StepConfig struct {
 type CouplingType int
 
 const (
-	PerceptionMemory   CouplingType = iota // T4E ↔ T7R
-	AssessmentPlanning                     // T1R ↔ T2E
-	BalancedIntegration                    // T8E
+	PerceptionMemory    CouplingType = iota // T4E ↔ T7R
+	AssessmentPlanning                      // T1R ↔ T2E
+	BalancedIntegration                     // T8E
 )
 
 // Coupling represents a tensional coupling between cognitive streams
@@ -126,14 +126,14 @@ type ThreePhaseManager struct {
 
 // SystemMetrics tracks overall system metrics
 type SystemMetrics struct {
-	TotalSteps       int
-	CurrentStep      int
-	CycleNumber      int
-	ActiveCouplings  []Coupling
-	CognitiveLoad    float64
-	StreamCoherence  float64
-	PhaseMetrics     [3]PhaseMetrics
-	StartTime        time.Time
+	TotalSteps      int
+	CurrentStep     int
+	CycleNumber     int
+	ActiveCouplings []Coupling
+	CognitiveLoad   float64
+	StreamCoherence float64
+	PhaseMetrics    [3]PhaseMetrics
+	StartTime       time.Time
 }
 
 // ConsciousnessIntegrator interface for integrating cognitive streams

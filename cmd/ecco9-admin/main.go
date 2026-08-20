@@ -18,14 +18,14 @@ func main() {
 	var baseURL string
 	flag.StringVar(&baseURL, "url", defaultBaseURL, "ecco9 server URL")
 	flag.Parse()
-	
+
 	if len(flag.Args()) < 1 {
 		printUsage()
 		os.Exit(1)
 	}
-	
+
 	command := flag.Args()[0]
-	
+
 	switch command {
 	case "status":
 		showStatus(baseURL)
@@ -67,19 +67,19 @@ func showStatus(baseURL string) {
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
-	
+
 	body, _ := io.ReadAll(resp.Body)
-	
+
 	var result struct {
 		Platform string                 `json:"platform"`
 		Status   map[string]interface{} `json:"status"`
 	}
-	
+
 	if err := json.Unmarshal(body, &result); err != nil {
 		fmt.Printf("Error: Failed to parse response: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Println("🌊 ecco9 Platform Status")
 	fmt.Println("========================")
 	fmt.Printf("Platform:         %s\n", result.Platform)
@@ -88,13 +88,13 @@ func showStatus(baseURL string) {
 	fmt.Printf("Boot Stage:       %v\n", result.Status["boot_stage"])
 	fmt.Printf("Device Count:     %v\n", result.Status["device_count"])
 	fmt.Printf("Driver Count:     %v\n", result.Status["driver_count"])
-	
+
 	// Format uptime as human-readable duration
 	if uptimeNs, ok := result.Status["uptime"].(float64); ok {
 		uptime := time.Duration(uptimeNs)
 		fmt.Printf("Uptime:           %v\n", uptime.Round(time.Second))
 	}
-	
+
 	if ports, ok := result.Status["ports"].(map[string]interface{}); ok {
 		fmt.Println("\nPort Allocation:")
 		fmt.Printf("  HTTP:      %v\n", ports["HTTP"])
@@ -113,25 +113,25 @@ func showDevices(baseURL string) {
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
-	
+
 	body, _ := io.ReadAll(resp.Body)
-	
+
 	var result struct {
 		Devices []map[string]interface{} `json:"devices"`
 	}
-	
+
 	if err := json.Unmarshal(body, &result); err != nil {
 		fmt.Printf("Error: Failed to parse response: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Println("📍 Cognitive Devices")
 	fmt.Println("====================")
-	
+
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ID\tNAME\tTYPE\tSTATUS\tHEALTH")
 	fmt.Fprintln(w, "──\t────\t────\t──────\t──────")
-	
+
 	for _, device := range result.Devices {
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			device["id"],
@@ -140,7 +140,7 @@ func showDevices(baseURL string) {
 			device["status"],
 			device["health"])
 	}
-	
+
 	w.Flush()
 	fmt.Printf("\nTotal devices: %d\n", len(result.Devices))
 }
@@ -152,32 +152,32 @@ func showDrivers(baseURL string) {
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
-	
+
 	body, _ := io.ReadAll(resp.Body)
-	
+
 	var result struct {
 		Drivers []map[string]interface{} `json:"drivers"`
 	}
-	
+
 	if err := json.Unmarshal(body, &result); err != nil {
 		fmt.Printf("Error: Failed to parse response: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Println("🔧 Device Drivers")
 	fmt.Println("=================")
-	
+
 	for _, driver := range result.Drivers {
 		fmt.Printf("\n%s (v%s)\n", driver["name"], driver["version"])
 		fmt.Println("  Capabilities:")
-		
+
 		if caps, ok := driver["capabilities"].([]interface{}); ok {
 			for _, cap := range caps {
 				fmt.Printf("    - %s\n", cap)
 			}
 		}
 	}
-	
+
 	fmt.Printf("\nTotal drivers: %d\n", len(result.Drivers))
 }
 
@@ -188,30 +188,30 @@ func showHealth(baseURL string) {
 		os.Exit(1)
 	}
 	defer resp.Body.Close()
-	
+
 	body, _ := io.ReadAll(resp.Body)
-	
+
 	var result struct {
 		Healthy   bool   `json:"healthy"`
 		Timestamp string `json:"timestamp"`
 	}
-	
+
 	if err := json.Unmarshal(body, &result); err != nil {
 		fmt.Printf("Error: Failed to parse response: %v\n", err)
 		os.Exit(1)
 	}
-	
+
 	fmt.Println("🏥 Platform Health Check")
 	fmt.Println("========================")
-	
+
 	if result.Healthy {
 		fmt.Println("Status:    ✅ HEALTHY")
 	} else {
 		fmt.Println("Status:    ⚠️  DEGRADED")
 	}
-	
+
 	fmt.Printf("Timestamp: %s\n", result.Timestamp)
-	
+
 	if !result.Healthy {
 		os.Exit(1)
 	}

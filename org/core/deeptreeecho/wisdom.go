@@ -203,9 +203,9 @@ func NewWisdomSynthesisEngine(identity *Identity) *WisdomSynthesisEngine {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	return &WisdomSynthesisEngine{
-		ctx:      ctx,
-		cancel:   cancel,
-		identity: identity,
+		ctx:        ctx,
+		cancel:     cancel,
+		identity:   identity,
 		principles: make([]WisdomPrinciple, 0),
 		graph: &WisdomGraph{
 			Nodes:    make(map[string]*WisdomNode),
@@ -812,21 +812,21 @@ func (ws *WisdomSynthesisEngine) GetMetrics() map[string]interface{} {
 	defer ws.mu.RUnlock()
 
 	return map[string]interface{}{
-		"wisdom_level":       ws.wisdomLevel,
-		"principles_count":   len(ws.principles),
-		"total_synthesized":  ws.totalPrinciplesSynthesized,
-		"total_applications": ws.totalApplications,
-		"total_evolutions":   ws.totalEvolutions,
-		"pending_patterns":   len(ws.pendingPatterns),
-		"graph_nodes":        len(ws.graph.Nodes),
-		"graph_edges":        len(ws.graph.Edges),
-		"running":            ws.running,
-		"metrics_depth":      ws.wisdomMetrics.Depth,
-		"metrics_breadth":    ws.wisdomMetrics.Breadth,
+		"wisdom_level":        ws.wisdomLevel,
+		"principles_count":    len(ws.principles),
+		"total_synthesized":   ws.totalPrinciplesSynthesized,
+		"total_applications":  ws.totalApplications,
+		"total_evolutions":    ws.totalEvolutions,
+		"pending_patterns":    len(ws.pendingPatterns),
+		"graph_nodes":         len(ws.graph.Nodes),
+		"graph_edges":         len(ws.graph.Edges),
+		"running":             ws.running,
+		"metrics_depth":       ws.wisdomMetrics.Depth,
+		"metrics_breadth":     ws.wisdomMetrics.Breadth,
 		"metrics_integration": ws.wisdomMetrics.Integration,
 		"metrics_application": ws.wisdomMetrics.Application,
-		"metrics_evolution":  ws.wisdomMetrics.Evolution,
-		"metrics_coherence":  ws.wisdomMetrics.Coherence,
-		"metrics_resilience": ws.wisdomMetrics.Resilience,
+		"metrics_evolution":   ws.wisdomMetrics.Evolution,
+		"metrics_coherence":   ws.wisdomMetrics.Coherence,
+		"metrics_resilience":  ws.wisdomMetrics.Resilience,
 	}
 }

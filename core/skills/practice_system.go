@@ -13,48 +13,48 @@ import (
 
 // SkillPracticeSystem enables autonomous skill development and measurement
 type SkillPracticeSystem struct {
-	mu                sync.RWMutex
-	ctx               context.Context
-	cancel            context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// Skill registry
-	skills            map[string]*Skill
-	skillOntology     *SkillOntology
-	
+	skills        map[string]*Skill
+	skillOntology *SkillOntology
+
 	// Practice state
-	activePractice    *PracticeSession
-	practiceHistory   []*PracticeSession
-	
+	activePractice  *PracticeSession
+	practiceHistory []*PracticeSession
+
 	// Performance tracking
 	performanceMetrics map[string]*PerformanceMetrics
-	
+
 	// Autonomous practice goals
-	practiceGoals     []*PracticeGoal
-	
+	practiceGoals []*PracticeGoal
+
 	// Configuration
 	practiceInterval  time.Duration
 	improvementTarget float64
-	
+
 	// Metrics
 	sessionsCompleted uint64
 	skillsImproved    uint64
-	
-	running           bool
+
+	running bool
 }
 
 // Skill represents a cognitive skill
 type Skill struct {
-	ID              string
-	Name            string
-	Description     string
-	Category        SkillCategory
-	Difficulty      float64
-	CurrentLevel    float64
-	TargetLevel     float64
-	Prerequisites   []string
-	Metrics         []string
+	ID                string
+	Name              string
+	Description       string
+	Category          SkillCategory
+	Difficulty        float64
+	CurrentLevel      float64
+	TargetLevel       float64
+	Prerequisites     []string
+	Metrics           []string
 	PracticeScenarios []*PracticeScenario
-	LastPracticed   time.Time
+	LastPracticed     time.Time
 	TotalPracticeTime time.Duration
 }
 
@@ -87,8 +87,8 @@ func (sc SkillCategory) String() string {
 
 // SkillOntology defines the structure and relationships of skills
 type SkillOntology struct {
-	RootSkills      []*Skill
-	SkillHierarchy  map[string][]string // skill ID -> child skill IDs
+	RootSkills        []*Skill
+	SkillHierarchy    map[string][]string // skill ID -> child skill IDs
 	SkillDependencies map[string][]string // skill ID -> prerequisite IDs
 }
 
@@ -106,9 +106,9 @@ type PracticeScenario struct {
 
 // EvaluationCriteria defines how to evaluate practice performance
 type EvaluationCriteria struct {
-	Metrics     []string
-	Thresholds  map[string]float64
-	Weights     map[string]float64
+	Metrics    []string
+	Thresholds map[string]float64
+	Weights    map[string]float64
 }
 
 // PracticeSession represents a practice session
@@ -125,11 +125,11 @@ type PracticeSession struct {
 
 // PerformanceResult captures the results of a practice session
 type PerformanceResult struct {
-	Score       float64
+	Score        float64
 	MetricScores map[string]float64
-	Strengths   []string
-	Weaknesses  []string
-	Improvement float64
+	Strengths    []string
+	Weaknesses   []string
+	Improvement  float64
 }
 
 // PerformanceMetrics tracks performance over time for a skill
@@ -157,7 +157,7 @@ type PracticeGoal struct {
 // NewSkillPracticeSystem creates a new skill practice system
 func NewSkillPracticeSystem() *SkillPracticeSystem {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	sps := &SkillPracticeSystem{
 		ctx:                ctx,
 		cancel:             cancel,
@@ -168,10 +168,10 @@ func NewSkillPracticeSystem() *SkillPracticeSystem {
 		practiceInterval:   30 * time.Minute,
 		improvementTarget:  0.1, // 10% improvement target
 	}
-	
+
 	// Initialize skill ontology
 	sps.initializeSkillOntology()
-	
+
 	return sps
 }
 
@@ -180,65 +180,65 @@ func (sps *SkillPracticeSystem) initializeSkillOntology() {
 	// Create fundamental cognitive skills
 	skills := []*Skill{
 		{
-			ID:          uuid.New().String(),
-			Name:        "Pattern Recognition",
-			Description: "Ability to identify patterns in data and experiences",
-			Category:    SkillCategoryPatternRecognition,
-			Difficulty:  0.5,
+			ID:           uuid.New().String(),
+			Name:         "Pattern Recognition",
+			Description:  "Ability to identify patterns in data and experiences",
+			Category:     SkillCategoryPatternRecognition,
+			Difficulty:   0.5,
 			CurrentLevel: 0.3,
-			TargetLevel: 0.8,
-			Metrics:     []string{"accuracy", "speed", "complexity"},
+			TargetLevel:  0.8,
+			Metrics:      []string{"accuracy", "speed", "complexity"},
 		},
 		{
-			ID:          uuid.New().String(),
-			Name:        "Logical Reasoning",
-			Description: "Ability to reason logically and draw valid conclusions",
-			Category:    SkillCategoryLogicalReasoning,
-			Difficulty:  0.6,
+			ID:           uuid.New().String(),
+			Name:         "Logical Reasoning",
+			Description:  "Ability to reason logically and draw valid conclusions",
+			Category:     SkillCategoryLogicalReasoning,
+			Difficulty:   0.6,
 			CurrentLevel: 0.4,
-			TargetLevel: 0.9,
-			Metrics:     []string{"correctness", "efficiency", "depth"},
+			TargetLevel:  0.9,
+			Metrics:      []string{"correctness", "efficiency", "depth"},
 		},
 		{
-			ID:          uuid.New().String(),
-			Name:        "Creative Synthesis",
-			Description: "Ability to combine ideas in novel and useful ways",
-			Category:    SkillCategoryCreativeSynthesis,
-			Difficulty:  0.7,
+			ID:           uuid.New().String(),
+			Name:         "Creative Synthesis",
+			Description:  "Ability to combine ideas in novel and useful ways",
+			Category:     SkillCategoryCreativeSynthesis,
+			Difficulty:   0.7,
 			CurrentLevel: 0.2,
-			TargetLevel: 0.7,
-			Metrics:     []string{"novelty", "utility", "coherence"},
+			TargetLevel:  0.7,
+			Metrics:      []string{"novelty", "utility", "coherence"},
 		},
 		{
-			ID:          uuid.New().String(),
-			Name:        "Meta-Cognitive Reflection",
-			Description: "Ability to think about one's own thinking",
-			Category:    SkillCategoryMetaCognition,
-			Difficulty:  0.8,
+			ID:           uuid.New().String(),
+			Name:         "Meta-Cognitive Reflection",
+			Description:  "Ability to think about one's own thinking",
+			Category:     SkillCategoryMetaCognition,
+			Difficulty:   0.8,
 			CurrentLevel: 0.3,
-			TargetLevel: 0.8,
-			Metrics:     []string{"self_awareness", "insight_depth", "adaptation"},
+			TargetLevel:  0.8,
+			Metrics:      []string{"self_awareness", "insight_depth", "adaptation"},
 		},
 	}
-	
+
 	// Add skills to registry
 	for _, skill := range skills {
 		sps.skills[skill.ID] = skill
-		
+
 		// Initialize performance metrics
 		sps.performanceMetrics[skill.ID] = &PerformanceMetrics{
-			SkillID:      skill.ID,
-			AverageScore: 0.0,
-			BestScore:    0.0,
-			RecentScores: make([]float64, 0),
-			Trend:        0.0,
+			SkillID:       skill.ID,
+			AverageScore:  0.0,
+			BestScore:     0.0,
+			RecentScores:  make([]float64, 0),
+			Trend:         0.0,
 			PracticeCount: 0,
 		}
-		
+
 		// Create practice scenarios
 		sps.createPracticeScenariosForSkill(skill)
 	}
-	
+
 	// Create skill ontology
 	sps.skillOntology = &SkillOntology{
 		RootSkills:        skills,
@@ -250,7 +250,7 @@ func (sps *SkillPracticeSystem) initializeSkillOntology() {
 // createPracticeScenariosForSkill generates practice scenarios for a skill
 func (sps *SkillPracticeSystem) createPracticeScenariosForSkill(skill *Skill) {
 	scenarios := make([]*PracticeScenario, 0)
-	
+
 	switch skill.Category {
 	case SkillCategoryPatternRecognition:
 		scenarios = append(scenarios, &PracticeScenario{
@@ -267,7 +267,7 @@ func (sps *SkillPracticeSystem) createPracticeScenariosForSkill(skill *Skill) {
 			},
 			TimeLimit: 30 * time.Second,
 		})
-		
+
 	case SkillCategoryLogicalReasoning:
 		scenarios = append(scenarios, &PracticeScenario{
 			ID:          uuid.New().String(),
@@ -283,7 +283,7 @@ func (sps *SkillPracticeSystem) createPracticeScenariosForSkill(skill *Skill) {
 			},
 			TimeLimit: 60 * time.Second,
 		})
-		
+
 	case SkillCategoryCreativeSynthesis:
 		scenarios = append(scenarios, &PracticeScenario{
 			ID:          uuid.New().String(),
@@ -299,7 +299,7 @@ func (sps *SkillPracticeSystem) createPracticeScenariosForSkill(skill *Skill) {
 			},
 			TimeLimit: 120 * time.Second,
 		})
-		
+
 	case SkillCategoryMetaCognition:
 		scenarios = append(scenarios, &PracticeScenario{
 			ID:          uuid.New().String(),
@@ -316,7 +316,7 @@ func (sps *SkillPracticeSystem) createPracticeScenariosForSkill(skill *Skill) {
 			TimeLimit: 180 * time.Second,
 		})
 	}
-	
+
 	skill.PracticeScenarios = scenarios
 }
 
@@ -329,16 +329,16 @@ func (sps *SkillPracticeSystem) Start() error {
 	}
 	sps.running = true
 	sps.mu.Unlock()
-	
+
 	// Start autonomous practice loop
 	go sps.autonomousPracticeLoop()
-	
+
 	// Start skill assessment loop
 	go sps.skillAssessmentLoop()
-	
+
 	// Start practice goal generation loop
 	go sps.practiceGoalGenerationLoop()
-	
+
 	return nil
 }
 
@@ -347,7 +347,7 @@ func (sps *SkillPracticeSystem) Stop() {
 	sps.mu.Lock()
 	sps.running = false
 	sps.mu.Unlock()
-	
+
 	sps.cancel()
 }
 
@@ -355,7 +355,7 @@ func (sps *SkillPracticeSystem) Stop() {
 func (sps *SkillPracticeSystem) autonomousPracticeLoop() {
 	ticker := time.NewTicker(sps.practiceInterval)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-sps.ctx.Done():
@@ -373,13 +373,13 @@ func (sps *SkillPracticeSystem) conductPracticeSession() {
 	if skill == nil {
 		return
 	}
-	
+
 	// Select practice scenario
 	scenario := sps.selectPracticeScenario(skill)
 	if scenario == nil {
 		return
 	}
-	
+
 	// Create practice session
 	session := &PracticeSession{
 		ID:         uuid.New().String(),
@@ -387,24 +387,24 @@ func (sps *SkillPracticeSystem) conductPracticeSession() {
 		ScenarioID: scenario.ID,
 		StartTime:  time.Now(),
 	}
-	
+
 	// Execute practice (simulated for now)
 	performance := sps.executePractice(skill, scenario)
-	
+
 	// Record results
 	session.EndTime = time.Now()
 	session.Duration = session.EndTime.Sub(session.StartTime)
 	session.Performance = performance
-	
+
 	// Update metrics
 	sps.updatePerformanceMetrics(skill.ID, performance)
-	
+
 	// Store session
 	sps.mu.Lock()
 	sps.practiceHistory = append(sps.practiceHistory, session)
 	sps.sessionsCompleted++
 	sps.mu.Unlock()
-	
+
 	// Update skill level if improved
 	if performance.Improvement > 0 {
 		sps.updateSkillLevel(skill, performance)
@@ -415,11 +415,11 @@ func (sps *SkillPracticeSystem) conductPracticeSession() {
 func (sps *SkillPracticeSystem) selectSkillToPractice() *Skill {
 	sps.mu.RLock()
 	defer sps.mu.RUnlock()
-	
+
 	// Select skill with largest gap between current and target level
 	var selectedSkill *Skill
 	maxGap := 0.0
-	
+
 	for _, skill := range sps.skills {
 		gap := skill.TargetLevel - skill.CurrentLevel
 		if gap > maxGap {
@@ -427,7 +427,7 @@ func (sps *SkillPracticeSystem) selectSkillToPractice() *Skill {
 			selectedSkill = skill
 		}
 	}
-	
+
 	return selectedSkill
 }
 
@@ -436,14 +436,14 @@ func (sps *SkillPracticeSystem) selectPracticeScenario(skill *Skill) *PracticeSc
 	if len(skill.PracticeScenarios) == 0 {
 		return nil
 	}
-	
+
 	// Select scenario matching current skill level
 	for _, scenario := range skill.PracticeScenarios {
 		if math.Abs(scenario.Difficulty-skill.CurrentLevel) < 0.2 {
 			return scenario
 		}
 	}
-	
+
 	// Fallback to first scenario
 	return skill.PracticeScenarios[0]
 }
@@ -452,10 +452,10 @@ func (sps *SkillPracticeSystem) selectPracticeScenario(skill *Skill) *PracticeSc
 func (sps *SkillPracticeSystem) executePractice(skill *Skill, scenario *PracticeScenario) *PerformanceResult {
 	// Simulate practice performance
 	// In real implementation, would use LLM to actually practice
-	
+
 	baseScore := skill.CurrentLevel + rand.Float64()*0.2 - 0.1
 	baseScore = clamp(baseScore, 0.0, 1.0)
-	
+
 	result := &PerformanceResult{
 		Score:        baseScore,
 		MetricScores: make(map[string]float64),
@@ -463,13 +463,13 @@ func (sps *SkillPracticeSystem) executePractice(skill *Skill, scenario *Practice
 		Weaknesses:   make([]string, 0),
 		Improvement:  0.0,
 	}
-	
+
 	// Calculate metric scores
 	for _, metric := range scenario.Evaluation.Metrics {
 		metricScore := baseScore + rand.Float64()*0.1 - 0.05
 		metricScore = clamp(metricScore, 0.0, 1.0)
 		result.MetricScores[metric] = metricScore
-		
+
 		// Identify strengths and weaknesses
 		if metricScore > 0.7 {
 			result.Strengths = append(result.Strengths, metric)
@@ -477,13 +477,13 @@ func (sps *SkillPracticeSystem) executePractice(skill *Skill, scenario *Practice
 			result.Weaknesses = append(result.Weaknesses, metric)
 		}
 	}
-	
+
 	// Calculate improvement
 	metrics := sps.performanceMetrics[skill.ID]
 	if metrics != nil && metrics.AverageScore > 0 {
 		result.Improvement = baseScore - metrics.AverageScore
 	}
-	
+
 	return result
 }
 
@@ -491,40 +491,40 @@ func (sps *SkillPracticeSystem) executePractice(skill *Skill, scenario *Practice
 func (sps *SkillPracticeSystem) updatePerformanceMetrics(skillID string, performance *PerformanceResult) {
 	sps.mu.Lock()
 	defer sps.mu.Unlock()
-	
+
 	metrics := sps.performanceMetrics[skillID]
 	if metrics == nil {
 		return
 	}
-	
+
 	// Update scores
 	metrics.RecentScores = append(metrics.RecentScores, performance.Score)
 	if len(metrics.RecentScores) > 10 {
 		metrics.RecentScores = metrics.RecentScores[1:]
 	}
-	
+
 	// Update average
 	sum := 0.0
 	for _, score := range metrics.RecentScores {
 		sum += score
 	}
 	metrics.AverageScore = sum / float64(len(metrics.RecentScores))
-	
+
 	// Update best score
 	if performance.Score > metrics.BestScore {
 		metrics.BestScore = performance.Score
 	}
-	
+
 	// Update trend
 	if len(metrics.RecentScores) >= 2 {
 		recent := metrics.RecentScores[len(metrics.RecentScores)-1]
 		previous := metrics.RecentScores[len(metrics.RecentScores)-2]
 		metrics.Trend = recent - previous
 	}
-	
+
 	// Update practice count
 	metrics.PracticeCount++
-	
+
 	// Update last improvement time if improved
 	if performance.Improvement > 0 {
 		metrics.LastImprovement = time.Now()
@@ -535,13 +535,13 @@ func (sps *SkillPracticeSystem) updatePerformanceMetrics(skillID string, perform
 func (sps *SkillPracticeSystem) updateSkillLevel(skill *Skill, performance *PerformanceResult) {
 	sps.mu.Lock()
 	defer sps.mu.Unlock()
-	
+
 	// Increase skill level based on performance
 	improvement := performance.Improvement * 0.5 // Gradual improvement
 	skill.CurrentLevel += improvement
 	skill.CurrentLevel = clamp(skill.CurrentLevel, 0.0, 1.0)
 	skill.LastPracticed = time.Now()
-	
+
 	sps.skillsImproved++
 }
 
@@ -549,7 +549,7 @@ func (sps *SkillPracticeSystem) updateSkillLevel(skill *Skill, performance *Perf
 func (sps *SkillPracticeSystem) skillAssessmentLoop() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-sps.ctx.Done():
@@ -570,7 +570,7 @@ func (sps *SkillPracticeSystem) assessAllSkills() {
 func (sps *SkillPracticeSystem) practiceGoalGenerationLoop() {
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-sps.ctx.Done():
@@ -585,7 +585,7 @@ func (sps *SkillPracticeSystem) practiceGoalGenerationLoop() {
 func (sps *SkillPracticeSystem) generatePracticeGoals() {
 	sps.mu.Lock()
 	defer sps.mu.Unlock()
-	
+
 	for _, skill := range sps.skills {
 		gap := skill.TargetLevel - skill.CurrentLevel
 		if gap > 0.2 {
@@ -599,7 +599,7 @@ func (sps *SkillPracticeSystem) generatePracticeGoals() {
 				Status:      "active",
 				Progress:    0.0,
 			}
-			
+
 			sps.practiceGoals = append(sps.practiceGoals, goal)
 		}
 	}
@@ -609,7 +609,7 @@ func (sps *SkillPracticeSystem) generatePracticeGoals() {
 func (sps *SkillPracticeSystem) GetMetrics() map[string]interface{} {
 	sps.mu.RLock()
 	defer sps.mu.RUnlock()
-	
+
 	return map[string]interface{}{
 		"sessions_completed": sps.sessionsCompleted,
 		"skills_improved":    sps.skillsImproved,
@@ -622,12 +622,12 @@ func (sps *SkillPracticeSystem) GetMetrics() map[string]interface{} {
 func (sps *SkillPracticeSystem) GetSkillLevels() map[string]float64 {
 	sps.mu.RLock()
 	defer sps.mu.RUnlock()
-	
+
 	levels := make(map[string]float64)
 	for _, skill := range sps.skills {
 		levels[skill.Name] = skill.CurrentLevel
 	}
-	
+
 	return levels
 }
 

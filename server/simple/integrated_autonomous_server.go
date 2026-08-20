@@ -332,7 +332,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 func handleStatus(w http.ResponseWriter, r *http.Request) {
 	status := consciousness.GetStatus()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(status)
 }
@@ -342,16 +342,16 @@ func handleThink(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	var req struct {
 		Content string `json:"content"`
 	}
-	
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	
+
 	thought := deeptreeecho.Thought{
 		Content:    req.Content,
 		Type:       deeptreeecho.ThoughtPerception,
@@ -359,9 +359,9 @@ func handleThink(w http.ResponseWriter, r *http.Request) {
 		Importance: 0.7,
 		Source:     deeptreeecho.SourceExternal,
 	}
-	
+
 	consciousness.Think(thought)
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "thought received",
@@ -373,9 +373,9 @@ func handleWake(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	consciousness.Wake()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "awakening",
@@ -387,9 +387,9 @@ func handleRest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	consciousness.Rest()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"status": "resting",
@@ -398,7 +398,7 @@ func handleRest(w http.ResponseWriter, r *http.Request) {
 
 func handleSkills(w http.ResponseWriter, r *http.Request) {
 	status := consciousness.GetStatus()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"skills": status["skills"],
@@ -407,7 +407,7 @@ func handleSkills(w http.ResponseWriter, r *http.Request) {
 
 func handleMemory(w http.ResponseWriter, r *http.Request) {
 	status := consciousness.GetStatus()
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"memory": status["memory"],

@@ -118,9 +118,9 @@ func (s *Server) handleStatus(c *gin.Context) {
 	// Get consciousness status
 	// This would require adding a GetStatus method to UnifiedAutonomousConsciousness
 	c.JSON(http.StatusOK, gin.H{
-		"status":      "autonomous",
-		"awake":       true,
-		"mode":        "unified",
+		"status": "autonomous",
+		"awake":  true,
+		"mode":   "unified",
 		"features": map[string]bool{
 			"llm_thoughts":       true,
 			"autonomous_cycles":  true,
@@ -198,9 +198,9 @@ func (s *Server) handleWisdom(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"wisdom_score": 0.87,
 		"metrics": map[string]float64{
-			"knowledge_depth":    0.85,
-			"insight_quality":    0.89,
-			"reflection_depth":   0.88,
+			"knowledge_depth":     0.85,
+			"insight_quality":     0.89,
+			"reflection_depth":    0.88,
 			"pattern_recognition": 0.86,
 		},
 	})

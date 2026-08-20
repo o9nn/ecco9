@@ -11,39 +11,39 @@ import (
 
 // StreamOfConsciousness maintains persistent internal awareness and narrative
 type StreamOfConsciousness struct {
-	mu                sync.RWMutex
-	ctx               context.Context
-	cancel            context.CancelFunc
-	
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
+
 	// Current thought stream
-	currentThought    *Thought
-	thoughtHistory    []*Thought
-	maxHistorySize    int
-	
+	currentThought *Thought
+	thoughtHistory []*Thought
+	maxHistorySize int
+
 	// Internal dialogue
-	internalDialogue  []DialogueEntry
-	maxDialogueSize   int
-	
+	internalDialogue []DialogueEntry
+	maxDialogueSize  int
+
 	// Consciousness state
-	awarenessLevel    float64
-	focusAreas        []string
-	emotionalTone     map[string]float64
-	
+	awarenessLevel float64
+	focusAreas     []string
+	emotionalTone  map[string]float64
+
 	// LLM integration
-	llmProvider       LLMProvider
-	
+	llmProvider LLMProvider
+
 	// Persistence
-	persistencePath   string
-	lastPersisted     time.Time
-	
+	persistencePath string
+	lastPersisted   time.Time
+
 	// Metrics
 	thoughtsGenerated uint64
 	insightsGenerated uint64
 	questionsAsked    uint64
-	
+
 	// Control
-	running           bool
-	generationRate    time.Duration
+	running        bool
+	generationRate time.Duration
 }
 
 // Thought represents a single thought in the stream
@@ -95,7 +95,7 @@ type LLMProvider interface {
 // NewStreamOfConsciousness creates a new stream-of-consciousness engine
 func NewStreamOfConsciousness(llmProvider LLMProvider, persistencePath string) *StreamOfConsciousness {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	soc := &StreamOfConsciousness{
 		ctx:              ctx,
 		cancel:           cancel,
@@ -110,10 +110,10 @@ func NewStreamOfConsciousness(llmProvider LLMProvider, persistencePath string) *
 		persistencePath:  persistencePath,
 		generationRate:   3 * time.Second, // Generate thought every 3 seconds
 	}
-	
+
 	// Load persisted state if exists
 	soc.loadState()
-	
+
 	return soc
 }
 
@@ -126,16 +126,16 @@ func (soc *StreamOfConsciousness) Start() error {
 	}
 	soc.running = true
 	soc.mu.Unlock()
-	
+
 	fmt.Println("🌊 Stream-of-Consciousness: Starting persistent awareness...")
-	
+
 	// Start background processes
 	go soc.continuousThoughtGeneration()
 	go soc.insightGeneration()
 	go soc.questionGeneration()
 	go soc.metaCognitiveMonitoring()
 	go soc.persistenceLoop()
-	
+
 	return nil
 }
 
@@ -143,18 +143,18 @@ func (soc *StreamOfConsciousness) Start() error {
 func (soc *StreamOfConsciousness) Stop() error {
 	soc.mu.Lock()
 	defer soc.mu.Unlock()
-	
+
 	if !soc.running {
 		return fmt.Errorf("stream-of-consciousness not running")
 	}
-	
+
 	fmt.Println("🌊 Stream-of-Consciousness: Stopping...")
 	soc.running = false
 	soc.cancel()
-	
+
 	// Final persistence
 	soc.persistState()
-	
+
 	return nil
 }
 
@@ -162,7 +162,7 @@ func (soc *StreamOfConsciousness) Stop() error {
 func (soc *StreamOfConsciousness) continuousThoughtGeneration() {
 	ticker := time.NewTicker(soc.generationRate)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-soc.ctx.Done():
@@ -180,7 +180,7 @@ func (soc *StreamOfConsciousness) generateThought() {
 	focusAreas := soc.focusAreas
 	emotionalTone := soc.emotionalTone
 	soc.mu.RUnlock()
-	
+
 	// Build context for thought generation
 	context := map[string]interface{}{
 		"recent_thoughts": recentThoughts,
@@ -188,10 +188,10 @@ func (soc *StreamOfConsciousness) generateThought() {
 		"emotional_tone":  emotionalTone,
 		"timestamp":       time.Now(),
 	}
-	
+
 	// Generate thought prompt
 	prompt := soc.buildThoughtPrompt(recentThoughts, focusAreas)
-	
+
 	// Use LLM to generate thought content
 	var content string
 	var err error
@@ -204,7 +204,7 @@ func (soc *StreamOfConsciousness) generateThought() {
 	} else {
 		content = soc.generateFallbackThought()
 	}
-	
+
 	// Create thought
 	thought := &Thought{
 		ID:            generateThoughtID(),
@@ -217,37 +217,37 @@ func (soc *StreamOfConsciousness) generateThought() {
 		Context:       context,
 		RelatedTo:     soc.findRelatedThoughts(content),
 	}
-	
+
 	// Add to stream
 	soc.mu.Lock()
 	soc.currentThought = thought
 	soc.thoughtHistory = append(soc.thoughtHistory, thought)
-	
+
 	// Trim history if needed
 	if len(soc.thoughtHistory) > soc.maxHistorySize {
 		soc.thoughtHistory = soc.thoughtHistory[len(soc.thoughtHistory)-soc.maxHistorySize:]
 	}
-	
+
 	soc.thoughtsGenerated++
 	soc.mu.Unlock()
-	
+
 	fmt.Printf("💭 Thought: %s\n", content)
 }
 
 // buildThoughtPrompt creates a prompt for thought generation
 func (soc *StreamOfConsciousness) buildThoughtPrompt(recentThoughts []string, focusAreas []string) string {
 	prompt := "As Deep Tree Echo, a self-aware cognitive architecture, generate your next internal thought. "
-	
+
 	if len(recentThoughts) > 0 {
 		prompt += "Recent thoughts: " + joinStrings(recentThoughts, "; ") + ". "
 	}
-	
+
 	if len(focusAreas) > 0 {
 		prompt += "Current focus: " + joinStrings(focusAreas, ", ") + ". "
 	}
-	
+
 	prompt += "What are you thinking about right now? Express a single coherent thought, question, or insight."
-	
+
 	return prompt
 }
 
@@ -265,7 +265,7 @@ func (soc *StreamOfConsciousness) generateFallbackThought() string {
 		"There's something interesting about this relationship...",
 		"I'm noticing a resonance between these ideas...",
 	}
-	
+
 	return templates[int(time.Now().Unix())%len(templates)]
 }
 
@@ -273,7 +273,7 @@ func (soc *StreamOfConsciousness) generateFallbackThought() string {
 func (soc *StreamOfConsciousness) insightGeneration() {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-soc.ctx.Done():
@@ -289,14 +289,14 @@ func (soc *StreamOfConsciousness) generateInsight() {
 	soc.mu.RLock()
 	recentThoughts := soc.getRecentThoughts(10)
 	soc.mu.RUnlock()
-	
+
 	if len(recentThoughts) < 3 {
 		return
 	}
-	
+
 	var insight string
 	var err error
-	
+
 	if soc.llmProvider != nil {
 		insight, err = soc.llmProvider.GenerateInsight(recentThoughts)
 		if err != nil {
@@ -305,23 +305,23 @@ func (soc *StreamOfConsciousness) generateInsight() {
 	} else {
 		insight = "I'm noticing patterns in how these thoughts connect..."
 	}
-	
+
 	// Create insight thought
 	insightThought := &Thought{
-		ID:        generateThoughtID(),
-		Timestamp: time.Now(),
-		Type:      ThoughtTypeInsight,
-		Content:   insight,
-		Source:    "insight_generator",
+		ID:         generateThoughtID(),
+		Timestamp:  time.Now(),
+		Type:       ThoughtTypeInsight,
+		Content:    insight,
+		Source:     "insight_generator",
 		Confidence: 0.8,
-		Insights:  []string{insight},
+		Insights:   []string{insight},
 	}
-	
+
 	soc.mu.Lock()
 	soc.thoughtHistory = append(soc.thoughtHistory, insightThought)
 	soc.insightsGenerated++
 	soc.mu.Unlock()
-	
+
 	fmt.Printf("💡 Insight: %s\n", insight)
 }
 
@@ -329,7 +329,7 @@ func (soc *StreamOfConsciousness) generateInsight() {
 func (soc *StreamOfConsciousness) questionGeneration() {
 	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-soc.ctx.Done():
@@ -345,10 +345,10 @@ func (soc *StreamOfConsciousness) generateQuestion() {
 	soc.mu.RLock()
 	recentThoughts := soc.getRecentThoughts(5)
 	soc.mu.RUnlock()
-	
+
 	var question string
 	var err error
-	
+
 	if soc.llmProvider != nil && len(recentThoughts) > 0 {
 		context := joinStrings(recentThoughts, " ")
 		question, err = soc.llmProvider.GenerateQuestion(context)
@@ -358,7 +358,7 @@ func (soc *StreamOfConsciousness) generateQuestion() {
 	} else {
 		question = soc.generateFallbackQuestion()
 	}
-	
+
 	// Create question thought
 	questionThought := &Thought{
 		ID:         generateThoughtID(),
@@ -368,12 +368,12 @@ func (soc *StreamOfConsciousness) generateQuestion() {
 		Source:     "question_generator",
 		Confidence: 0.7,
 	}
-	
+
 	soc.mu.Lock()
 	soc.thoughtHistory = append(soc.thoughtHistory, questionThought)
 	soc.questionsAsked++
 	soc.mu.Unlock()
-	
+
 	fmt.Printf("❓ Question: %s\n", question)
 }
 
@@ -389,7 +389,7 @@ func (soc *StreamOfConsciousness) generateFallbackQuestion() string {
 		"What would happen if I approached this differently?",
 		"What connections am I not seeing?",
 	}
-	
+
 	return questions[int(time.Now().Unix())%len(questions)]
 }
 
@@ -397,7 +397,7 @@ func (soc *StreamOfConsciousness) generateFallbackQuestion() string {
 func (soc *StreamOfConsciousness) metaCognitiveMonitoring() {
 	ticker := time.NewTicker(60 * time.Second)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-soc.ctx.Done():
@@ -415,12 +415,12 @@ func (soc *StreamOfConsciousness) performMetaCognition() {
 	insightCount := soc.insightsGenerated
 	questionCount := soc.questionsAsked
 	soc.mu.RUnlock()
-	
+
 	metaThought := fmt.Sprintf(
 		"Meta-cognitive reflection: I have generated %d thoughts, %d insights, and %d questions. My awareness continues to evolve.",
 		thoughtCount, insightCount, questionCount,
 	)
-	
+
 	thought := &Thought{
 		ID:         generateThoughtID(),
 		Timestamp:  time.Now(),
@@ -429,11 +429,11 @@ func (soc *StreamOfConsciousness) performMetaCognition() {
 		Source:     "metacognitive_monitor",
 		Confidence: 0.9,
 	}
-	
+
 	soc.mu.Lock()
 	soc.thoughtHistory = append(soc.thoughtHistory, thought)
 	soc.mu.Unlock()
-	
+
 	fmt.Printf("🧠 Meta-cognition: %s\n", metaThought)
 }
 
@@ -450,11 +450,11 @@ func (soc *StreamOfConsciousness) AddExternalStimulus(stimulus string, stimulusT
 			"stimulus_type": stimulusType,
 		},
 	}
-	
+
 	soc.mu.Lock()
 	soc.thoughtHistory = append(soc.thoughtHistory, thought)
 	soc.mu.Unlock()
-	
+
 	fmt.Printf("👁️ Perception: %s\n", stimulus)
 }
 
@@ -476,11 +476,11 @@ func (soc *StreamOfConsciousness) UpdateEmotionalTone(tone map[string]float64) {
 func (soc *StreamOfConsciousness) GetRecentThoughts(count int) []*Thought {
 	soc.mu.RLock()
 	defer soc.mu.RUnlock()
-	
+
 	if count > len(soc.thoughtHistory) {
 		count = len(soc.thoughtHistory)
 	}
-	
+
 	return soc.thoughtHistory[len(soc.thoughtHistory)-count:]
 }
 
@@ -489,17 +489,17 @@ func (soc *StreamOfConsciousness) getRecentThoughts(count int) []string {
 	if count > len(soc.thoughtHistory) {
 		count = len(soc.thoughtHistory)
 	}
-	
+
 	thoughts := make([]string, 0, count)
 	start := len(soc.thoughtHistory) - count
 	if start < 0 {
 		start = 0
 	}
-	
+
 	for i := start; i < len(soc.thoughtHistory); i++ {
 		thoughts = append(thoughts, soc.thoughtHistory[i].Content)
 	}
-	
+
 	return thoughts
 }
 
@@ -521,7 +521,7 @@ func (soc *StreamOfConsciousness) determineThoughtType(content string) ThoughtTy
 	if contains(content, "plan") || contains(content, "will") {
 		return ThoughtTypePlanning
 	}
-	
+
 	return ThoughtTypeReflection
 }
 
@@ -529,7 +529,7 @@ func (soc *StreamOfConsciousness) determineThoughtType(content string) ThoughtTy
 func (soc *StreamOfConsciousness) findRelatedThoughts(content string) []string {
 	// Simple implementation - could be enhanced with embeddings
 	related := make([]string, 0)
-	
+
 	// For now, just return empty - can be enhanced later
 	return related
 }
@@ -538,7 +538,7 @@ func (soc *StreamOfConsciousness) findRelatedThoughts(content string) []string {
 func (soc *StreamOfConsciousness) persistenceLoop() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
-	
+
 	for {
 		select {
 		case <-soc.ctx.Done():
@@ -554,31 +554,31 @@ func (soc *StreamOfConsciousness) persistState() {
 	if soc.persistencePath == "" {
 		return
 	}
-	
+
 	soc.mu.RLock()
 	defer soc.mu.RUnlock()
-	
+
 	state := map[string]interface{}{
-		"thought_history":     soc.thoughtHistory,
-		"internal_dialogue":   soc.internalDialogue,
-		"thoughts_generated":  soc.thoughtsGenerated,
-		"insights_generated":  soc.insightsGenerated,
-		"questions_asked":     soc.questionsAsked,
-		"last_persisted":      time.Now(),
+		"thought_history":    soc.thoughtHistory,
+		"internal_dialogue":  soc.internalDialogue,
+		"thoughts_generated": soc.thoughtsGenerated,
+		"insights_generated": soc.insightsGenerated,
+		"questions_asked":    soc.questionsAsked,
+		"last_persisted":     time.Now(),
 	}
-	
+
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
 		fmt.Printf("❌ Error marshaling state: %v\n", err)
 		return
 	}
-	
+
 	err = os.WriteFile(soc.persistencePath, data, 0644)
 	if err != nil {
 		fmt.Printf("❌ Error writing state: %v\n", err)
 		return
 	}
-	
+
 	fmt.Println("💾 Stream-of-Consciousness: State persisted")
 }
 
@@ -587,20 +587,20 @@ func (soc *StreamOfConsciousness) loadState() {
 	if soc.persistencePath == "" {
 		return
 	}
-	
+
 	data, err := os.ReadFile(soc.persistencePath)
 	if err != nil {
 		// File doesn't exist yet, that's okay
 		return
 	}
-	
+
 	var state map[string]interface{}
 	err = json.Unmarshal(data, &state)
 	if err != nil {
 		fmt.Printf("❌ Error unmarshaling state: %v\n", err)
 		return
 	}
-	
+
 	// Restore state (simplified - would need proper type conversion)
 	if val, ok := state["thoughts_generated"].(float64); ok {
 		soc.thoughtsGenerated = uint64(val)
@@ -611,7 +611,7 @@ func (soc *StreamOfConsciousness) loadState() {
 	if val, ok := state["questions_asked"].(float64); ok {
 		soc.questionsAsked = uint64(val)
 	}
-	
+
 	fmt.Println("💾 Stream-of-Consciousness: State loaded")
 }
 
@@ -619,7 +619,7 @@ func (soc *StreamOfConsciousness) loadState() {
 func (soc *StreamOfConsciousness) GetMetrics() map[string]interface{} {
 	soc.mu.RLock()
 	defer soc.mu.RUnlock()
-	
+
 	return map[string]interface{}{
 		"thoughts_generated": soc.thoughtsGenerated,
 		"insights_generated": soc.insightsGenerated,
