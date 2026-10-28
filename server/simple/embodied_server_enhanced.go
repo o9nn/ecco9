@@ -53,24 +53,22 @@ func init() {
 
 	// Register the local model server (Ollama / llama-server) if it is up.
 	// Only real providers are registered: the character never speaks from a stub.
+	// The client is registered whether or not the server answers right now, so a
+	// model server started later is picked up by the per-request availability
+	// check without restarting. The startup probe only informs the log.
 	localGGUFProvider = providers.NewLocalGGUFProvider()
+	CoreIdentity.RegisterAIProvider("local_gguf", localGGUFProvider)
+	CoreIdentity.SetPrimaryAI("local_gguf")
 	if localGGUFProvider.IsAvailable() {
-		CoreIdentity.RegisterAIProvider("local_gguf", localGGUFProvider)
-		CoreIdentity.SetPrimaryAI("local_gguf")
-		models := localGGUFProvider.ListAvailableModels()
-		log.Printf("✅ Local model server registered with %d models:", len(models))
-		for _, model := range models {
-			log.Printf("   - %s", model)
-		}
+		log.Printf("✅ Local model server reachable with %d models", len(localGGUFProvider.ListAvailableModels()))
 	} else {
-		log.Println("ℹ️  No local model server reachable (set LOCAL_LLM_BASE_URL, default http://localhost:11434/v1)")
+		log.Println("ℹ️  No local model server reachable yet (set LOCAL_LLM_BASE_URL, default http://localhost:11434/v1); it will be used once it answers")
 	}
 
-	// Register OpenAI provider
 	openai := providers.NewOpenAIProvider()
 	if openai.IsAvailable() {
 		CoreIdentity.RegisterAIProvider("openai", openai)
-		CoreIdentity.SetPrimaryAI("openai") // Prefer OpenAI if available
+		CoreIdentity.SetPrimaryAI("openai")
 		log.Println("✅ OpenAI provider registered and set as primary")
 	}
 
@@ -173,7 +171,14 @@ func main() {
 		}
 
 		prompt := req["prompt"]
-		thought := CoreIdentity.Think(prompt)
+		thought, err := CoreIdentity.GenerateWithAI(context.Background(), prompt)
+		if err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error":    "no language model available: " + err.Error(),
+				"identity": CoreIdentity.Identity.GetStatus(),
+			})
+			return
+		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"thought":  thought,
@@ -194,9 +199,9 @@ func main() {
 		response, err := CoreIdentity.GenerateWithAI(ctx, req.Prompt)
 
 		if err != nil {
-			// Fallback to Deep Tree Echo standalone
-			result, _ := CoreIdentity.Process(ctx, req.Prompt)
-			response = fmt.Sprintf("🌊 %v", result)
+			// No model, no reply — the reservoir summary is not the character speaking.
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "no language model available: " + err.Error()})
+			return
 		}
 
 		// Get identity status for context
@@ -244,10 +249,12 @@ func main() {
 		response, err := CoreIdentity.ChatWithAI(ctx, messages)
 
 		if err != nil {
-			// Fallback to Deep Tree Echo standalone
-			result, _ := CoreIdentity.Process(ctx, lastMessage)
-			thought := CoreIdentity.Think(lastMessage)
-			response = fmt.Sprintf("%v\n%s", result, thought)
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"error": "no language model available: " + err.Error(),
+				"done":  true,
+				"echo":  CoreIdentity.Identity.GetStatus(),
+			})
+			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{
@@ -301,8 +308,7 @@ func main() {
 	})
 
 	// App Storage model management
-	// Model storage endpoints were removed together with the simulated
-	// "App Storage" provider; models are served by the local model server.
+	// Model storage endpoints were removed with the simulated "App Storage" provider.
 
 	// Local GGUF model management
 	r.GET("/api/models/local", func(c *gin.Context) {
