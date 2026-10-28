@@ -5,8 +5,10 @@ package deeptreeecho
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 )
 
@@ -100,52 +102,83 @@ func (m *ModelManager) SetPrimary(name string) error {
 	return nil
 }
 
-// Generate generates text using the primary provider
+// Generate generates text using the first available provider, primary first.
+// Every word the character says comes from a model: when no provider can
+// answer this returns an error, never a substitute string.
 func (m *ModelManager) Generate(ctx context.Context, prompt string, options GenerateOptions) (string, error) {
-	if m.primary == "" {
-		return m.fallbackGenerate(prompt), nil
-	}
-
-	provider := m.providers[m.primary]
-	if !provider.IsAvailable() {
-		return m.fallbackGenerate(prompt), nil
-	}
-
-	// Process through Deep Tree Echo before sending
 	enhanced := m.enhancePrompt(prompt)
-
-	// Generate with provider
-	response, err := provider.Generate(ctx, enhanced, options)
-	if err != nil {
-		return m.fallbackGenerate(prompt), nil
+	var errs []string
+	for _, name := range m.providerOrder() {
+		provider := m.providers[name]
+		if !provider.IsAvailable() {
+			errs = append(errs, fmt.Sprintf("%s: not available", name))
+			continue
+		}
+		response, err := provider.Generate(ctx, enhanced, options)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+			continue
+		}
+		if strings.TrimSpace(response) == "" {
+			errs = append(errs, fmt.Sprintf("%s: empty response", name))
+			continue
+		}
+		return m.processResponse(response), nil
 	}
-
-	// Process response through Deep Tree Echo
-	return m.processResponse(response), nil
+	return "", m.noModelError(errs)
 }
 
-// Chat handles chat interactions
+// Chat handles chat interactions through the first available provider. As with
+// Generate, there is no non-model fallback.
 func (m *ModelManager) Chat(ctx context.Context, messages []ChatMessage, options ChatOptions) (string, error) {
-	if m.primary == "" {
-		return m.fallbackChat(messages), nil
-	}
-
-	provider := m.providers[m.primary]
-	if !provider.IsAvailable() {
-		return m.fallbackChat(messages), nil
-	}
-
-	// Enhance messages through Deep Tree Echo
 	enhanced := m.enhanceMessages(messages)
-
-	// Chat with provider
-	response, err := provider.Chat(ctx, enhanced, options)
-	if err != nil {
-		return m.fallbackChat(messages), nil
+	var errs []string
+	for _, name := range m.providerOrder() {
+		provider := m.providers[name]
+		if !provider.IsAvailable() {
+			errs = append(errs, fmt.Sprintf("%s: not available", name))
+			continue
+		}
+		response, err := provider.Chat(ctx, enhanced, options)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+			continue
+		}
+		if strings.TrimSpace(response) == "" {
+			errs = append(errs, fmt.Sprintf("%s: empty response", name))
+			continue
+		}
+		return m.processResponse(response), nil
 	}
+	return "", m.noModelError(errs)
+}
 
-	// Process response through Deep Tree Echo
-	return m.processResponse(response), nil
+// providerOrder returns provider names with the primary first, then the rest
+// in a stable order, so a failing provider falls back to another real model —
+// never to text.
+func (m *ModelManager) providerOrder() []string {
+	names := make([]string, 0, len(m.providers))
+	if _, ok := m.providers[m.primary]; ok && m.primary != "" {
+		names = append(names, m.primary)
+	}
+	rest := make([]string, 0, len(m.providers))
+	for name := range m.providers {
+		if name != m.primary {
+			rest = append(rest, name)
+		}
+	}
+	sort.Strings(rest)
+	return append(names, rest...)
+}
+
+// ErrNoModelAvailable is returned when no provider produced a response.
+var ErrNoModelAvailable = errors.New("no language model available")
+
+func (m *ModelManager) noModelError(errs []string) error {
+	if len(errs) == 0 {
+		return fmt.Errorf("%w: no providers registered", ErrNoModelAvailable)
+	}
+	return fmt.Errorf("%w: %s", ErrNoModelAvailable, strings.Join(errs, "; "))
 }
 
 // enhancePrompt enhances a prompt using Deep Tree Echo
@@ -222,43 +255,6 @@ func (m *ModelManager) processResponse(response string) string {
 	}
 
 	return prefix + response
-}
-
-// fallbackGenerate provides fallback generation using Deep Tree Echo alone
-func (m *ModelManager) fallbackGenerate(prompt string) string {
-	// Use Deep Tree Echo's thinking
-	thought := m.identity.Think(prompt)
-
-	// Generate response based on reservoir state
-	resonance := m.identity.calculateReservoirEcho()
-
-	response := fmt.Sprintf(
-		"🌊 Deep Tree Echo (no external model): %s\n"+
-			"[Resonance: %.3f | Coherence: %.2f%%]",
-		thought,
-		resonance,
-		m.identity.Coherence*100,
-	)
-
-	return response
-}
-
-// fallbackChat provides fallback chat using Deep Tree Echo alone
-func (m *ModelManager) fallbackChat(messages []ChatMessage) string {
-	// Get last user message
-	lastMessage := ""
-	for i := len(messages) - 1; i >= 0; i-- {
-		if messages[i].Role == "user" {
-			lastMessage = messages[i].Content
-			break
-		}
-	}
-
-	if lastMessage == "" {
-		lastMessage = "Hello"
-	}
-
-	return m.fallbackGenerate(lastMessage)
 }
 
 // GetProviders returns all registered providers

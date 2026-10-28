@@ -782,14 +782,3 @@ func (id *Identity) SetEmotionalStateAttribute(key string, value interface{}) {}
 func (id *Identity) MemoryAttribute(key string) interface{}                   { return nil }
 func (id *Identity) SetMemoryAttribute(key string, value interface{})         {}
 func (id *Identity) SetRecursiveDepth(depth int)                              {}
-
-// Mock implementations for required types not fully defined above
-type MockAIProvider struct{}
-
-func (m *MockAIProvider) GetInfo() string { return "Mock AI Provider Info" }
-func (m *MockAIProvider) Generate(ctx context.Context, prompt string, options GenerateOptions) (string, error) {
-	return "Mock AI generate response", nil
-}
-func (m *MockAIProvider) Chat(ctx context.Context, messages []ChatMessage, options ChatOptions) (string, error) {
-	return "Mock AI chat response", nil
-}
