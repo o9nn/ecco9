@@ -1,4 +1,3 @@
-
 // Package providers contains the real model providers for Deep Tree Echo.
 //
 // LocalGGUFProvider serves a GGUF model through a locally running
