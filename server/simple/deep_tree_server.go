@@ -43,26 +43,22 @@ func init() {
 }
 
 func registerProviders() {
-	// App Storage provider
-	appStorage := providers.NewAppStorageProvider()
-	if appStorage.IsAvailable() {
-		DeepTree.RegisterAIProvider("app_storage", appStorage)
-		log.Printf("☁️  App Storage connected: %s", os.Getenv("REPLIT_OBJSTORE_BUCKET"))
-	}
-
-	// Local GGUF provider
+	// Only real providers are registered; nothing here fabricates text.
 	localGGUF := providers.NewLocalGGUFProvider()
 	if localGGUF.IsAvailable() {
 		DeepTree.RegisterAIProvider("local_gguf", localGGUF)
-		models := localGGUF.ListAvailableModels()
-		log.Printf("📦 Local models available: %d", len(models))
+		log.Printf("📦 Local model server: %d models", len(localGGUF.ListAvailableModels()))
 	}
 
-	// OpenAI provider
 	openai := providers.NewOpenAIProvider()
 	if openai.IsAvailable() {
 		DeepTree.RegisterAIProvider("openai", openai)
+		DeepTree.SetPrimaryAI("openai")
 		log.Println("🤖 OpenAI provider connected")
+	}
+
+	if !localGGUF.IsAvailable() && !openai.IsAvailable() {
+		log.Println("⚠️  No language model available — set LOCAL_LLM_BASE_URL (Ollama/llama-server) or OPENAI_API_KEY")
 	}
 }
 
