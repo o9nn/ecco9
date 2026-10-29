@@ -17,6 +17,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,7 +45,7 @@ func NewLocalGGUFProvider() *LocalGGUFProvider {
 	return &LocalGGUFProvider{
 		baseURL: base,
 		model:   model,
-		client:  &http.Client{Timeout: 120 * time.Second},
+		client:  &http.Client{Timeout: requestTimeout()},
 	}
 }
 
@@ -109,6 +110,20 @@ func (p *LocalGGUFProvider) IsAvailable() bool {
 	return len(p.ListAvailableModels()) > 0
 }
 
+// defaultMaxTokens bounds a reply when the caller did not specify a length.
+const defaultMaxTokens = 512
+
+// requestTimeout reads LOCAL_LLM_TIMEOUT_SECONDS (default 180) so slow CPU-only
+// hosts can be given more time instead of their replies being dropped.
+func requestTimeout() time.Duration {
+	if raw := os.Getenv("LOCAL_LLM_TIMEOUT_SECONDS"); raw != "" {
+		if secs, err := strconv.Atoi(raw); err == nil && secs > 0 {
+			return time.Duration(secs) * time.Second
+		}
+	}
+	return 180 * time.Second
+}
+
 type chatRequest struct {
 	Model       string                     `json:"model"`
 	Messages    []deeptreeecho.ChatMessage `json:"messages"`
@@ -124,11 +139,17 @@ func (p *LocalGGUFProvider) buildRequest(messages []deeptreeecho.ChatMessage, o 
 	if o.Model != "" {
 		model = o.Model
 	}
+	maxTokens := o.MaxTokens
+	if maxTokens <= 0 {
+		// A locally served model on CPU must never be asked for an unbounded
+		// reply: without a cap a rambling completion outlives the request.
+		maxTokens = defaultMaxTokens
+	}
 	return chatRequest{
 		Model:       model,
 		Messages:    messages,
 		Temperature: o.Temperature,
-		MaxTokens:   o.MaxTokens,
+		MaxTokens:   maxTokens,
 		TopP:        o.TopP,
 		Stop:        o.StopSequences,
 		Stream:      stream,
