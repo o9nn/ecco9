@@ -1,3 +1,8 @@
+//go:build relevance_demo
+// +build relevance_demo
+
+// Alternative entry point; build with -tags relevance_demo (the directory's default main is another file).
+
 package main
 
 import (

@@ -1,3 +1,10 @@
+//go:build legacy_consciousness
+// +build legacy_consciousness
+
+// This entry point depends on consciousness implementations that are not part
+// of this repository. It is excluded from the default build; build with
+// -tags legacy_consciousness once they exist.
+
 package main
 
 import (

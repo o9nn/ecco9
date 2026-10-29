@@ -309,7 +309,7 @@ func main() {
 	r.GET("/api/models/local", func(c *gin.Context) {
 		// Get the local GGUF provider
 		providers := CoreIdentity.GetAIProviders()
-		if localInfo, exists := providers["local_gguf"]; exists {
+		if localInfo, exists := providers["local_gguf"]; exists && len(localInfo.Models) > 0 {
 			c.JSON(http.StatusOK, gin.H{
 				"available": true,
 				"models":    localInfo.Models,

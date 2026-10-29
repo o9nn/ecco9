@@ -1,3 +1,8 @@
+//go:build enhanced_autonomous
+// +build enhanced_autonomous
+
+// Alternative entry point; build with -tags enhanced_autonomous (the directory's default main is another file).
+
 package main
 
 import (

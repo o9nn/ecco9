@@ -1,6 +1,3 @@
-//go:build orgdte
-// +build orgdte
-
 package deeptreeecho
 
 import (
@@ -65,7 +62,7 @@ type WisdomPrinciple struct {
 	Depth           float64
 	Confidence      float64
 	SourcePatterns  []string
-	Applications    []WisdomApplication
+	Applications    []PrincipleApplication
 	CreatedAt       time.Time
 	LastApplied     time.Time
 	ApplyCount      int
@@ -100,8 +97,8 @@ func (wd WisdomDomain) String() string {
 	}[wd]
 }
 
-// WisdomApplication records how a principle was applied
-type WisdomApplication struct {
+// PrincipleApplication records how a principle was applied
+type PrincipleApplication struct {
 	Context       string
 	Outcome       string
 	Effectiveness float64
@@ -418,7 +415,7 @@ func (ws *WisdomSynthesisEngine) synthesizeWisdom(patterns []AccumulatedPattern)
 		Depth:          depth,
 		Confidence:     0.7,
 		SourcePatterns: patternIDs,
-		Applications:   make([]WisdomApplication, 0),
+		Applications:   make([]PrincipleApplication, 0),
 		CreatedAt:      time.Now(),
 	}
 
@@ -627,7 +624,7 @@ func (ws *WisdomSynthesisEngine) applyWisdom() {
 		return
 	}
 
-	application := WisdomApplication{
+	application := PrincipleApplication{
 		Context:       contextStr,
 		Outcome:       "Applied to current cognitive state",
 		Effectiveness: 0.7,

@@ -31,8 +31,28 @@ func main() {
 		log.Fatalf("Failed to boot ecco9 platform: %v", err)
 	}
 
-	// Create LLM provider manager
+	// Create LLM provider manager and register the real providers that are
+	// configured. Nothing here fabricates text: with no provider, generation
+	// returns an error and /api/generate answers 503.
 	providerManager := llm.NewProviderManager()
+	if os.Getenv("OPENAI_API_KEY") != "" {
+		if err := providerManager.RegisterProvider(llm.NewOpenAIProvider(os.Getenv("OPENAI_API_KEY"))); err != nil {
+			log.Printf("⚠️  OpenAI provider not registered: %v", err)
+		}
+	}
+	if os.Getenv("ANTHROPIC_API_KEY") != "" {
+		if err := providerManager.RegisterProvider(llm.NewAnthropicProvider("")); err != nil {
+			log.Printf("⚠️  Anthropic provider not registered: %v", err)
+		}
+	}
+	if os.Getenv("OPENROUTER_API_KEY") != "" {
+		if err := providerManager.RegisterProvider(llm.NewOpenRouterProvider("")); err != nil {
+			log.Printf("⚠️  OpenRouter provider not registered: %v", err)
+		}
+	}
+	if len(providerManager.ListProviders()) == 0 {
+		log.Println("⚠️  No language model provider configured (OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY); /api/generate will return 503")
+	}
 
 	// Register all drivers
 	allDrivers := []struct {
@@ -197,21 +217,19 @@ func setupRouter(platform *ecco9.Platform, providerManager *llm.ProviderManager)
 				return
 			}
 
-			// Use ecco9 platform for generation
-			response := fmt.Sprintf(
-				"🌊 ecco9 Cognitive Platform Response\n\n"+
-					"Platform: %s\n"+
-					"Firmware: %s\n"+
-					"Devices: %d active\n"+
-					"Prompt: %s\n\n"+
-					"This is a demonstration of the ecco9 virtual cognitive hardware platform. "+
-					"The platform provides device drivers, firmware interfaces, and hardware "+
-					"simulation for Deep Tree Echo's embodied cognition architecture.\n",
-				"ecco9",
-				platform.Firmware.Version,
-				len(platform.Devices),
-				req.Prompt,
-			)
+			// The response is the model's. The platform description is served
+			// by GET / and /api/status; it is never returned as generated text.
+			genCtx, cancel := context.WithTimeout(c.Request.Context(), 120*time.Second)
+			defer cancel()
+			opts := llm.DefaultGenerateOptions()
+			response, err := providerManager.Generate(genCtx, req.Prompt, opts)
+			if err != nil {
+				c.JSON(http.StatusServiceUnavailable, gin.H{
+					"error":    "no language model available: " + err.Error(),
+					"platform": "ecco9",
+				})
+				return
+			}
 
 			c.JSON(http.StatusOK, gin.H{
 				"response": response,
@@ -250,7 +268,7 @@ func generateDashboardHTML(platform *ecco9.Platform) string {
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%s, #764ba2 100%s);
+            background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
             color: #fff;
             margin: 0;
             padding: 20px;

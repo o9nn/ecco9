@@ -453,9 +453,18 @@ func (tseb *TwelveStepEchoBeats) GetMetrics() *TwelveStepMetrics {
 	tseb.metrics.mu.RLock()
 	defer tseb.metrics.mu.RUnlock()
 
-	// Return a copy
-	metricsCopy := *tseb.metrics
-	return &metricsCopy
+	// Return a copy of the counters (the mutex itself is not copied)
+	m := tseb.metrics
+	return &TwelveStepMetrics{
+		TotalCycles:            m.TotalCycles,
+		StepExecutionTimes:     m.StepExecutionTimes,
+		EngineActivations:      m.EngineActivations,
+		RelevanceRealizations:  m.RelevanceRealizations,
+		AffordanceInteractions: m.AffordanceInteractions,
+		SalienceSimulations:    m.SalienceSimulations,
+		PhaseTransitions:       m.PhaseTransitions,
+		ModeTransitions:        m.ModeTransitions,
+	}
 }
 
 // GetStatus returns current status

@@ -383,9 +383,10 @@ func (e *Engine) GetState() *EnneadState {
 	e.state.mu.RLock()
 	defer e.state.mu.RUnlock()
 
-	// Return copy
-	stateCopy := *e.state
-	return &stateCopy
+	// Return a copy of the exported fields (the mutex itself is not copied)
+	stateCopy := &EnneadState{}
+	copyExportedFields(stateCopy, e.state)
+	return stateCopy
 }
 
 // GetMetrics returns current metrics
@@ -393,9 +394,10 @@ func (e *Engine) GetMetrics() *EnneadMetrics {
 	e.metrics.mu.RLock()
 	defer e.metrics.mu.RUnlock()
 
-	// Return copy
-	metricsCopy := *e.metrics
-	return &metricsCopy
+	// Return a copy of the exported fields (the mutex itself is not copied)
+	metricsCopy := &EnneadMetrics{}
+	copyExportedFields(metricsCopy, e.metrics)
+	return metricsCopy
 }
 
 // GetStatus returns comprehensive status

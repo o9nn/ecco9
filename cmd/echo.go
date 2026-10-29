@@ -45,7 +45,7 @@ func EchoAssessHandler(cmd *cobra.Command, args []string) error {
 
 		// Continue assessments on interval
 		for range ticker.C {
-			fmt.Println("\n--- New Assessment Cycle ---\n")
+			fmt.Print("\n--- New Assessment Cycle ---\n\n")
 			if err := performAndDisplayAssessment(sa, jsonFormat, outputFile); err != nil {
 				return err
 			}
@@ -61,14 +61,15 @@ func EchoAssessHandler(cmd *cobra.Command, args []string) error {
 // performAndDisplayAssessment performs assessment and displays results
 func performAndDisplayAssessment(sa *deeptreeecho.SelfAssessment, jsonFormat bool, outputFile string) error {
 	// Perform assessment
-	assessment := sa.PerformAssessment()
+	assessment := sa.PerformSelfAssessment()
 
 	if jsonFormat {
 		// Export as JSON
-		jsonStr, err := sa.ExportAssessment(assessment)
+		jsonBytes, err := json.MarshalIndent(assessment, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to export assessment: %w", err)
 		}
+		jsonStr := string(jsonBytes)
 
 		if outputFile != "" {
 			// Write to file

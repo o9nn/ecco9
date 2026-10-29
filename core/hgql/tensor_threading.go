@@ -361,9 +361,21 @@ func (tte *TensorThreadingEngine) GetMetrics() *ThreadingMetrics {
 	tte.metrics.mu.RLock()
 	defer tte.metrics.mu.RUnlock()
 
-	// Return a copy
-	metrics := *tte.metrics
-	return &metrics
+	// Return a copy of the counters (the mutex itself is not copied)
+	m := tte.metrics
+	pool := make(map[string]float64, len(m.PoolUtilization))
+	for k, v := range m.PoolUtilization {
+		pool[k] = v
+	}
+	return &ThreadingMetrics{
+		TotalOperations:  m.TotalOperations,
+		ActiveOperations: m.ActiveOperations,
+		CompletedOps:     m.CompletedOps,
+		FailedOps:        m.FailedOps,
+		AvgLatency:       m.AvgLatency,
+		Throughput:       m.Throughput,
+		PoolUtilization:  pool,
+	}
 }
 
 // NewTensorThreadPool creates a new tensor thread pool

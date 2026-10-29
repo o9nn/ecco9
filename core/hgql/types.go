@@ -287,7 +287,9 @@ type TimeRange struct {
 }
 
 type Coordinates struct {
-	X, Y, Z float64 `json:"x,y,z"`
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+	Z float64 `json:"z"`
 }
 
 type ResonanceQuery struct {

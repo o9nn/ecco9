@@ -1,7 +1,9 @@
 package deeptreeecho
 
 import (
+	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -52,7 +54,7 @@ func TestPerformAssessment(t *testing.T) {
 	cognition := NewEmbodiedCognition("TestCognition")
 	sa := NewSelfAssessment(identity, cognition)
 
-	assessment := sa.PerformAssessment()
+	assessment := sa.PerformSelfAssessment()
 
 	if assessment == nil {
 		t.Fatal("PerformAssessment returned nil")
@@ -253,17 +255,19 @@ func TestAssessRepositoryCoherence(t *testing.T) {
 	cognition := NewEmbodiedCognition("TestCognition")
 	sa := NewSelfAssessment(identity, cognition)
 
-	assessment := &Assessment{
-		Findings:        make([]Finding, 0),
-		Deviations:      make([]Deviation, 0),
-		Recommendations: make([]Recommendation, 0),
+	// Repository coherence is scored by calculateRepoScore; the score must be a
+	// valid fraction and must be reflected in the overall assessment.
+	score := sa.calculateRepoScore()
+	if score < 0.0 || score > 1.0 {
+		t.Errorf("repository coherence score out of range: %f", score)
 	}
 
-	sa.assessRepositoryCoherence(assessment)
-
-	// Should have findings about repository structure
-	if len(assessment.Findings) == 0 && len(assessment.Deviations) == 0 {
-		t.Error("No findings or deviations from repository assessment")
+	assessment := sa.PerformSelfAssessment()
+	if assessment == nil || assessment.Metrics == nil {
+		t.Fatal("PerformSelfAssessment returned no metrics")
+	}
+	if assessment.Metrics.RepoCoherence < 0.0 || assessment.Metrics.RepoCoherence > 1.0 {
+		t.Errorf("RepoCoherence out of range: %f", assessment.Metrics.RepoCoherence)
 	}
 }
 
@@ -340,8 +344,12 @@ func TestGetMetrics(t *testing.T) {
 		t.Error("GetMetrics returned nil")
 	}
 
-	if metrics.OverallCoherence < 0 || metrics.OverallCoherence > 1 {
-		t.Errorf("Invalid overall coherence: %.2f", metrics.OverallCoherence)
+	overall, ok := metrics["overall_coherence"].(float64)
+	if !ok {
+		t.Fatalf("overall_coherence missing or not a float64: %v", metrics["overall_coherence"])
+	}
+	if overall < 0 || overall > 1 {
+		t.Errorf("Invalid overall coherence: %.2f", overall)
 	}
 }
 
@@ -350,9 +358,10 @@ func TestExportAssessment(t *testing.T) {
 	cognition := NewEmbodiedCognition("TestCognition")
 	sa := NewSelfAssessment(identity, cognition)
 
-	assessment := sa.PerformAssessment()
+	assessment := sa.PerformSelfAssessment()
 
-	jsonStr, err := sa.ExportAssessment(assessment)
+	jsonBytes, err := json.MarshalIndent(assessment, "", "  ")
+	jsonStr := string(jsonBytes)
 
 	if err != nil {
 		t.Errorf("ExportAssessment failed: %v", err)
@@ -373,7 +382,7 @@ func TestGenerateSummary(t *testing.T) {
 	cognition := NewEmbodiedCognition("TestCognition")
 	sa := NewSelfAssessment(identity, cognition)
 
-	assessment := sa.PerformAssessment()
+	assessment := sa.PerformSelfAssessment()
 
 	if assessment.Summary == "" {
 		t.Error("Summary not generated")
@@ -454,17 +463,17 @@ Deep Tree Echo: Self-evolving cognitive architecture combining ESN, P-systems, a
 ` + "```" + `
 `
 
-	// Write test kernel
-	err := os.WriteFile("/tmp/test_replit.md", []byte(testKernel), 0644)
-	if err != nil {
+	// Write the test kernel where loadIdentityKernel looks for it: replit.md in
+	// the working directory, which is a fresh temporary directory for this test.
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "replit.md"), []byte(testKernel), 0644); err != nil {
 		t.Skipf("Could not create test kernel file: %v", err)
 		return
 	}
-	defer os.Remove("/tmp/test_replit.md")
-
-	// Change to temp directory for test
 	oldWd, _ := os.Getwd()
-	os.Chdir("/tmp")
+	if err := os.Chdir(dir); err != nil {
+		t.Fatalf("chdir: %v", err)
+	}
 	defer os.Chdir(oldWd)
 
 	identity := NewIdentity("TestIdentity")
@@ -491,6 +500,17 @@ Deep Tree Echo: Self-evolving cognitive architecture combining ESN, P-systems, a
 
 // Helper functions
 
+// countFindings counts the findings with the given severity.
+func countFindings(findings []Finding, severity string) int {
+	n := 0
+	for _, f := range findings {
+		if f.Severity == severity {
+			n++
+		}
+	}
+	return n
+}
+
 func isValidJSON(s string) bool {
 	var js map[string]interface{}
 	return json.Unmarshal([]byte(s), &js) == nil
@@ -503,10 +523,6 @@ func containsAny(s string, substrs []string) bool {
 		}
 	}
 	return false
-}
-
-func containsString(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && hasSubstring(s, substr))
 }
 
 func hasSubstring(s, substr string) bool {

@@ -1,3 +1,8 @@
+//go:build legacy_consciousness
+// +build legacy_consciousness
+
+// Excluded from the default build: exercises Identity.PersonaManager / PersonaOrdo / PersonaChao, which are not part of this repository.
+
 package deeptreeecho
 
 import (

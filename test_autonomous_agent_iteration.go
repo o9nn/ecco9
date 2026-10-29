@@ -1,3 +1,9 @@
+//go:build manual_test
+// +build manual_test
+
+// Ad-hoc test program with its own main(); excluded from the default build so the
+// module's real entry point (main.go) builds. Run with -tags manual_test.
+
 package main
 
 import (

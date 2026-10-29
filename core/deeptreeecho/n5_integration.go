@@ -46,6 +46,12 @@ func NewN5CognitiveSystem() *N5CognitiveSystem {
 	}
 }
 
+// SetInsightSource wires the language model that writes the system's
+// meta-cognitive insights. Without it no insight text is produced.
+func (n5 *N5CognitiveSystem) SetInsightSource(source InsightSource) {
+	n5.metacognitiveMonitor.SetInsightSource(source)
+}
+
 // Start begins autonomous operation of the N+5 system
 func (n5 *N5CognitiveSystem) Start() error {
 	n5.mu.Lock()
@@ -121,13 +127,17 @@ func (n5 *N5CognitiveSystem) ProcessWithMetaCognition(task string) *MetaCognitiv
 	// 5. Update process status
 	n5.metacognitiveMonitor.UpdateProcess(processID, 1.0, StatusCompleted)
 
-	// 6. Generate meta-thought about the process
+	// 6. Ask the model to reflect on the process. MetaInsight stays empty
+	// when no model is wired; it is never filled in with a fixed sentence.
 	metaThought := n5.metacognitiveMonitor.GenerateMetaThought(
 		"task_processing",
-		fmt.Sprintf("Reflected on how I processed '%s'", task),
+		fmt.Sprintf("Processed task '%s' with the %s strategy, %d wisdom matches and a %d-step reasoning chain",
+			task, strategy.Name, len(wisdomMatches), 2),
 		0,
 	)
-	result.MetaInsight = metaThought.Insight
+	if metaThought != nil {
+		result.MetaInsight = metaThought.Insight
+	}
 
 	result.EndTime = time.Now()
 	result.Success = true

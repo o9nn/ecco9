@@ -3,7 +3,9 @@ package deeptreeecho
 import (
 	"context"
 	"fmt"
+	"log"
 	"math"
+	"strings"
 	"sync"
 	"time"
 )
@@ -36,6 +38,7 @@ type MetaCognitiveMonitor struct {
 	reasoningDepth    int
 	maxReasoningDepth int
 	recursiveThoughts []*MetaThought
+	insightSource     InsightSource
 
 	// Performance metrics
 	totalProcessesMonitored uint64
@@ -341,8 +344,10 @@ func (mcm *MetaCognitiveMonitor) AssessDecisionQuality(decisionID string, outcom
 
 // SelectStrategy chooses the best cognitive strategy for a task
 func (mcm *MetaCognitiveMonitor) SelectStrategy(processType ProcessType, constraints map[string]interface{}) *CognitiveStrategy {
-	mcm.mu.RLock()
-	defer mcm.mu.RUnlock()
+	// The selection may update currentStrategy, so take the write lock for the
+	// whole method; upgrading an RLock to Lock in place deadlocks.
+	mcm.mu.Lock()
+	defer mcm.mu.Unlock()
 
 	var bestStrategy *CognitiveStrategy
 	bestScore := 0.0
@@ -372,21 +377,41 @@ func (mcm *MetaCognitiveMonitor) SelectStrategy(processType ProcessType, constra
 	}
 
 	if bestStrategy != nil && (mcm.currentStrategy == nil || bestStrategy.ID != mcm.currentStrategy.ID) {
-		mcm.mu.Lock()
 		mcm.currentStrategy = bestStrategy
 		mcm.totalStrategyShifts++
-		mcm.mu.Unlock()
 	}
 
 	return bestStrategy
 }
 
 // GenerateMetaThought creates recursive self-reflective thoughts
-func (mcm *MetaCognitiveMonitor) GenerateMetaThought(about, content string, depth int) *MetaThought {
+// InsightSource is the language model that writes the monitor's meta-cognitive
+// insights in the character's own words. An empty answer means the model had
+// nothing further to say at this depth.
+type InsightSource func(prompt string) (string, error)
+
+// SetInsightSource wires the model that writes insights. Without one, meta-
+// thoughts are recorded with their observed content only and carry no insight;
+// no sentence is invented to stand in for the model.
+func (mcm *MetaCognitiveMonitor) SetInsightSource(source InsightSource) {
 	mcm.mu.Lock()
 	defer mcm.mu.Unlock()
+	mcm.insightSource = source
+}
 
-	if depth > mcm.maxReasoningDepth {
+// GenerateMetaThought records a thought about `about` and asks the model for
+// an insight on it. While the model keeps producing insights the monitor
+// reflects on its own reflection, one level deeper each time, up to
+// maxReasoningDepth. The lock is held only while touching monitor state: the
+// model call and the recursion run unlocked, so a thought can never deadlock
+// on its own child.
+func (mcm *MetaCognitiveMonitor) GenerateMetaThought(about, content string, depth int) *MetaThought {
+	mcm.mu.RLock()
+	maxDepth := mcm.maxReasoningDepth
+	source := mcm.insightSource
+	mcm.mu.RUnlock()
+
+	if depth > maxDepth {
 		return nil
 	}
 
@@ -398,17 +423,26 @@ func (mcm *MetaCognitiveMonitor) GenerateMetaThought(about, content string, dept
 		Timestamp: time.Now(),
 	}
 
-	// Generate insight based on depth
-	if depth > 0 {
-		thought.Insight = generateMetaInsight(about, content, depth)
+	if source != nil {
+		insight, err := source(fmt.Sprintf(
+			"You are reflecting on your own cognition (reflection depth %d of %d). Subject: %s. Observation: %s. "+
+				"In one honest first-person sentence, state what this reveals about how you think. "+
+				"If there is nothing further worth noticing at this depth, reply with an empty line.",
+			depth, maxDepth, about, content))
+		if err != nil {
+			log.Printf("Meta-cognitive insight skipped at depth %d: %v", depth, err)
+		} else {
+			thought.Insight = strings.TrimSpace(insight)
+		}
 	}
 
+	mcm.mu.Lock()
 	mcm.recursiveThoughts = append(mcm.recursiveThoughts, thought)
+	mcm.mu.Unlock()
 
-	// Recursively think about the thought
-	if depth < mcm.maxReasoningDepth-1 && shouldRecurse(depth) {
-		metaContent := fmt.Sprintf("Thinking about: %s", content)
-		childThought := mcm.GenerateMetaThought("meta-reflection", metaContent, depth+1)
+	// Reflect on the reflection while the model still has something to say.
+	if thought.Insight != "" && depth < maxDepth-1 {
+		childThought := mcm.GenerateMetaThought("meta-reflection", thought.Insight, depth+1)
 		if childThought != nil {
 			childThought.ParentThought = thought
 		}
@@ -629,27 +663,6 @@ func updateSelfModel(model *SelfModel, record *ProcessRecord) {
 	} else {
 		model.Confidence = math.Max(0.0, model.Confidence-0.02)
 	}
-}
-
-func generateMetaInsight(about, content string, depth int) string {
-	insights := []string{
-		fmt.Sprintf("Reflecting on %s reveals patterns in my thinking", about),
-		fmt.Sprintf("At depth %d, I notice meta-patterns in %s", depth, about),
-		fmt.Sprintf("This recursive reflection about %s deepens self-understanding", about),
-	}
-
-	if depth < len(insights) {
-		return insights[depth]
-	}
-
-	return fmt.Sprintf("Deep meta-reflection (level %d) about %s", depth, about)
-}
-
-func shouldRecurse(depth int) bool {
-	// Probability decreases with depth
-	threshold := 0.7 - (float64(depth) * 0.15)
-	random := math.Mod(float64(time.Now().UnixNano()), 100) / 100.0
-	return random < threshold
 }
 
 func generateProcessID() string {

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// EmotionType represents discrete emotion categories (Izard's Differential Emotion Theory)
+// EmotionType represents discrete emotion categories (Izard's Differential EmbodiedEmotion Theory)
 type EmotionType int
 
 const (
@@ -33,8 +33,8 @@ func (et EmotionType) String() string {
 	return "Unknown"
 }
 
-// Emotion represents a discrete emotional state with cognitive effects
-type Emotion struct {
+// EmbodiedEmotion represents a discrete emotional state with cognitive effects
+type EmbodiedEmotion struct {
 	Type      EmotionType
 	Intensity float64 // 0.0 to 1.0
 	Duration  time.Duration
@@ -53,7 +53,7 @@ type EmotionSystem struct {
 	mu sync.RWMutex
 
 	// Current emotional state
-	emotions        map[EmotionType]*Emotion
+	emotions        map[EmotionType]*EmbodiedEmotion
 	dominantEmotion EmotionType
 	emotionBlend    map[EmotionType]float64
 
@@ -71,17 +71,17 @@ type EmotionSystem struct {
 
 // EmotionEvent records emotional transitions
 type EmotionEvent struct {
-	Timestamp time.Time
-	Emotion   EmotionType
-	Intensity float64
-	Trigger   string
-	Context   map[string]interface{}
+	Timestamp       time.Time
+	EmbodiedEmotion EmotionType
+	Intensity       float64
+	Trigger         string
+	Context         map[string]interface{}
 }
 
 // NewEmotionSystem creates a new embodied emotion system
 func NewEmotionSystem() *EmotionSystem {
 	es := &EmotionSystem{
-		emotions:       make(map[EmotionType]*Emotion),
+		emotions:       make(map[EmotionType]*EmbodiedEmotion),
 		emotionBlend:   make(map[EmotionType]float64),
 		emotionHistory: make([]EmotionEvent, 0),
 		decayRate:      0.1,
@@ -114,8 +114,8 @@ func (es *EmotionSystem) initializeEmotions() {
 }
 
 // createEmotion creates an emotion with appropriate cognitive effects
-func (es *EmotionSystem) createEmotion(emotionType EmotionType, intensity float64) *Emotion {
-	emotion := &Emotion{
+func (es *EmotionSystem) createEmotion(emotionType EmotionType, intensity float64) *EmbodiedEmotion {
+	emotion := &EmbodiedEmotion{
 		Type:      emotionType,
 		Intensity: intensity,
 		OnsetTime: time.Now(),
@@ -332,10 +332,10 @@ type CognitiveEffects struct {
 // recordEmotionEvent adds to emotion history
 func (es *EmotionSystem) recordEmotionEvent(emotionType EmotionType, intensity float64, trigger string) {
 	event := EmotionEvent{
-		Timestamp: time.Now(),
-		Emotion:   emotionType,
-		Intensity: intensity,
-		Trigger:   trigger,
+		Timestamp:       time.Now(),
+		EmbodiedEmotion: emotionType,
+		Intensity:       intensity,
+		Trigger:         trigger,
 	}
 
 	es.emotionHistory = append(es.emotionHistory, event)
