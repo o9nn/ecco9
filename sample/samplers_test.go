@@ -171,8 +171,8 @@ func TestAdvancedGrammar(t *testing.T) {
 
 	// Test with quantified patterns
 	grammarQuantified := `
-	root ::= number_sequence
-	number_sequence ::= digit ("," digit)*
+	root ::= number-sequence
+	number-sequence ::= digit ("," digit)*
 	digit ::= [0-9]
 	`
 

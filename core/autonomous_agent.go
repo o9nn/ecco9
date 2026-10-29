@@ -202,7 +202,7 @@ func (agent *AutonomousAgent) Start() error {
 	// Start monitoring
 	go agent.monitoringLoop()
 
-	fmt.Println("\n✨ Deep Tree Echo: All systems operational - autonomous operation begun\n")
+	fmt.Print("\n✨ Deep Tree Echo: All systems operational - autonomous operation begun\n\n")
 
 	return nil
 }

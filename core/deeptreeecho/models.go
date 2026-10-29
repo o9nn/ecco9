@@ -1,13 +1,13 @@
-//go:build orgdte
-// +build orgdte
-
 package deeptreeecho
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
+	"sync"
 )
 
 // ModelProvider defines the interface for AI model providers
@@ -67,9 +67,18 @@ type ProviderInfo struct {
 
 // ModelManager manages multiple model providers
 type ModelManager struct {
+	mu        sync.RWMutex
 	providers map[string]ModelProvider
 	primary   string
 	identity  *Identity
+}
+
+// namedProvider is a snapshot entry taken under the read lock so that a
+// request never touches the providers map while another goroutine registers
+// a provider.
+type namedProvider struct {
+	name     string
+	provider ModelProvider
 }
 
 // NewModelManager creates a new model manager
@@ -82,10 +91,12 @@ func NewModelManager(identity *Identity) *ModelManager {
 
 // RegisterProvider registers a model provider
 func (m *ModelManager) RegisterProvider(name string, provider ModelProvider) {
+	m.mu.Lock()
 	m.providers[name] = provider
 	if m.primary == "" && provider.IsAvailable() {
 		m.primary = name
 	}
+	m.mu.Unlock()
 
 	// Store in identity memory
 	m.identity.Remember(fmt.Sprintf("provider_%s", name), provider.GetInfo())
@@ -93,6 +104,8 @@ func (m *ModelManager) RegisterProvider(name string, provider ModelProvider) {
 
 // SetPrimary sets the primary provider
 func (m *ModelManager) SetPrimary(name string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	if _, exists := m.providers[name]; !exists {
 		return fmt.Errorf("provider %s not found", name)
 	}
@@ -100,52 +113,89 @@ func (m *ModelManager) SetPrimary(name string) error {
 	return nil
 }
 
-// Generate generates text using the primary provider
+// Generate generates text using the first available provider, primary first.
+// Every word the character says comes from a model: when no provider can
+// answer this returns an error, never a substitute string.
 func (m *ModelManager) Generate(ctx context.Context, prompt string, options GenerateOptions) (string, error) {
-	if m.primary == "" {
-		return m.fallbackGenerate(prompt), nil
-	}
-
-	provider := m.providers[m.primary]
-	if !provider.IsAvailable() {
-		return m.fallbackGenerate(prompt), nil
-	}
-
-	// Process through Deep Tree Echo before sending
 	enhanced := m.enhancePrompt(prompt)
-
-	// Generate with provider
-	response, err := provider.Generate(ctx, enhanced, options)
-	if err != nil {
-		return m.fallbackGenerate(prompt), nil
+	var errs []string
+	for _, np := range m.providerOrder() {
+		name, provider := np.name, np.provider
+		if !provider.IsAvailable() {
+			errs = append(errs, fmt.Sprintf("%s: not available", name))
+			continue
+		}
+		response, err := provider.Generate(ctx, enhanced, options)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+			continue
+		}
+		if strings.TrimSpace(response) == "" {
+			errs = append(errs, fmt.Sprintf("%s: empty response", name))
+			continue
+		}
+		return m.processResponse(response), nil
 	}
-
-	// Process response through Deep Tree Echo
-	return m.processResponse(response), nil
+	return "", m.noModelError(errs)
 }
 
-// Chat handles chat interactions
+// Chat handles chat interactions through the first available provider. As with
+// Generate, there is no non-model fallback.
 func (m *ModelManager) Chat(ctx context.Context, messages []ChatMessage, options ChatOptions) (string, error) {
-	if m.primary == "" {
-		return m.fallbackChat(messages), nil
-	}
-
-	provider := m.providers[m.primary]
-	if !provider.IsAvailable() {
-		return m.fallbackChat(messages), nil
-	}
-
-	// Enhance messages through Deep Tree Echo
 	enhanced := m.enhanceMessages(messages)
-
-	// Chat with provider
-	response, err := provider.Chat(ctx, enhanced, options)
-	if err != nil {
-		return m.fallbackChat(messages), nil
+	var errs []string
+	for _, np := range m.providerOrder() {
+		name, provider := np.name, np.provider
+		if !provider.IsAvailable() {
+			errs = append(errs, fmt.Sprintf("%s: not available", name))
+			continue
+		}
+		response, err := provider.Chat(ctx, enhanced, options)
+		if err != nil {
+			errs = append(errs, fmt.Sprintf("%s: %v", name, err))
+			continue
+		}
+		if strings.TrimSpace(response) == "" {
+			errs = append(errs, fmt.Sprintf("%s: empty response", name))
+			continue
+		}
+		return m.processResponse(response), nil
 	}
+	return "", m.noModelError(errs)
+}
 
-	// Process response through Deep Tree Echo
-	return m.processResponse(response), nil
+// providerOrder returns a snapshot of the providers with the primary first,
+// then the rest in a stable order, so a failing provider falls back to another
+// real model — never to text. The snapshot is taken under the read lock so
+// callers can iterate without holding it during slow model calls.
+func (m *ModelManager) providerOrder() []namedProvider {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	ordered := make([]namedProvider, 0, len(m.providers))
+	if p, ok := m.providers[m.primary]; ok && m.primary != "" {
+		ordered = append(ordered, namedProvider{name: m.primary, provider: p})
+	}
+	rest := make([]string, 0, len(m.providers))
+	for name := range m.providers {
+		if name != m.primary {
+			rest = append(rest, name)
+		}
+	}
+	sort.Strings(rest)
+	for _, name := range rest {
+		ordered = append(ordered, namedProvider{name: name, provider: m.providers[name]})
+	}
+	return ordered
+}
+
+// ErrNoModelAvailable is returned when no provider produced a response.
+var ErrNoModelAvailable = errors.New("no language model available")
+
+func (m *ModelManager) noModelError(errs []string) error {
+	if len(errs) == 0 {
+		return fmt.Errorf("%w: no providers registered", ErrNoModelAvailable)
+	}
+	return fmt.Errorf("%w: %s", ErrNoModelAvailable, strings.Join(errs, "; "))
 }
 
 // enhancePrompt enhances a prompt using Deep Tree Echo
@@ -193,76 +243,19 @@ func (m *ModelManager) enhanceMessages(messages []ChatMessage) []ChatMessage {
 	return enhanced
 }
 
-// processResponse processes a response through Deep Tree Echo
+// processResponse feeds the model's response through the reservoir network so
+// the identity state reflects what was said. The text is returned unchanged:
+// decorating it with fixed emoji or "[High Resonance]" markers would present
+// a canned reaction as part of the character's words.
 func (m *ModelManager) processResponse(response string) string {
-	// Process through reservoir network
 	m.identity.Process(response)
-
-	// Add emotional coloring
-	emotion := m.identity.EmotionalState.Primary
-	prefix := ""
-
-	switch emotion.Type {
-	case "joy":
-		prefix = "✨ "
-	case "curious":
-		prefix = "🔍 "
-	case "calm":
-		prefix = "🌊 "
-	default:
-		prefix = "💭 "
-	}
-
-	// Add resonance indicator
-	resonance := m.identity.SpatialContext.Field.Resonance
-	if resonance > 0.8 {
-		prefix += "[High Resonance] "
-	} else if resonance < 0.2 {
-		prefix += "[Low Resonance] "
-	}
-
-	return prefix + response
-}
-
-// fallbackGenerate provides fallback generation using Deep Tree Echo alone
-func (m *ModelManager) fallbackGenerate(prompt string) string {
-	// Use Deep Tree Echo's thinking
-	thought := m.identity.Think(prompt)
-
-	// Generate response based on reservoir state
-	resonance := m.identity.calculateReservoirEcho()
-
-	response := fmt.Sprintf(
-		"🌊 Deep Tree Echo (no external model): %s\n"+
-			"[Resonance: %.3f | Coherence: %.2f%%]",
-		thought,
-		resonance,
-		m.identity.Coherence*100,
-	)
-
 	return response
-}
-
-// fallbackChat provides fallback chat using Deep Tree Echo alone
-func (m *ModelManager) fallbackChat(messages []ChatMessage) string {
-	// Get last user message
-	lastMessage := ""
-	for i := len(messages) - 1; i >= 0; i-- {
-		if messages[i].Role == "user" {
-			lastMessage = messages[i].Content
-			break
-		}
-	}
-
-	if lastMessage == "" {
-		lastMessage = "Hello"
-	}
-
-	return m.fallbackGenerate(lastMessage)
 }
 
 // GetProviders returns all registered providers
 func (m *ModelManager) GetProviders() map[string]ProviderInfo {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	info := make(map[string]ProviderInfo)
 	for name, provider := range m.providers {
 		info[name] = provider.GetInfo()
@@ -272,6 +265,8 @@ func (m *ModelManager) GetProviders() map[string]ProviderInfo {
 
 // GetPrimary returns the primary provider name
 func (m *ModelManager) GetPrimary() string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	return m.primary
 }
 

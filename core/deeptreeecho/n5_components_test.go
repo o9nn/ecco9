@@ -1,6 +1,7 @@
 package deeptreeecho
 
 import (
+	"fmt"
 	"testing"
 	"time"
 )
@@ -83,29 +84,43 @@ func TestMetaCognitiveMonitor_StrategySelection(t *testing.T) {
 func TestMetaCognitiveMonitor_MetaThoughts(t *testing.T) {
 	mcm := NewMetaCognitiveMonitor()
 
-	// Generate meta-thought
-	thought := mcm.GenerateMetaThought(
-		"decision_making",
-		"I'm thinking about how I make decisions",
-		0,
-	)
-
+	// Without a model there is a recorded thought but no insight text.
+	thought := mcm.GenerateMetaThought("decision_making", "observed a decision", 0)
 	if thought == nil {
-		t.Fatal("Expected meta-thought to be generated")
+		t.Fatal("Expected meta-thought to be recorded")
 	}
-
 	if thought.Depth != 0 {
 		t.Errorf("Expected depth 0, got %d", thought.Depth)
 	}
-
-	if thought.Insight == "" {
-		t.Error("Expected insight to be generated")
+	if thought.Insight != "" {
+		t.Errorf("Expected no insight without a model, got %q", thought.Insight)
 	}
 
-	// Check recursive thinking
+	// With a model, the insight is the model's answer and the monitor reflects
+	// one level deeper for each non-empty answer, without deadlocking.
+	calls := 0
+	mcm.SetInsightSource(func(prompt string) (string, error) {
+		calls++
+		if calls > 2 {
+			return "", nil
+		}
+		return fmt.Sprintf("model insight %d", calls), nil
+	})
+	thought = mcm.GenerateMetaThought("decision_making", "observed a decision", 0)
+	if thought == nil {
+		t.Fatal("Expected meta-thought to be generated")
+	}
+	if thought.Insight != "model insight 1" {
+		t.Errorf("Expected the model's insight, got %q", thought.Insight)
+	}
+	if calls != 3 {
+		t.Errorf("Expected the model to be consulted until it had nothing further (3 calls), got %d", calls)
+	}
+
+	// Check recursive thinking: 1 without a model + 3 with (the last one has no insight).
 	awareness := mcm.GetSelfAwareness()
-	if metaThoughts, ok := awareness["meta_thoughts"].(int); !ok || metaThoughts < 1 {
-		t.Errorf("Expected at least 1 meta-thought, got %v", awareness["meta_thoughts"])
+	if metaThoughts, ok := awareness["meta_thoughts"].(int); !ok || metaThoughts != 4 {
+		t.Errorf("Expected 4 meta-thoughts, got %v", awareness["meta_thoughts"])
 	}
 }
 
@@ -385,6 +400,9 @@ func TestN5Integration_StartStop(t *testing.T) {
 
 func TestN5Integration_MetaCognitiveProcessing(t *testing.T) {
 	n5 := NewN5CognitiveSystem()
+	n5.SetInsightSource(func(prompt string) (string, error) {
+		return "I leaned on a known strategy rather than exploring", nil
+	})
 
 	// Process a task with meta-cognition
 	result := n5.ProcessWithMetaCognition("Optimize learning strategy")

@@ -69,8 +69,9 @@ type CognitiveGoal struct {
 
 // ConsciousnessStream maintains persistent stream-of-consciousness
 type ConsciousnessStream struct {
-	mu  sync.RWMutex
-	ctx context.Context
+	mu     sync.RWMutex
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	// LLM provider for thought generation
 	llmProvider llm.Provider
@@ -554,7 +555,7 @@ func (cs *ConsciousnessStream) Start() error {
 		cs.mu.Unlock()
 		return fmt.Errorf("consciousness stream already active")
 	}
-	cs.ctx, _ = context.WithCancel(context.Background())
+	cs.ctx, cs.cancel = context.WithCancel(context.Background())
 	cs.streamActive = true
 	cs.mu.Unlock()
 
@@ -572,6 +573,10 @@ func (cs *ConsciousnessStream) Stop() error {
 	}
 
 	cs.streamActive = false
+	if cs.cancel != nil {
+		cs.cancel() // stop the stream loop and any in-flight model request
+		cs.cancel = nil
+	}
 	return nil
 }
 

@@ -381,7 +381,7 @@ func (ao *AgentOrchestrator) handleThoughtEvent(event *echobeats.CognitiveEvent)
 	ao.persistentState.AddThought(
 		event.ID,
 		thought,
-		string(event.Type),
+		fmt.Sprint(int(event.Type)),
 		float64(event.Priority)/100.0,
 	)
 

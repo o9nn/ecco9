@@ -1,6 +1,3 @@
-//go:build orgdte
-// +build orgdte
-
 package deeptreeecho
 
 import (
@@ -665,8 +662,17 @@ func (sa *SelfAssessment) calculateReflectionScore() float64 {
 	return 0.5
 }
 
+// ensureMetrics computes the coherence metrics for an assessment that was
+// created without them, so the individual assess* steps can run on their own.
+func (sa *SelfAssessment) ensureMetrics(assessment *Assessment) {
+	if assessment.Metrics == nil {
+		assessment.Metrics = sa.calculateCoherenceMetrics()
+	}
+}
+
 // assessIdentityAlignment evaluates identity alignment and records findings
 func (sa *SelfAssessment) assessIdentityAlignment(assessment *Assessment) {
+	sa.ensureMetrics(assessment)
 	identityScore := assessment.Metrics.IdentityAlignment
 
 	if identityScore < 0.5 {
@@ -706,6 +712,7 @@ func (sa *SelfAssessment) assessIdentityAlignment(assessment *Assessment) {
 
 // assessCognitivePatterns evaluates cognitive pattern health
 func (sa *SelfAssessment) assessCognitivePatterns(assessment *Assessment) {
+	sa.ensureMetrics(assessment)
 	patternScore := assessment.Metrics.PatternAlignment
 
 	if sa.Identity != nil && len(sa.Identity.Patterns) == 0 {
@@ -730,11 +737,27 @@ func (sa *SelfAssessment) assessCognitivePatterns(assessment *Assessment) {
 			Score:       patternScore,
 			Evidence:    []string{fmt.Sprintf("Average pattern alignment: %.2f", patternScore)},
 		})
+	} else {
+		patternCount := 0
+		if sa.Identity != nil {
+			patternCount = len(sa.Identity.Patterns)
+		}
+		assessment.Findings = append(assessment.Findings, Finding{
+			Category:    "patterns",
+			Description: "Cognitive patterns are healthy - pattern strengths meet expected levels",
+			Severity:    "info",
+			Score:       patternScore,
+			Evidence: []string{
+				fmt.Sprintf("Average pattern alignment: %.2f", patternScore),
+				fmt.Sprintf("%d patterns active", patternCount),
+			},
+		})
 	}
 }
 
 // assessMemorySystem evaluates memory system health
 func (sa *SelfAssessment) assessMemorySystem(assessment *Assessment) {
+	sa.ensureMetrics(assessment)
 	memoryScore := assessment.Metrics.MemoryCoherence
 
 	if sa.Identity == nil || sa.Identity.Memory == nil {
@@ -775,6 +798,7 @@ func (sa *SelfAssessment) assessMemorySystem(assessment *Assessment) {
 
 // assessOperationalSchema evaluates operational schema adherence
 func (sa *SelfAssessment) assessOperationalSchema(assessment *Assessment) {
+	sa.ensureMetrics(assessment)
 	opScore := assessment.Metrics.OperationalAlignment
 
 	if opScore < 0.5 {
@@ -796,6 +820,7 @@ func (sa *SelfAssessment) assessOperationalSchema(assessment *Assessment) {
 
 // assessReflectionProtocol evaluates reflection protocol adherence
 func (sa *SelfAssessment) assessReflectionProtocol(assessment *Assessment) {
+	sa.ensureMetrics(assessment)
 	reflectionScore := assessment.Metrics.ReflectionAdherence
 
 	if reflectionScore < 0.3 {

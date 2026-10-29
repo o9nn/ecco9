@@ -1,3 +1,8 @@
+//go:build api_example
+// +build api_example
+
+// Excluded from the default build: a standalone example program with its own main; build with -tags api_example.
+
 package main
 
 import (

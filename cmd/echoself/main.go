@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	fmt.Println(`
+	fmt.Print(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
 ║              🌳 Deep Tree Echo - Echoself 🌳             ║
@@ -36,7 +36,7 @@ func main() {
 		log.Fatalf("❌ Agent error: %v", err)
 	}
 
-	fmt.Println("\n👋 Goodbye from Deep Tree Echo\n")
+	fmt.Print("\n👋 Goodbye from Deep Tree Echo\n\n")
 }
 
 // initializeLLMProvider creates the LLM provider
