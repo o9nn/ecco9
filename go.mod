@@ -1,7 +1,7 @@
 module github.com/EchoCog/echollama
 
 // Deep Tree Echo - compatible with Go 1.18+
-go 1.23.0
+go 1.24.0
 
 toolchain go1.24.10
 

@@ -1,5 +1,5 @@
-//go:build simple
-// +build simple
+//go:build simple && legacy_consciousness
+// +build simple,legacy_consciousness
 
 package main
 
