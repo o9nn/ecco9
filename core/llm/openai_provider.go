@@ -8,6 +8,8 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 )
 
 // OpenAIProvider implements LLMProvider for OpenAI-compatible APIs
@@ -16,6 +18,11 @@ type OpenAIProvider struct {
 	model      string
 	apiURL     string
 	httpClient *http.Client
+
+	// name and modelsURL are set for OpenAI-compatible servers other than
+	// OpenAI itself (see NewOpenAICompatibleProvider).
+	name      string
+	modelsURL string
 }
 
 // NewOpenAIProvider creates a new OpenAI provider
@@ -36,14 +43,60 @@ func NewOpenAIProvider(apiKey string) *OpenAIProvider {
 	}
 }
 
+// NewOpenAICompatibleProvider talks to any server that implements the OpenAI
+// chat-completions API under baseURL (which ends in /v1): Ollama, llama.cpp's
+// llama-server, vLLM, LM Studio and the like. apiKey may be empty for a local
+// server; availability is then decided by whether the server answers.
+func NewOpenAICompatibleProvider(name, baseURL, apiKey, model string) *OpenAIProvider {
+	baseURL = strings.TrimRight(baseURL, "/")
+	return &OpenAIProvider{
+		apiKey:     apiKey,
+		model:      model,
+		apiURL:     baseURL + "/chat/completions",
+		modelsURL:  baseURL + "/models",
+		httpClient: &http.Client{},
+		name:       name,
+	}
+}
+
 // Name returns the provider name
 func (oai *OpenAIProvider) Name() string {
+	if oai.name != "" {
+		return oai.name
+	}
 	return "openai"
 }
 
-// Available checks if the provider is configured
+// Available checks if the provider is configured. For OpenAI itself that means
+// an API key; for an OpenAI-compatible server it means the server answers
+// GET /models right now, so a model server started after this process is
+// picked up without a restart.
 func (oai *OpenAIProvider) Available() bool {
-	return oai.apiKey != ""
+	if oai.modelsURL == "" {
+		return oai.apiKey != ""
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, oai.modelsURL, nil)
+	if err != nil {
+		return false
+	}
+	oai.setAuth(req)
+	resp, err := oai.httpClient.Do(req)
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body)
+	return resp.StatusCode == http.StatusOK
+}
+
+// setAuth adds the bearer token when one is configured; a local server
+// usually has none.
+func (oai *OpenAIProvider) setAuth(req *http.Request) {
+	if oai.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+oai.apiKey)
+	}
 }
 
 // MaxTokens returns the maximum tokens supported
@@ -134,7 +187,7 @@ func (oai *OpenAIProvider) Generate(ctx context.Context, prompt string, opts Gen
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+oai.apiKey)
+	oai.setAuth(httpReq)
 
 	// Send request
 	resp, err := oai.httpClient.Do(httpReq)
@@ -224,7 +277,7 @@ func (oai *OpenAIProvider) StreamGenerate(ctx context.Context, prompt string, op
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("Authorization", "Bearer "+oai.apiKey)
+	oai.setAuth(httpReq)
 
 	// Start streaming in goroutine
 	go func() {

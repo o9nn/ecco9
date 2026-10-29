@@ -35,6 +35,11 @@ func main() {
 	// configured. Nothing here fabricates text: with no provider, generation
 	// returns an error and /api/generate answers 503.
 	providerManager := llm.NewProviderManager()
+	// The locally served model is always registered; it is used whenever the
+	// server at LOCAL_LLM_BASE_URL answers, even one started later.
+	if err := providerManager.RegisterProvider(llm.NewLocalProvider()); err != nil {
+		log.Printf("⚠️  Could not register local model provider: %v", err)
+	}
 	if os.Getenv("OPENAI_API_KEY") != "" {
 		if err := providerManager.RegisterProvider(llm.NewOpenAIProvider(os.Getenv("OPENAI_API_KEY"))); err != nil {
 			log.Printf("⚠️  OpenAI provider not registered: %v", err)
@@ -50,8 +55,8 @@ func main() {
 			log.Printf("⚠️  OpenRouter provider not registered: %v", err)
 		}
 	}
-	if len(providerManager.ListProviders()) == 0 {
-		log.Println("⚠️  No language model provider configured (OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY); /api/generate will return 503")
+	if local := llm.NewLocalProvider(); !local.Available() && os.Getenv("OPENAI_API_KEY") == "" && os.Getenv("ANTHROPIC_API_KEY") == "" && os.Getenv("OPENROUTER_API_KEY") == "" {
+		log.Println("⚠️  No language model answering yet (LOCAL_LLM_BASE_URL, default http://localhost:11434/v1, or OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY); /api/generate returns 503 until one does")
 	}
 
 	// Register all drivers
